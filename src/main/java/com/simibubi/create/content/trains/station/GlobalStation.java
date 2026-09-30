@@ -41,7 +41,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
-import io.github.fabricators_of_create.porting_lib.util.ServerLifecycleHooks;
+import io.github.fabricators_of_create.porting_lib.core.util.ServerLifecycleHooks;
 import com.simibubi.create.content.trains.entity.CarriageContraptionEntity;
 import net.minecraft.server.level.ServerLevel;
 

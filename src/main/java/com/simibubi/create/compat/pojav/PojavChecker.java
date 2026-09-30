@@ -9,8 +9,7 @@ import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.TitleScreen;
 
-import net.neoforged.neoforge.client.event.ScreenEvent;
-import net.neoforged.neoforge.common.NeoForge;
+import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 
 /**
  * Mobile devices have low quality graphics drivers that cause visual issues.
@@ -60,11 +59,11 @@ public class PojavChecker {
 		if (!IS_PRESENT)
 			return;
 
-		NeoForge.EVENT_BUS.addListener(PojavChecker::onScreenInit);
+		ScreenEvents.AFTER_INIT.register(PojavChecker::onScreenInit);
 	}
 
-	public static void onScreenInit(ScreenEvent.Init.Post event) {
-		if (!screenShown && event.getScreen() instanceof TitleScreen titleScreen) {
+	public static void onScreenInit(Minecraft client, net.minecraft.client.gui.screens.Screen screen, int width, int height) {
+		if (!screenShown && screen instanceof TitleScreen titleScreen) {
 			Minecraft.getInstance().setScreen(new PojavWarningScreen(titleScreen));
 			screenShown = true;
 		}

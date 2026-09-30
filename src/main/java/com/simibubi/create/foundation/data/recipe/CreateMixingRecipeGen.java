@@ -18,7 +18,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.material.Fluids;
 
 import io.github.fabricators_of_create.porting_lib.tags.Tags;
-import net.neoforged.neoforge.common.crafting.BlockTagIngredient;
 
 /**
  * Create's own Data Generation for Mixing recipes
@@ -70,7 +69,10 @@ public final class CreateMixingRecipeGen extends MixingRecipeGen {
 		.require(CreateRecipeProvider.I.zincNugget())
 		.output(CreateRecipeProvider.I.andesiteAlloy(), 1)),
 
-	MUD = create("mud_by_mixing", b -> b.require(new BlockTagIngredient(BlockTags.CONVERTABLE_TO_MUD))
+	// TODO fabric: NeoForge's BlockTagIngredient (matches an item if its corresponding block is in a
+	// block tag) has no fabric port; BlockTags.CONVERTABLE_TO_MUD is vanilla dirt only by default, so
+	// hardcoding the one vanilla entry is faithful but won't pick up datapack/mod additions to that tag.
+	MUD = create("mud_by_mixing", b -> b.require(Blocks.DIRT)
 		.require(Fluids.WATER, 250)
 		.output(Blocks.MUD, 1)),
 

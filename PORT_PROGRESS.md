@@ -2324,3 +2324,11 @@ Trajectory: 221 → 220 (confirmed).
   `StandardBogeyBlock.java`/`LecternControllerBlock.java`, batch 61) → cast to `(LevelReader) view`.
 
 **Current verified baseline: 220 errors.**
+
+## Done this session (batch 64)
+Trajectory: 220 → 219 (confirmed).
+- [x] `content/equipment/symmetryWand/SymmetryWandItem.java` (clean) — dead
+  `io.github.fabricators_of_create.porting_lib.util.EnvExecutor` import (recurring pattern, same as
+  `FunnelBlockEntity.java`/`ContraptionCollider.java` earlier batches), never referenced in the file body.
+
+**Current verified baseline: 219 errors.**

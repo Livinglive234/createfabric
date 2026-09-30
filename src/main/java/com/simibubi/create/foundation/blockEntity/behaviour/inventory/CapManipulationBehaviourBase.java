@@ -101,14 +101,6 @@ public abstract class CapManipulationBehaviourBase<T, S extends CapManipulationB
 			: InventoryIdentifier.get(getWorld(), new BlockFace(blockEntity.getBlockPos(), side));
 	}
 
-	/**
-	 * Get the target of this is behavior, which is the face of the owner BlockEntity that acts as the interface.
-	 * To get the BlockFace to use for capability lookup, call getOpposite on the result.
-	 */
-	public BlockFace getTarget() {
-		return this.target.getTarget(this.getWorld(), this.blockEntity.getBlockPos(), this.blockEntity.getBlockState());
-	}
-
 	protected boolean onHandlerInvalidated() {
 		if (this.targetStorageProvider == null)
 			return false;

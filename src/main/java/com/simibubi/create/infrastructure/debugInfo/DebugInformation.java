@@ -33,7 +33,6 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 
-import io.github.fabricators_of_create.porting_lib.util.EnvExecutor;
 import net.minecraft.client.resources.language.I18n;
 import oshi.SystemInfo;
 

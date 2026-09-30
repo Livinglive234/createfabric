@@ -23,7 +23,7 @@ public class AllCommands {
 			.then(ToggleDebugCommand.register())
 			.then(FabulousWarningCommand.register())
 			.then(OverlayConfigCommand.register())
-			.then(FixLightingCommand.register())
+			// FixLightingCommand is currently disabled (see FixLightingCommand.java)
 
 			// utility
 			.then(util);

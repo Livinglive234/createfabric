@@ -2,7 +2,6 @@ package com.simibubi.create.foundation.collision;
 
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import com.simibubi.create.foundation.collision.ContinuousOBBCollider.ContinuousSeparationManifold;
 
 public class OrientedBB {
 

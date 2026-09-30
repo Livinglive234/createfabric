@@ -69,7 +69,7 @@ public abstract class JeiSequencedAssemblySubCategory {
 
 		@Override
 		public void setRecipe(IRecipeLayoutBuilder builder, SequencedRecipe<?> recipe, IFocusGroup focuses, int x) {
-			SizedFluidIngredient fluidIngredient = recipe.getRecipe()
+			FluidIngredient fluidIngredient = recipe.getRecipe()
 					.getFluidIngredients()
 					.get(0);
 

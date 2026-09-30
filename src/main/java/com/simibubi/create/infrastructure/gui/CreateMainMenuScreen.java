@@ -38,7 +38,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
 import io.github.fabricators_of_create.porting_lib.mixin.accessors.client.accessor.ScreenAccessor;
-import io.github.fabricators_of_create.porting_lib.mixin.accessors.client.accessor.TitleScreenAccessor;
 
 public class CreateMainMenuScreen extends AbstractSimiScreen {
 

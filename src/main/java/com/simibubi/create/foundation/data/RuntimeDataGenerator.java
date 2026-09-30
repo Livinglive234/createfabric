@@ -39,7 +39,8 @@ import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.ConcretePowderBlock;
 
-import io.github.fabricators_of_create.porting_lib.resources.conditions.WithConditions;
+import io.github.fabricators_of_create.porting_lib.conditions.ConditionalOps;
+import io.github.fabricators_of_create.porting_lib.conditions.WithConditions;
 import com.simibubi.create.content.processing.recipe.ProcessingRecipe;
 import com.simibubi.create.content.processing.recipe.ProcessingRecipeBuilder;
 import com.simibubi.create.content.processing.recipe.ProcessingRecipeSerializer;
@@ -221,7 +222,7 @@ public class RuntimeDataGenerator {
 			ResourceLocation id = ResourceLocation.fromNamespaceAndPath(recipeId.getNamespace(),
 				typeId.getPath() + "/" + recipeId.getPath());
 
-			Optional<JsonElement> serialized = CatnipCodecUtils.encode(Recipe.CONDITIONAL_CODEC, JsonOps.INSTANCE, Optional.of(new WithConditions<>(recipe)));
+			Optional<JsonElement> serialized = CatnipCodecUtils.encode(ConditionalOps.createConditionalCodecWithConditions(Recipe.CODEC), JsonOps.INSTANCE, Optional.of(new WithConditions<>(recipe)));
 			serialized.ifPresent(r -> JSON_FILES.put(id.withPrefix("recipe/"), r));
 			return recipe;
 		}

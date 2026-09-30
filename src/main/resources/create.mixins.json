@@ -31,6 +31,7 @@
     "accessor.CropBlockAccessor",
     "accessor.DispenserBlockAccessor",
     "accessor.FallingBlockEntityAccessor",
+    "accessor.FireBlockAccessor",
     "accessor.FlowingFluidAccessor",
     "accessor.FluidInteractionRegistryAccessor",
     "accessor.GameTestHelperAccessor",

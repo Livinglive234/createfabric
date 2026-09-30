@@ -47,7 +47,7 @@ public class CreateWikiBlockInfoProvider implements DataProvider {
 				element.addProperty("luminous", state.getLightEmission() > 0);
 				//element.addProperty("transparent", block.propagatesSkylightDown());
 				element.addProperty("waterloggable", block instanceof SimpleWaterloggedBlock);
-				element.addProperty("flammable", ((FireBlock) Blocks.FIRE).getBurnOdds(state) > 0);
+				element.addProperty("flammable", ((com.simibubi.create.foundation.mixin.accessor.FireBlockAccessor) (FireBlock) Blocks.FIRE).create$callGetBurnOdds(state) > 0);
 				element.addProperty("ignited_by_lava", state.ignitedByLava());
 
 				return DataProvider.saveStable(cachedOutput, element, path.json(id));

@@ -187,7 +187,7 @@ public class RecipeTrie<R extends Recipe<?>> {
 					ingredients.add(AbstractIngredient.Universal.INSTANCE);
 					continue;
 				}
-				if (!ingredient.isSimple()) {
+				if (ingredient.getCustomIngredient() != null) {
 					ingredients.add(AbstractIngredient.Universal.INSTANCE);
 					continue;
 				}

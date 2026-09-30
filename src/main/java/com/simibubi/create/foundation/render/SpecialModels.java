@@ -12,8 +12,8 @@ import dev.engine_room.flywheel.lib.util.RendererReloadCache;
 
 public class SpecialModels {
 	private static final RendererReloadCache<Key, Model> FLAT = new RendererReloadCache<>(it -> new BakedModelBuilder(it.partial.get())
-		.materialFunc((renderType, shaded, ao) -> {
-			var material = ModelUtil.getMaterial(renderType, shaded, ao);
+		.materialFunc((renderType, shaded) -> {
+			var material = ModelUtil.getMaterial(renderType, shaded);
 			if (material == null) {
 				return null;
 			}

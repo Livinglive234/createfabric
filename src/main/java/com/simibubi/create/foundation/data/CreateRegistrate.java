@@ -73,7 +73,6 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry;
 import com.simibubi.create.impl.registrate.CreateRegistrateRegistrationCallbackImpl;
-import com.simibubi.create.impl.registrate.CreateRegistrateRegistrationCallbackImpl.CallbackImpl;
 
 public class CreateRegistrate extends AbstractRegistrate<CreateRegistrate> {
 	private static final Map<RegistryEntry<?, ?>, ResourceKey<CreativeModeTab>> TAB_LOOKUP = Collections.synchronizedMap(new IdentityHashMap<>());

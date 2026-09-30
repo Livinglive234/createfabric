@@ -12,7 +12,7 @@ Baseline compile counts (full clean `./gradlew compileJava`, not incremental):
 - After bulk import-restoration script (see below), 267 files / 552 imports: 2,964 errors
 - After fixing ProcessingRecipeSerializer.java (stale pre-refactor dead code): 2,942 errors
 - After ChuteBlockEntity/ItemDrainBlock/AllItemAttributeTypes (Capabilities.* → Fabric Storage/BlockApiCache) + ClientEvents (AllFluids import, ClientWorldEvents wrong package, duplicate CommonEvents registration) + CreateEmptyingRecipeGen (NeoForgeMod.MILK → Milk.STILL_MILK): pending re-verify (cr_verify10.log)
-- **Current (batch 59, fresh-container verified): 271 errors** — see "Session resumed" / batch 50-59 notes near the end of this file for the full trajectory from the last documented checkpoint (503) through this session's confirmed 478 → 455 → 441 → 407 → 395 → 389 → 367 → 345 → 330 → 311 → 271. Development also moved from a throwaway session branch onto `main` directly partway through (see "Branch consolidation" note below) — all commits from batch 56 onward are on `main`.
+- **Current (batch 60, fresh-container verified): 252 errors** — see "Session resumed" / batch 50-60 notes near the end of this file for the full trajectory from the last documented checkpoint (503) through this session's confirmed 478 → 455 → 441 → 407 → 395 → 389 → 367 → 345 → 330 → 311 → 271 → 252. Development also moved from a throwaway session branch onto `main` directly partway through (see "Branch consolidation" note below) — all commits from batch 56 onward are on `main`.
 
 ## Bulk import-restoration technique (big win — use again if a similar wave of import loss shows up)
 The "merge picked wrong side and dropped imports" bug (see session summary) turned out to affect
@@ -2046,18 +2046,94 @@ Trajectory: 311 → 271 (confirmed) — biggest single-batch drop this session, 
 - [x] `content/equipment/blueprint/BlueprintMenu.java` (clean) — missing `EnvType`/`Environment` imports
   entirely (not a leftover-annotation bug, just never added).
 
-**Current verified baseline: 271 errors** (down from 503 at the start of this session, ~4,130 at the very
-start of the port — see `/tmp/cr_verify12.log`/`/tmp/error_files.txt`, container-local scratch files).
+## Done this session (batch 60)
+Trajectory: 252 confirmed (from 271) — another ~23-file batch, mostly `foundation`/`infrastructure`
+one-off bugs with no shared theme.
+- [x] `content/trains/track/TrackBlockEntity.java` (clean) — last remaining `AABB.INFINITE` instance
+  (doesn't exist on vanilla `AABB` — same fix as `EjectorBlockEntity.java` earlier this session); swept
+  codebase-wide afterward, none left.
+- [x] `foundation/block/render/CustomBlockModels.java` (clean) — missing `Blocks` import.
+- [x] `foundation/blockEntity/behaviour/edgeInteraction/EdgeInteractionHandler.java` (clean) —
+  `behaviour.requiredPredicate` referenced a field that was actually named `requiredItem` (leftover from
+  an incomplete field rename — same bug shape as several `order`/`identifier`-style leftover-variable
+  bugs found earlier this session, just on a field instead of a local).
+- [x] `foundation/blockEntity/behaviour/inventory/CapManipulationBehaviourBase.java` (clean) — a
+  byte-for-byte **duplicate `getTarget()` method** (identical body, identical javadoc) sitting a few
+  lines apart — classic bad-merge duplication, deleted the second copy.
+- [x] `foundation/blockEntity/behaviour/inventory/TankManipulationBehaviour.java` (clean) — this
+  project's `FluidStack#setAmount(long)` mutates in place and returns `void` (confirmed by reading the
+  class), but the call site used `return stack.setAmount(extracted);` as if it returned the stack →
+  split into a mutate-then-return.
+- [x] `foundation/collision/OrientedBB.java` (clean) — same dead `ContinuousSeparationManifold`
+  private-nested-class import bug as `ContraptionCollider.java` from earlier this session.
+- [x] `foundation/data/CreateRegistrate.java` (clean) — dead import of `CallbackImpl`, a `private
+  record` nested in `CreateRegistrateRegistrationCallbackImpl` (inaccessible from outside anyway, and
+  never referenced in the file body beyond the two import lines).
+- [x] `foundation/data/RuntimeDataGenerator.java` (clean) — two independent bugs stacked: `WithConditions`
+  was imported from the wrong porting-lib subpackage (`.resources.conditions` — doesn't exist — instead
+  of the real `.conditions`); `Recipe.CONDITIONAL_CODEC` doesn't exist on vanilla `Recipe` at all
+  (confirmed via `javap`) — real replacement is porting-lib's own
+  `ConditionalOps.createConditionalCodecWithConditions(Recipe.CODEC)` (confirmed via `javap` on the
+  `conditions` module jar — a purpose-built static factory for exactly "wrap a codec with
+  fabric-resource-conditions support", the fabric-side equivalent of NeoForge's conditional-codec system).
+- [x] `foundation/data/SimpleDatagenIngredient.java` (clean) — `new Ingredient(values)` (an array) isn't
+  a real constructor; vanilla `Ingredient` only has `Ingredient(Stream<? extends Value>)` (confirmed via
+  `javap`) → wrapped in `Stream.of(...)`.
+- [x] `foundation/data/recipe/CreatePressingRecipeGen.java` (clean) — `Mods.BEF` was removed from the
+  `Mods` enum in favor of `Mods.BE` ("Better End") per the enum file's own inline comment
+  (`//BEF("betterendforge"), fabric: replaced with Better End`), but this one call site in
+  `CreatePressingRecipeGen.java` was never updated to match.
+- [x] `foundation/item/render/CustomItemModels.java` (clean) — dead `net.minecraftforge.registries.ForgeRegistries` import.
+- [x] `foundation/mixin/ItemStackMixin.java` (clean) — `PatchedDataComponentMap#isPatchEmpty()` doesn't
+  exist (confirmed via `javap`) → `.asPatch().isEmpty()` (the real way to check "does this patch have no
+  changes", going through `DataComponentPatch#isEmpty()` instead).
+- [x] `foundation/pack/DynamicPack.java` (clean) — `PackMetadataSection`'s constructor gained a required
+  3rd `Optional<InclusiveRange<Integer>>` parameter (confirmed via `javap`) → `Optional.empty()`.
+- [x] `foundation/recipe/trie/RecipeTrie.java` (clean) — `Ingredient#isSimple()` doesn't exist (a
+  NeoForge patch method for "is this a plain vanilla ingredient, not a custom modded one", used to decide
+  whether the trie's fast-path lookup is safe to apply) — fabric-api's `Ingredient` implements
+  `FabricIngredient` directly (confirmed via `javap`), whose `getCustomIngredient()` returning `null`
+  means the same thing → swapped `!ingredient.isSimple()` for `ingredient.getCustomIngredient() != null`.
+  Swept codebase-wide afterward; no more `isSimple()` calls remain.
+- [x] `foundation/render/SpecialModels.java` (clean) — flywheel's `BakedModelBuilder#materialFunc` and
+  `ModelUtil#getMaterial` both dropped their third `ao` (ambient-occlusion) boolean parameter in the
+  resolved flywheel version on this project's classpath (confirmed via `javap` directly on the resolved
+  jar, not an assumption from memory) — trimmed both the lambda signature and the inner call to match.
+- [x] `foundation/utility/ServerSpeedProvider.java` (clean) — missing `MinecraftServer` import.
+- [x] `infrastructure/command/AllCommands.java` (clean) — called `FixLightingCommand.register()` on a
+  class whose **entire body is commented out** (a deliberately-disabled command, confirmed by reading
+  the file — every line starts with `//`) — commented out the one call site to match, rather than
+  un-commenting a command that was clearly disabled on purpose.
+- [x] `infrastructure/data/CreateWikiBlockInfoProvider.java` (clean) — `FireBlock#getBurnOdds(BlockState)`
+  is genuinely `private` on vanilla `FireBlock` (confirmed via `javap -p`) — added a new
+  `FireBlockAccessor` mixin (`@Invoker("getBurnOdds")`), registered in `create.mixins.json`, following
+  the exact same established pattern as `AbstractMinecartAccessor`.
+- [x] `infrastructure/debugInfo/DebugInformation.java`, `compat/jei/StockKeeperTransferHandler.java`
+  (both clean) — two more dead `EnvExecutor` imports.
+- [x] `infrastructure/gui/CreateMainMenuScreen.java` (clean) — dead import of
+  `io.github.fabricators_of_create.porting_lib.mixin.accessors.client.accessor.TitleScreenAccessor`, a
+  class that doesn't exist anywhere in any resolved porting-lib module (confirmed — not a wrong-path
+  bug like several others this session, genuinely absent) and wasn't referenced in the file body anyway.
+- [x] `infrastructure/worldgen/LayerPattern.java` (clean) — missing `@NotNull` import (only `@Nullable`
+  was imported).
+- [x] `compat/jei/category/sequencedAssembly/JeiSequencedAssemblySubCategory.java` (clean, JEI is
+  priority) — `SizedFluidIngredient` (NeoForge) → this project's own `FluidIngredient`, matching exactly
+  what `CreateRecipeCategory.addFluidSlot(...)` actually accepts as a parameter (checked the real method
+  signature rather than assuming — a repeated lesson from this session: always verify the call site's
+  actual expected type before picking a replacement).
+
+**Current verified baseline: 252 errors** (down from 503 at the start of this session, ~4,130 at the very
+start of the port — see `/tmp/cr_verify13.log`/`/tmp/error_files.txt`, container-local scratch files).
 Non-deprioritized frontier is now thin: `BlueprintEntity.java` (20, deferred multi-part feature),
 `MinecartController.java` (18, deferred fabric-attachment-API redesign), `StockTickerInteractionHandler.java`
 (1 remaining error, deferred — needs the `ExtendedScreenHandlerFactory` redesign above), and a long tail of
-~75 files with 1-4 errors each scattered across nearly every content package — no single shared root
-cause found across dozens sampled this session (each is its own small distinct bug: missing imports,
-NeoForge-patched-method signature mismatches, a couple of undefined-variable leftovers, the occasional
-genuinely-removed vanilla API needing a `javap`-verified replacement). The deprioritized compat mods
-(JourneyMap/EMI/FTB/REI/sandwichable/CC:Tweaked) still account for the single biggest chunks
-(`JourneyTrainMap.java` 48, `CreateEmiPlugin.java` 46, `FTBChunksTrainMap.java` 32, `CreateREI.java` 30,
-plus several more REI/EMI/FTB files in the 6-10 range).
+~55 files with 1-4 errors each scattered across nearly every content package — no single shared root
+cause found across the ~140 files fixed this session (each is its own small distinct bug: missing
+imports, NeoForge-patched-method signature mismatches, undefined-variable leftovers from incomplete
+renames, the occasional genuinely-removed vanilla API needing a `javap`-verified replacement). The
+deprioritized compat mods (JourneyMap/EMI/FTB/REI/sandwichable/CC:Tweaked) still account for the single
+biggest chunks (`JourneyTrainMap.java` 48, `CreateEmiPlugin.java` 46, `FTBChunksTrainMap.java` 32,
+`CreateREI.java` 30, plus several more REI/EMI/FTB files in the 6-10 range).
 
 ## Session resumed (new container) — environment note
 Picked this back up in a fresh cloud container; the previous session's `/tmp` artifacts (scripts,

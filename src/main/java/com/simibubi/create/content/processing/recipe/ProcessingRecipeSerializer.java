@@ -38,8 +38,8 @@ public class ProcessingRecipeSerializer {
 					i.getFluidResults().forEach(o -> list.add(Either.right(o)));
 					return list;
 				}),
-			ExtraCodecs.NON_NEGATIVE_INT.optionalFieldOf("processing_time", 0).forGetter(T::getProcessingDuration),
-			HeatCondition.CODEC.optionalFieldOf("heat_requirement", HeatCondition.NONE).forGetter(T::getRequiredHeat)
+			ExtraCodecs.NON_NEGATIVE_INT.optionalFieldOf("processing_time", 0).forGetter(i -> i.getProcessingDuration()),
+			HeatCondition.CODEC.optionalFieldOf("heat_requirement", HeatCondition.NONE).forGetter(i -> i.getRequiredHeat())
 		).apply(instance, (ingredients, results, processingTime, heatRequirement) -> {
 			RecipeSerializer<?> serializer = recipeTypes.getSerializer();
 			if (!(serializer instanceof StandardProcessingRecipe.Serializer<?> standardSerializer))

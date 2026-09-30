@@ -62,7 +62,7 @@ public class AllItemAttributeTypes {
 		SMELTABLE = singleton("smeltable", (s, w) -> testRecipe(s, w, RecipeType.SMELTING)),
 		SMOKABLE = singleton("smokable", (s, w) -> testRecipe(s, w, RecipeType.SMOKING)),
 		BLASTABLE = singleton("blastable", (s, w) -> testRecipe(s, w, RecipeType.BLASTING)),
-		COMPOSTABLE = singleton("compostable", s -> ComposterBlock.getValue(s) > 0),
+		COMPOSTABLE = singleton("compostable", s -> ComposterBlock.COMPOSTABLES.getFloat(s.getItem()) > 0),
 
 	IN_TAG = register("in_tag", new InTagAttribute.Type()),
 		IN_ITEM_GROUP = register("in_item_group", new InItemGroupAttribute.Type()),
@@ -82,7 +82,7 @@ public class AllItemAttributeTypes {
 	}
 
 	private static boolean maxEnchanted(ItemStack s) {
-		for (Object2IntMap.Entry<Holder<Enchantment>> entry : s.getTagEnchantments().entrySet()) {
+		for (Object2IntMap.Entry<Holder<Enchantment>> entry : s.getEnchantments().entrySet()) {
 			if (entry.getKey().value().getMaxLevel() <= entry.getIntValue())
 				return true;
 		}

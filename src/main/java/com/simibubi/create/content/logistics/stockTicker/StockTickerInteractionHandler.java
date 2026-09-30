@@ -40,7 +40,6 @@ import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 
 import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
-import io.github.fabricators_of_create.porting_lib.util.NetworkHooks;
 
 public class StockTickerInteractionHandler {
 

@@ -142,11 +142,11 @@ public class BasinRecipe extends StandardProcessingRecipe<RecipeInput> {
 				});
 			}
 
-			CraftingInput remainderInput = new DummyCraftingContainer(availableItems, extractedItemsFromSlot)
+			CraftingInput remainderInput = new DummyCraftingContainer(consumedItems)
 					.asCraftInput();
 
 			if (recipe instanceof BasinRecipe basinRecipe) {
-				recipeOutputItems.addAll(basinRecipe.rollResults());
+				recipeOutputItems.addAll(basinRecipe.rollResults(basin.getLevel().random));
 
 					for (FluidStack fluidStack : basinRecipe.getFluidResults())
 						if (!fluidStack.isEmpty())

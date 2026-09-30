@@ -11,7 +11,6 @@ import net.minecraft.client.particle.SpriteSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleType;
 
-import io.github.fabricators_of_create.porting_lib.util.ParticleHelper;
 
 public class SoulBaseParticle extends CustomRotationParticle {
 
@@ -26,7 +25,7 @@ public class SoulBaseParticle extends CustomRotationParticle {
 		this.loopLength = 16 + (int) (this.random.nextFloat() * 2f - 1f);
 		this.lifetime = (int) (90.0F / (this.random.nextFloat() * 0.36F + 0.64F));
 		this.selectSpriteLoopingWithAge(animatedSprite);
-		ParticleHelper.setStoppedByCollision(this, true); // disable movement
+		this.stoppedByCollision = true; // disable movement
 	}
 
 	@Override

@@ -44,6 +44,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 import com.simibubi.create.Create;
 import com.simibubi.create.foundation.fluid.FluidIngredient;
+import io.github.fabricators_of_create.porting_lib.transfer.item.RecipeWrapper;
 import net.minecraft.world.Container;
 import net.minecraft.world.level.ItemLike;
 import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;

@@ -12,6 +12,7 @@ Baseline compile counts (full clean `./gradlew compileJava`, not incremental):
 - After bulk import-restoration script (see below), 267 files / 552 imports: 2,964 errors
 - After fixing ProcessingRecipeSerializer.java (stale pre-refactor dead code): 2,942 errors
 - After ChuteBlockEntity/ItemDrainBlock/AllItemAttributeTypes (Capabilities.* → Fabric Storage/BlockApiCache) + ClientEvents (AllFluids import, ClientWorldEvents wrong package, duplicate CommonEvents registration) + CreateEmptyingRecipeGen (NeoForgeMod.MILK → Milk.STILL_MILK): pending re-verify (cr_verify10.log)
+- **Current (batch 51, fresh-container verified): 441 errors** — see "Session resumed" / batch 50 / batch 51 notes near the end of this file for the full trajectory from the last documented checkpoint (503) through this session's confirmed 478 → 455 → 441.
 
 ## Bulk import-restoration technique (big win — use again if a similar wave of import loss shows up)
 The "merge picked wrong side and dropped imports" bug (see session summary) turned out to affect
@@ -1724,3 +1725,109 @@ file) for the current frontier — it has shifted a lot; re-sort by count rather
   `content/contraptions/render/ContraptionRenderInfo.java`, `content/contraptions/minecart/capability/MinecartController.java`,
   `foundation/blockEntity/behaviour/inventory/VersionedInventoryWrapper.java`,
   `content/redstone/displayLink/source/EnchantPowerDisplaySource.java`.
+
+## Session resumed (new container) — environment note
+Picked this back up in a fresh cloud container; the previous session's `/tmp` artifacts (scripts,
+logs) were gone (ephemeral container), so re-derived everything from this file + a fresh compile.
+**Gradle needs an explicit `-Dorg.gradle.java.home=/usr/lib/jvm/java-21-openjdk-amd64` override**
+on this kind of container — `gradle.properties`' committed `org.gradle.java.home` points at a
+macOS path (`/Library/Java/...`) from whoever's dev machine, which doesn't exist here. Also: this
+environment's outbound network policy denies `maven.fabricmc.net` by default (blocks even resolving
+the `fabric-loom` Gradle plugin) — needed the container's network access widened before any Gradle
+command could work at all.
+First fresh-container compile confirmed the batch-49 checkpoint's fixes did land clean: **503 → 478
+errors** (javac summary line, authoritative metric per the correction note above).
+
+## Done this session (batch 50)
+Trajectory: 478 → 455 (confirmed).
+- [x] `foundation/data/recipe/CreateMechanicalCraftingRecipeGen.java` (clean) — `net.neoforged.neoforge.common.Tags.Items.GLASS_BLOCKS`/`.OBSIDIANS`
+  (NeoForge-only) → fabric-api's own `net.fabricmc.fabric.api.tag.convention.v2.ConventionalItemTags.GLASS_BLOCKS`/`.OBSIDIANS`
+  (confirmed present via `javap` on the resolved 2.11.1 convention-tags jar — unlike the `DOUGH_FOODS`/`.DRINKS` gap
+  found in `AllItems.java` last session, these two fields **do** exist at this resolved version).
+- [x] `content/contraptions/actors/harvester/HarvesterMovementBehaviour.java` (clean) — same genuinely-unported
+  `net.neoforged.neoforge.common.SpecialPlantable` gap as `BlockHelper.java` (no fabric port at all) — dropped the
+  dead `IPlantable`/`SpecialPlantable` imports and the `instanceof SpecialPlantable` branch, left a `// TODO fabric:`
+  note pointing at the precedent.
+- [x] `content/contraptions/OrientedContraptionEntity.java` (clean, 2 passes — see batch 51 note below for the
+  second) — same recurring `io.github.fabricators_of_create.porting_lib.util.MinecartAndRailUtil` dead-class bug as
+  `MinecartContraptionItem.java`/`MinecartSim2020.java` last session; fixed the one real call site with the
+  established replacement, `blockState.getValue(abstractRailBlock.getShapeProperty())`.
+- [x] `AllBlocks.java` + `content/contraptions/mounted/CartAssemblerBlock.java` (both clean) — `getPistonPushReaction(BlockState)`
+  is **not** an overridable `Block`/`BlockBehaviour` method in 1.21.1 at all (confirmed via `javap` — no such method
+  on either class); vanilla 1.21.1 configures push reaction through the `BlockBehaviour.Properties` builder instead
+  (`Properties#pushReaction(PushReaction)`, confirmed present via `javap`). Deleted the invalid `@Override` in
+  `CartAssemblerBlock.java` and added `.pushReaction(PushReaction.BLOCK)` to the block's `initialProperties`/`properties`
+  builder chain in `AllBlocks.java` instead — matches the file's already-established pattern of configuring
+  Block behavior through properties rather than overrides where 1.21.1 vanilla moved it there.
+- [x] `content/contraptions/render/ContraptionEntityRenderer.java` (clean) — same "NeoForge's `ModelData` capability
+  system has no fabric port" gap as `WrappedBlockAndTintGetter.java`/`TableClothModel.java` earlier sessions, this
+  time hitting `BakedModel#getModelData`/`#getRenderTypes(state, random, modelData)` (both NeoForge-only extensions —
+  confirmed via `javap` that vanilla fabric `BakedModel` only extends fabric-api's own `FabricBakedModel`, no
+  `ModelData`-aware methods at all) plus `BlockRenderDispatcher`'s real `ModelBlockRenderer#tesselateBlock` taking
+  9 vanilla params, not the 11-param NeoForge-patched overload this file called. Rewrote the per-`RenderType`-layer
+  filtering (previously `model.getRenderTypes(state, random, modelData).contains(layer)`) using vanilla's own
+  single-render-type-per-block-state API instead: `ItemBlockRenderTypes.getChunkRenderType(state) == layer`
+  (confirmed present via `javap`) — a behavior simplification (one type per block instead of a multi-layer set) but
+  matches what vanilla 1.21.1 itself supports without NeoForge's patch.
+- [x] `content/processing/burner/BlazeBurnerBlock.java` (clean) — `getCloneItemStack(BlockState, HitResult, LevelReader, BlockPos, Player)`
+  is a NeoForge-patched overload; vanilla `Block` only declares `getCloneItemStack(LevelReader, BlockPos, BlockState)`
+  (confirmed via `javap` — no HitResult/Player params at all) — retyped to match, body unchanged (`getLitOrUnlitStack(state)`
+  never used the extra params anyway). Also the recurring `@OnlyIn(Dist.CLIENT)` leftover-NeoForge-annotation bug (see
+  batch 51 — this file already had the correct `net.fabricmc.api.EnvType`/`Environment` imports sitting unused).
+- [x] `content/contraptions/ContraptionCollider.java` (clean) — three independent dead-import/API bugs: unused
+  `io.github.fabricators_of_create.porting_lib.util.EnvExecutor` import (never referenced in the body — just deleted,
+  no `BacktankUtil.java`-style rewrite needed since nothing called it); unused import of `ContinuousOBBCollider.ContinuousSeparationManifold`,
+  a `private static class` nested in a different file (also never referenced — the import alone was the only use,
+  deleted); `BlockState#getFriction(Level, BlockPos, Entity)` is a NeoForge 3-arg patch, vanilla only has the no-arg
+  `Block#getFriction()` (confirmed via `javap`, same shape as the `getSoundType`/`getPistonPushReaction` NeoForge-patch
+  pattern found repeatedly this session) → `blockState.getBlock().getFriction()`.
+- [x] `content/processing/sequenced/SequencedRecipe.java` (clean) — three independent bugs in one small file:
+  (1) `ProcessingRecipe::getRecipeType` doesn't exist (no such method anywhere on `ProcessingRecipe`) — the real
+  dispatch key is `getTypeInfo()` (declared on the `IRecipeTypeInfo` interface it implements via `AllRecipeTypes`),
+  cast to `AllRecipeTypes` since that's the only real implementor and `AllRecipeTypes::processingCodec` (the codec
+  side of the dispatch) is an *instance* method only declared there; (2) `STREAM_CODEC` referenced
+  `v.writeToBuffer(b)`/`SequencedRecipe::readFromBuffer`, methods that were never actually implemented anywhere in
+  the class (a "wire this up later" stub, same shape as the `FluidStack.CODEC = null` gap found last session) —
+  implemented both properly: write the `AllRecipeTypes` enum tag first (`buffer.writeEnum`), then delegate to that
+  type's own `RecipeSerializer#streamCodec()` (each `ProcessingRecipe` subtype already has one via
+  `StandardProcessingRecipe.Serializer`, confirmed last session); read does the mirror (`readEnum` then decode
+  through the same type's serializer); (3) `CompoundIngredient.of(...)` (NeoForge's ingredient-OR-combinator, no
+  fabric port — same class flagged as a dead `instanceof`-only check in `BlueprintItem.java` last session, but here
+  it's actually *constructed*, not just type-checked) → fabric-api's own equivalent,
+  `net.fabricmc.fabric.api.recipe.v1.ingredient.DefaultCustomIngredients.any(Ingredient...)` (confirmed present via
+  `javap` on the resolved `fabric-recipe-api-v1` jar — this is a real, direct replacement, not a stub/TODO).
+  **If another file needs an OR-combined `Ingredient` (`CompoundIngredient`/`Ingredient.of(a, b)`-shaped NeoForge
+  code), reach for `DefaultCustomIngredients.any(...)` first before assuming it needs a TODO stub** — fabric-api
+  ships this natively (also has `.all(...)` for AND and `.difference(...)` for NOT-style combinators, same jar).
+
+## Done this session (batch 51)
+Trajectory: 455 → 441 (confirmed).
+- [x] **Recurring `@OnlyIn(Dist.CLIENT)`-leftover-annotation bug, bulk-found via `grep -rl "@OnlyIn(Dist\." src/main/java/`**
+  — 6 files (`TrackBlock.java`, `ITrackBlock.java`, `PipeConnection.java`, `ClipboardOverrides.java`,
+  `ClipboardScreen.java`, `LitBlazeBurnerBlock.java`) all had the exact same shape as `BlazeBurnerBlock.java` earlier
+  this batch: the correct `net.fabricmc.api.EnvType`/`Environment` imports were already sitting there unused, just
+  the annotation itself was never swapped from NeoForge's `@OnlyIn(Dist.CLIENT)`/`Dist.DEDICATED_SERVER`. Fixed all 6
+  in one `sed` pass (`@OnlyIn(Dist.CLIENT)` → `@Environment(EnvType.CLIENT)`, `@OnlyIn(Dist.DEDICATED_SERVER)` →
+  `@Environment(EnvType.SERVER)`). **Re-run that grep periodically — if this pattern turns up again, bulk-fix the
+  same way rather than hand-fixing file by file.**
+- [x] `content/trains/track/ITrackBlock.java` (clean) — while fixing the above, found a genuine duplicate-import
+  hard compile error sitting in the same file: `net.fabricmc.api.EnvType`/`Environment` were imported **twice**
+  (once near the top, once again right before the interface declaration) — deleted the second copy.
+- [x] `content/contraptions/OrientedContraptionEntity.java` (clean, second pass) — same bug as `ITrackBlock.java`:
+  a duplicate `io.github.fabricators_of_create.porting_lib.util.MinecartAndRailUtil` import (two copies, only one
+  caught/removed in batch 50's first pass) was still there, still causing "cannot find symbol" on its own line even
+  though the one real call site had already been fixed.
+- [x] `AllBlocks.java` (clean) — dead import of `com.simibubi.create.content.decoration.CardboardBlockItem`, a class
+  that doesn't exist anywhere in the codebase (only `CardboardBlock.java` does) — never referenced in the file body,
+  just deleted.
+
+**Current verified baseline: 441 errors** (from `/tmp/cr_verify4.log`; frontier regenerated to `/tmp/error_files.txt`
+— both are container-local scratch files, gone if the container recycles, but the counts above are durable).
+Frontier is now dominated by deprioritized-mod compat code — top of `/tmp/error_files.txt`: `JourneyTrainMap.java`
+(48, JourneyMap deprioritized), `CreateEmiPlugin.java` (46, EMI deprioritized), `FTBChunksTrainMap.java` (32, FTB
+deprioritized), `CreateREI.java` (30, REI deprioritized). Next real non-deprioritized targets:
+`content/equipment/blueprint/BlueprintEntity.java` (20, already flagged above as a genuinely complex deferred
+multi-part feature port — `BlueprintCraftingInventory` doesn't exist, `CommonHooks.setCraftingPlayer` has no fabric
+port, etc.), `content/contraptions/minecart/capability/MinecartController.java` (18, also already flagged as
+deferred — needs a fabric attachment-API redesign), then the run of 6-8-error files below those (JEI category files
+are priority-mod, worth doing; REI/EMI/sandwichable/ftb ones are not).

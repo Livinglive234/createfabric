@@ -185,7 +185,7 @@ public class SequencedAssemblyRecipe implements Recipe<RecipeWrapper> {
 	}
 
 	@Override
-	public ItemStack assemble(RecipeInput input, HolderLookup.Provider registries) {
+	public ItemStack assemble(RecipeWrapper input, HolderLookup.Provider registries) {
 		return ItemStack.EMPTY;
 	}
 

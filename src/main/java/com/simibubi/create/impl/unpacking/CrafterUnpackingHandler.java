@@ -46,9 +46,9 @@ public enum CrafterUnpackingHandler implements UnpackingHandler {
 
 		try (Transaction t = Transaction.openOuter()) {
 			// insert in the order's defined ordering
-			int max = Math.min(inventories.size(), order.stacks().size());
+			int max = Math.min(inventories.size(), orderContext.stacks().size());
 			outer: for (int i = 0; i < max; i++) {
-				BigItemStack targetStack = order.stacks().get(i);
+				BigItemStack targetStack = orderContext.stacks().get(i);
 				if (targetStack.stack.isEmpty())
 					continue;
 

@@ -28,9 +28,8 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import dan200.computercraft.api.peripheral.PeripheralCapability;
 
-public class DisplayLinkBlockEntity extends LinkWithBulbBlockEntity {
+public class DisplayLinkBlockEntity extends LinkWithBulbBlockEntity implements TransformableBlockEntity {
 
 	protected BlockPos targetOffset;
 

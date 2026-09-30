@@ -51,7 +51,7 @@ public class PackagerLinkBlockEntity extends LinkWithBulbBlockEntity {
 		PackagerBlockEntity packager = getPackager();
 		if (packager == null)
 			return InventorySummary.EMPTY;
-		if (packager.isTargetingSameInventory(identifier))
+		if (packager.isTargetingSameInventory(ignoredHandler != null ? ignoredHandler.identifier() : null))
 			return InventorySummary.EMPTY;
 		return packager.getAvailableItems();
 	}
@@ -85,7 +85,7 @@ public class PackagerLinkBlockEntity extends LinkWithBulbBlockEntity {
 		PackagerBlockEntity packager = getPackager();
 		if (packager == null)
 			return null;
-		if (packager.isTargetingSameInventory(identifier))
+		if (packager.isTargetingSameInventory(ignoredHandler != null ? ignoredHandler.identifier() : null))
 			return null;
 
 		InventorySummary summary = packager.getAvailableItems();

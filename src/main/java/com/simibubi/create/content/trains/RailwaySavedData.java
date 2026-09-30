@@ -13,7 +13,6 @@ import com.simibubi.create.content.trains.graph.EdgePointType;
 import com.simibubi.create.content.trains.graph.TrackGraph;
 import com.simibubi.create.content.trains.signal.SignalBoundary;
 import com.simibubi.create.content.trains.signal.SignalEdgeGroup;
-import com.simibubi.create.foundation.utility.SavedDataUtil;
 
 import net.createmod.catnip.nbt.NBTHelper;
 import net.minecraft.core.HolderLookup;
@@ -29,7 +28,7 @@ public class RailwaySavedData extends SavedData {
 	private Map<UUID, Train> trains = new HashMap<>();
 
 	public static SavedData.Factory<RailwaySavedData> factory() {
-		return new SavedData.Factory<>(RailwaySavedData::new, RailwaySavedData::load);
+		return new SavedData.Factory<>(RailwaySavedData::new, RailwaySavedData::load, net.minecraft.util.datafix.DataFixTypes.LEVEL);
 	}
 
 	@Override

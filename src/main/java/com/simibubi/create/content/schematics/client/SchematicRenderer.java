@@ -32,7 +32,8 @@ public class SchematicRenderer {
 
 	private static final ThreadLocal<ThreadLocalObjects> THREAD_LOCAL_OBJECTS = ThreadLocal.withInitial(ThreadLocalObjects::new);
 
-	private final Map<RenderType, SuperByteBuffer> bufferCache = new LinkedHashMap<>(getLayerCount());
+	// fabric: calling RenderType.chunkBufferLayers() early (e.g. to presize this map) causes issues (#612)
+	private final Map<RenderType, SuperByteBuffer> bufferCache = new LinkedHashMap<>();
 	private boolean changed;
 	protected final SchematicLevel schematic;
 	private final BlockPos anchor;

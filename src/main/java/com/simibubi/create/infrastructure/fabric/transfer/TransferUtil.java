@@ -17,6 +17,7 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -114,8 +115,18 @@ public class TransferUtil {
 	}
 
 	@Nullable
+	public static Storage<ItemVariant> getItemStorage(Level level, BlockPos pos, Direction side) {
+		return ItemStorage.SIDED.find(level, pos, side);
+	}
+
+	@Nullable
 	public static Storage<FluidVariant> getFluidStorage(Level level, BlockPos pos) {
 		return FluidStorage.SIDED.find(level, pos, null);
+	}
+
+	@Nullable
+	public static Storage<FluidVariant> getFluidStorage(Level level, BlockPos pos, Direction side) {
+		return FluidStorage.SIDED.find(level, pos, side);
 	}
 
 	public static FluidStack firstOrEmpty(Storage<FluidVariant> storage) {

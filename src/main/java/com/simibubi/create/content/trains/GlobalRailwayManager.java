@@ -26,6 +26,7 @@ import com.simibubi.create.content.trains.graph.TrackGraph;
 import com.simibubi.create.content.trains.graph.TrackGraphSync;
 import com.simibubi.create.content.trains.graph.TrackGraphVisualizer;
 import com.simibubi.create.content.trains.graph.TrackNodeLocation;
+import com.simibubi.create.content.trains.signal.EdgeGroupColor;
 import com.simibubi.create.content.trains.signal.SignalEdgeGroup;
 import net.createmod.catnip.platform.CatnipServices;
 import com.simibubi.create.infrastructure.config.AllConfigs;
@@ -34,7 +35,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
-import io.github.fabricators_of_create.porting_lib.util.EnvExecutor;
 
 
 public class GlobalRailwayManager {

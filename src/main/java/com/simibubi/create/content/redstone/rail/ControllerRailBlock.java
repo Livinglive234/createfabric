@@ -39,7 +39,7 @@ import net.minecraft.world.level.block.state.properties.RailShape;
 import net.minecraft.world.phys.Vec3;
 
 import io.github.fabricators_of_create.porting_lib.blocks.extensions.MinecartPassHandlerBlock;
-import io.github.fabricators_of_create.porting_lib.util.MinecartAndRailUtil;
+import com.simibubi.create.foundation.mixin.accessor.AbstractMinecartAccessor;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -148,7 +148,7 @@ public class ControllerRailBlock extends BaseRailBlock implements IWrenchable, M
 		if (world.isClientSide)
 			return;
 		Vec3 accelerationVec = Vec3.atLowerCornerOf(getAccelerationVector(state));
-		double targetSpeed = MinecartAndRailUtil.getMaximumSpeed(cart) * state.getValue(POWER) / 15f;
+		double targetSpeed = ((AbstractMinecartAccessor) cart).create$callGetMaxSpeed() * state.getValue(POWER) / 15f;
 
 		if (cart instanceof MinecartFurnace fme) {
 			fme.xPush = accelerationVec.x;

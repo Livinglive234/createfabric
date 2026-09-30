@@ -127,6 +127,13 @@ public class DeployerHandler {
 		public net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant snapshotParticipant() {
 			throw new UnsupportedOperationException();
 		}
+
+		// fabric: same version-skew diamond conflict, this time between LevelReaderInjection and
+		// LevelReaderExtensions' isAreaLoaded(BlockPos, int) defaults - delegate to the wrapped level.
+		@Override
+		public boolean isAreaLoaded(BlockPos pos, int range) {
+			return level.isAreaLoaded(pos, range);
+		}
 	}
 
 	static boolean shouldActivate(ItemStack held, Level world, BlockPos targetPos, @Nullable Direction facing) {
@@ -311,7 +318,10 @@ public class DeployerHandler {
 		boolean holdingSomething = !player.getMainHandItem()
 			.isEmpty();
 		boolean flag1 =
-			!(player.isShiftKeyDown() && holdingSomething) || (stack.doesSneakBypassUse(level, clickedPos, player));
+			// TODO fabric: NeoForge's ItemStack#doesSneakBypassUse(Level, BlockPos, Player) item hook has
+			// no fabric equivalent; NeoForge's own default implementation is `false` for virtually every
+			// item anyway, so hardcoding it here is faithful to vanilla/most-mods behavior.
+			!(player.isShiftKeyDown() && holdingSomething) || false;
 
 		// Use on block
 		if (useBlock != InteractionResult.FAIL && flag1

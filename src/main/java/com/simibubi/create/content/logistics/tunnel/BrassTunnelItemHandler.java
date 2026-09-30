@@ -29,7 +29,7 @@ public class BrassTunnelItemHandler implements SingleSlotStorage<ItemVariant> {
 
 		if (!blockEntity.canTakeItems())
 			return 0;
-		long toInsert = Math.min(ItemHelper.truncateLong(maxAmount), resource.getItem().getMaxStackSize());
+		long toInsert = Math.min(ItemHelper.truncateLong(maxAmount), resource.getItem().getDefaultMaxStackSize());
 
 		blockEntity.setStackToDistribute(resource.toStack(ItemHelper.truncateLong(toInsert)), null, transaction);
 		return toInsert;

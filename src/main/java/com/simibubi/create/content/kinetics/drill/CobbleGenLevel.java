@@ -63,4 +63,11 @@ public class CobbleGenLevel extends WrappedLevel {
 		throw new UnsupportedOperationException();
 	}
 
+	// fabric: same version-skew diamond conflict, this time between LevelReaderInjection and
+	// LevelReaderExtensions' isAreaLoaded(BlockPos, int) defaults - delegate to the wrapped level.
+	@Override
+	public boolean isAreaLoaded(BlockPos pos, int range) {
+		return level.isAreaLoaded(pos, range);
+	}
+
 }

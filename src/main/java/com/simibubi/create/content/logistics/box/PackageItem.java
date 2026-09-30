@@ -214,9 +214,7 @@ public class PackageItem extends Item {
 	}
 
 	public static String getAddress(ItemVariant variant) {
-		String boxAddress = !variant.hasNbt() ? ""
-			: variant.getNbt()
-			.getString("Address");
+		String boxAddress = variant.toStack().getOrDefault(AllDataComponents.PACKAGE_ADDRESS, "");
 		return boxAddress;
 	}
 

@@ -49,7 +49,6 @@ import net.fabricmc.api.Environment;
 import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingHurtEvent;
 import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingKnockBackEvent;
 import io.github.fabricators_of_create.porting_lib.level.events.BlockEvent.EntityPlaceEvent;
-import com.simibubi.create.foundation.item.render.SimpleCustomRenderer;
 
 public class ExtendoGripItem extends Item {
 	public static final int MAX_DAMAGE = 200;
@@ -219,10 +218,10 @@ public class ExtendoGripItem extends Item {
 		return AllConfigs.server().equipment.maxExtendoGripActions.get();
 	}
 
-	@Override
-	public boolean doesSneakBypassUse(ItemStack stack, LevelReader level, BlockPos pos, Player player) {
-		return true;
-	}
+	// TODO fabric: NeoForge's ItemStack#doesSneakBypassUse(Level, BlockPos, Player) item hook (used here
+	// so sneaking with the Extendo Grip still lets you use blocks) has no fabric equivalent - vanilla's
+	// sneak-bypasses-use check isn't a hookable extension point at all in 1.21.1. Restoring this properly
+	// would need a Mixin into the relevant Player/ServerPlayerGameMode use-item-on logic.
 
 	public static void bufferLivingAttackEvent(LivingHurtEvent event) {
 		// Workaround for removed patch to get the attacking entity.

@@ -19,6 +19,7 @@ import net.createmod.catnip.math.BlockFace;
 import net.createmod.ponder.api.level.PonderLevel;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;

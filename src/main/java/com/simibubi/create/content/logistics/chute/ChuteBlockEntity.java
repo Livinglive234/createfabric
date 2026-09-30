@@ -126,8 +126,6 @@ public class ChuteBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 	@Override
 	public void setLevel(Level level) {
 		super.setLevel(level);
-		capAbove = StorageProvider.createForItems(level, worldPosition.above());
-		capBelow = StorageProvider.createForItems(level, worldPosition.below());
 	}
 
 	@Override

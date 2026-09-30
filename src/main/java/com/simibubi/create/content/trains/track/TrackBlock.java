@@ -642,7 +642,7 @@ public class TrackBlock extends Block implements IBE<TrackBlockEntity>, IWrencha
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public <Self extends Affine<Self>> PartialModel prepareTrackOverlay(Affine<Self> affine, BlockGetter world, BlockPos pos, BlockState state,
 																		BezierTrackPointLocation bezierPoint, AxisDirection direction, RenderedTrackOverlayType type) {
 		Vec3 axis = null;

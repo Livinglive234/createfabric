@@ -866,7 +866,7 @@ public class ClipboardScreen extends AbstractSimiScreen {
 		}
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	record Pos2i(int x, int y) {
 	}
 

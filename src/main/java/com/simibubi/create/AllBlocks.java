@@ -323,7 +323,6 @@ import net.fabricmc.fabric.api.tag.convention.v2.ConventionalItemTags;
 import io.github.fabricators_of_create.porting_lib.models.generators.ConfiguredModel;
 import io.github.fabricators_of_create.porting_lib.models.generators.ModelFile;
 import io.github.fabricators_of_create.porting_lib.tags.Tags;
-import com.simibubi.create.content.decoration.CardboardBlockItem;
 import net.fabricmc.fabric.api.registry.FuelRegistry;
 
 @SuppressWarnings("removal")

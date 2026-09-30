@@ -373,7 +373,7 @@ public class PipeConnection {
 		CatnipServices.PLATFORM.executeOnClientOnly(() -> () -> spawnParticlesInner(world, pos, fluid));
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	private void spawnParticlesInner(Level level, BlockPos pos, FluidStack fluid) {
 		if (level == Minecraft.getInstance().level)
 			if (!isRenderEntityWithinDistance(pos))

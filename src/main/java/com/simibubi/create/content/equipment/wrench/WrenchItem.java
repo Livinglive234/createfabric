@@ -1,6 +1,8 @@
 package com.simibubi.create.content.equipment.wrench;
 
-import javax.annotation.Nonnull;
+import java.util.function.Consumer;
+
+import org.jetbrains.annotations.NotNull;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -27,6 +29,7 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import javax.annotation.Nonnull;
 
 public class WrenchItem extends Item {
 
@@ -34,13 +37,14 @@ public class WrenchItem extends Item {
 		super(properties);
 	}
 
-	@Override
-	@Environment(EnvType.CLIENT)
-	public void initializeClient(Consumer<IClientItemExtensions> consumer) {
-		consumer.accept(SimpleCustomRenderer.create(this, new WrenchItemRenderer()));
-	}
+	// TODO fabric: no fabric port yet for IClientItemExtensions (NeoForge-patched Item extension point)
+//	@Override
+//	@Environment(EnvType.CLIENT)
+//	public void initializeClient(Consumer<IClientItemExtensions> consumer) {
+//		consumer.accept(SimpleCustomRenderer.create(this, new WrenchItemRenderer()));
+//	}
 
-	@Nonnull
+	@NotNull
 	@Override
 	public InteractionResult useOn(UseOnContext context) {
 		Player player = context.getPlayer();

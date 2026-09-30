@@ -34,11 +34,12 @@ public class ChuteItemHandler extends SingleVariantStorage<ItemVariant> {
 
 	@Override
 	protected long getCapacity(ItemVariant variant) {
-		return Math.min(64, variant.getItem().getMaxStackSize());
+		return Math.min(64, variant.getItem().getDefaultMaxStackSize());
 	}
 
 	@Override
 	protected ItemVariant getBlankVariant() {
 		return ItemVariant.blank();
 	}
+
 }

@@ -1,6 +1,7 @@
 package com.simibubi.create.infrastructure.data;
 
 import java.util.Map.Entry;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 
 import com.google.gson.JsonElement;
@@ -10,25 +11,26 @@ import com.simibubi.create.AllSoundEvents;
 import com.simibubi.create.Create;
 import com.simibubi.create.compat.archEx.ArchExCompat;
 import com.simibubi.create.foundation.advancement.AllAdvancements;
-import com.simibubi.create.foundation.data.CreateDatamapProvider;
 import com.simibubi.create.foundation.data.DamageTypeTagGen;
-import com.simibubi.create.foundation.data.TagLangGen;
-import com.simibubi.create.foundation.data.recipe.MechanicalCraftingRecipeGen;
-import com.simibubi.create.foundation.data.recipe.ProcessingRecipeGen;
-import com.simibubi.create.foundation.data.recipe.SequencedAssemblyRecipeGen;
-import com.simibubi.create.foundation.data.recipe.StandardRecipeGen;
+import com.simibubi.create.foundation.data.recipe.CreateMechanicalCraftingRecipeGen;
+import com.simibubi.create.foundation.data.recipe.CreateRecipeProvider;
+import com.simibubi.create.foundation.data.recipe.CreateSequencedAssemblyRecipeGen;
+import com.simibubi.create.foundation.data.recipe.CreateStandardRecipeGen;
 import com.simibubi.create.foundation.ponder.CreatePonderPlugin;
 import com.simibubi.create.foundation.utility.FilesHelper;
 import com.tterrag.registrate.providers.ProviderType;
-import com.tterrag.registrate.providers.RegistrateDataProvider;
 
 import net.createmod.ponder.foundation.PonderIndex;
 import net.minecraft.core.RegistrySetBuilder;
+import net.minecraft.data.CachedOutput;
+import net.minecraft.data.DataProvider;
 
 import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
 
 import io.github.fabricators_of_create.porting_lib.data.ExistingFileHelper;
+import com.simibubi.create.foundation.data.TagLangGen;
+import com.tterrag.registrate.providers.RegistrateDataProvider;
 
 public class CreateDatagen implements DataGeneratorEntrypoint {
 	@Override
@@ -36,10 +38,10 @@ public class CreateDatagen implements DataGeneratorEntrypoint {
 		ExistingFileHelper helper = ExistingFileHelper.withResourcesFromArg();
 		FabricDataGenerator.Pack pack = generator.createPack();
 		Create.registrate().setupDatagen(pack, helper);
-		gatherData(pack, helper);
+		gatherData(generator, pack, helper);
 	}
 
-	public static void gatherData(FabricDataGenerator.Pack pack, ExistingFileHelper existingFileHelper) {
+	public static void gatherData(FabricDataGenerator generator, FabricDataGenerator.Pack pack, ExistingFileHelper existingFileHelper) {
 		addExtraRegistrateData();
 
 		// fabric: tag lang
@@ -47,26 +49,20 @@ public class CreateDatagen implements DataGeneratorEntrypoint {
 		// fabric: archex compat
 		ArchExCompat.init(pack);
 
-		// fabric: pretty much redone, make sure all providers make it through merges
+		pack.addProvider((output, registries) -> new CreateRecipeSerializerTagsProvider(output, registries));
+		pack.addProvider((output, registries) -> new CreateContraptionTypeTagsProvider(output, registries, existingFileHelper));
+		pack.addProvider((output, registries) -> new CreateMountedItemStorageTypeTagsProvider(output, registries, existingFileHelper));
+		pack.addProvider(DamageTypeTagGen::new);
+		pack.addProvider(AllAdvancements::new);
+		pack.addProvider(CreateStandardRecipeGen::new);
+		pack.addProvider(CreateMechanicalCraftingRecipeGen::new);
+		pack.addProvider(CreateSequencedAssemblyRecipeGen::new);
+		// TODO fabric: NeoForge's data-map system (oxidizable/waxable copper) has no fabric port
+		pack.addProvider(VanillaHatOffsetGenerator::new);
+		pack.addProvider((output, registries) -> new CreateEnchantmentTagsProvider(output, registries, existingFileHelper));
+		pack.addProvider((FabricDataGenerator.Pack.Factory<CreateWikiBlockInfoProvider>) CreateWikiBlockInfoProvider::new);
 
-		generator.addProvider(event.includeServer(), new CreateRecipeSerializerTagsProvider(output, lookupProvider, existingFileHelper));
-		generator.addProvider(event.includeServer(), new CreateContraptionTypeTagsProvider(output, lookupProvider, existingFileHelper));
-		generator.addProvider(event.includeServer(), new CreateMountedItemStorageTypeTagsProvider(output, lookupProvider, existingFileHelper));
-		generator.addProvider(event.includeServer(), new DamageTypeTagGen(output, lookupProvider, existingFileHelper));
-		generator.addProvider(event.includeServer(), new AllAdvancements(output, lookupProvider));
-		generator.addProvider(event.includeServer(), new StandardRecipeGen(output, lookupProvider));
-		generator.addProvider(event.includeServer(), new MechanicalCraftingRecipeGen(output, lookupProvider));
-		generator.addProvider(event.includeServer(), new SequencedAssemblyRecipeGen(output, lookupProvider));
-		generator.addProvider(event.includeServer(), new CreateDatamapProvider(output, lookupProvider));
-		generator.addProvider(event.includeServer(), new VanillaHatOffsetGenerator(output));
-		generator.addProvider(event.includeServer(), new CuriosDataGenerator(output, lookupProvider, existingFileHelper));
-		generator.addProvider(event.includeServer(), new CreateEnchantmentTagsProvider(output, lookupProvider, existingFileHelper));
-
-		if (event.includeServer()) {
-			ProcessingRecipeGen.registerAll(generator, output, lookupProvider);
-		}
-
-		event.getGenerator().addProvider(true, Create.registrate().setDataProvider(new RegistrateDataProvider(Create.registrate(), Create.ID, event)));
+		CreateRecipeProvider.registerAllProcessing(pack);
 	}
 
 	@Override
@@ -86,6 +82,7 @@ public class CreateDatagen implements DataGeneratorEntrypoint {
 			AllSoundEvents.provideLang(langConsumer);
 			AllKeys.provideLang(langConsumer);
 			providePonderLang(langConsumer);
+			new TagLangGenerator(langConsumer).generate();
 		});
 	}
 

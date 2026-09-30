@@ -4,12 +4,10 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.content.contraptions.Contraption;
-import com.simibubi.create.content.contraptions.Contraption.RenderedBlocks;
-import com.simibubi.create.content.contraptions.ContraptionWorld;
-import com.simibubi.create.foundation.render.fabric.LayerFilteringBakedModel;
+import com.simibubi.create.content.contraptions.render.ClientContraption.RenderedBlocks;
 import com.simibubi.create.foundation.virtualWorld.VirtualRenderWorld;
+import com.simibubi.create.foundation.render.fabric.LayerFilteringBakedModel;
 
-import dev.engine_room.flywheel.api.visualization.VisualizationManager;
 import net.createmod.catnip.render.ShadedBlockSbbBuilder;
 import net.createmod.catnip.render.SuperByteBuffer;
 import net.createmod.catnip.render.SuperByteBufferCache;
@@ -81,30 +79,7 @@ public class ContraptionRenderInfo {
 	}
 
 	public static VirtualRenderWorld setupRenderWorld(Level level, Contraption c) {
-		ContraptionWorld contraptionWorld = c.getContraptionWorld();
-
-		BlockPos origin = c.anchor;
-		int minBuildHeight = contraptionWorld.getMinBuildHeight();
-		int height = contraptionWorld.getHeight();
-		VirtualRenderWorld renderWorld = new VirtualRenderWorld(level, minBuildHeight, height, origin) {
-			@Override
-			public boolean supportsVisualization() {
-				return VisualizationManager.supportsVisualization(level);
-			}
-
-			@Override
-			public ModelData getModelData(BlockPos pos) {
-				return c.modelData.getOrDefault(pos, ModelData.EMPTY);
-			}
-		};
-
-		renderWorld.setBlockEntities(c.presentBlockEntities.values());
-		for (StructureTemplate.StructureBlockInfo info : c.getBlocks()
-			.values())
-			renderWorld.setBlock(info.pos(), info.state(), 0);
-
-		renderWorld.runLightEngine();
-		return renderWorld;
+		return c.getOrCreateClientContraptionLazy().getRenderLevel();
 	}
 
 	private SuperByteBuffer buildStructureBuffer(RenderType layer) {
@@ -114,7 +89,7 @@ public class ContraptionRenderInfo {
 
 		PoseStack poseStack = objects.poseStack;
 		RandomSource random = objects.random;
-		RenderedBlocks blocks = contraption.getRenderedBlocks();
+		RenderedBlocks blocks = contraption.getOrCreateClientContraptionLazy().getRenderedBlocks();
 
 		ShadedBlockSbbBuilder sbbBuilder = objects.sbbBuilder;
 		sbbBuilder.begin();

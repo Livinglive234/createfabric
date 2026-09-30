@@ -59,6 +59,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.Clearable;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -82,7 +83,7 @@ import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
 
 import io.github.fabricators_of_create.porting_lib.util.StorageProvider;
 
-public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, SidedStorageBlockEntity {
+public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, SidedStorageBlockEntity, Clearable {
 
 	private boolean needsUpdate; // fabric: need to delay to avoid doing stuff mid-transaction, causing a crash
 	private boolean areFluidsMoving;
@@ -131,6 +132,8 @@ public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 
 	record Data(List<ItemStack> spoutputBuffer, List<com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack> spoutputFluidBuffer) {
 	}
+
+	private @Nullable HeatLevel cachedHeatLevel;
 
 	public BasinBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);
@@ -245,6 +248,15 @@ public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 		visualizedOutputItems.clear();
 		visualizedOutputFluids.clear();
 	}
+
+	@Override
+	public void clearContent() {
+		spoutputBuffer.clear();
+		inputInventory.clear();
+		outputInventory.clear();
+		filtering.setFilter(ItemStack.EMPTY);
+	}
+
 
 	@Override
 	public void destroy() {
@@ -374,6 +386,8 @@ public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 
 	@Override
 	public void tick() {
+		cachedHeatLevel = null;
+
 		super.tick();
 		if (needsUpdate) {
 			needsUpdate = false;

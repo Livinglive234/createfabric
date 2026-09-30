@@ -8,27 +8,18 @@
   "type": "create:milling",
   "ingredients": [
     {
-      "type": "neoforge:compound",
-      "ingredients": [
-        {
-          "item": "environmental:pink_delphinium"
-        }
-      ]
+      "item": "environmental:pink_delphinium"
     }
   ],
   "processing_time": 50,
   "results": [
     {
       "count": 3,
-      "item": {
-        "id": "minecraft:pink_dye"
-      }
+      "id": "minecraft:pink_dye"
     },
     {
       "chance": 0.1,
-      "item": {
-        "id": "minecraft:pink_dye"
-      }
+      "id": "minecraft:pink_dye"
     }
   ]
 }

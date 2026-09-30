@@ -2,6 +2,8 @@ package com.simibubi.create.content.fluids.hosePulley;
 
 import java.util.function.Supplier;
 
+import org.jetbrains.annotations.Nullable;
+
 import com.simibubi.create.content.fluids.transfer.FluidDrainingBehaviour;
 import com.simibubi.create.content.fluids.transfer.FluidFillingBehaviour;
 import com.simibubi.create.foundation.fluid.FluidHelper;
@@ -16,10 +18,7 @@ import net.minecraft.world.level.material.FlowingFluid;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 
-import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
-import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
@@ -31,7 +30,7 @@ public class HosePulleyFluidHandler implements SingleSlotStorage<FluidVariant> {
 	@Override
 	public long insert(FluidVariant resource, long maxAmount, TransactionContext transaction) {
 		StoragePreconditions.notBlankNotNegative(resource, maxAmount);
-		if (!internalTank.isEmpty() && !internalTank.getFluid().canFill(resource))
+		if (!internalTank.isEmpty() && !internalTank.getFluid().getVariant().equals(resource))
 			return 0;
 		if (resource.isBlank() || !FluidHelper.hasBlockState(resource.getFluid()))
 			return 0;
@@ -60,7 +59,7 @@ public class HosePulleyFluidHandler implements SingleSlotStorage<FluidVariant> {
 
 	@Override
 	public long extract(FluidVariant resource, long maxAmount, TransactionContext transaction) {
-		if (resource != null && !internalTank.isEmpty() && !internalTank.getFluid().canFill(resource))
+		if (resource != null && !internalTank.isEmpty() && !internalTank.getFluid().getVariant().equals(resource))
 			return 0;
 		if (internalTank.getFluidAmount() >= FluidConstants.BUCKET)
 			return internalTank.extract(resource, maxAmount, transaction);
@@ -74,11 +73,11 @@ public class HosePulleyFluidHandler implements SingleSlotStorage<FluidVariant> {
 		long available = FluidConstants.BUCKET + internalTank.getFluidAmount();
 		long drained;
 
-		if (!internalTank.isEmpty() && !internalTank.getFluid()
-				.isFluidEqual(returned) || returned.isEmpty())
+		if (!internalTank.isEmpty() && !FluidStack.isSameFluidSameComponents(internalTank.getFluid(), returned)
+				|| returned.isEmpty())
 			return internalTank.extract(resource, maxAmount, transaction);
 
-		if (resource != null && !returned.canFill(resource))
+		if (resource != null && !returned.getVariant().equals(resource))
 			return 0;
 
 		drained = Math.min(maxAmount, available);

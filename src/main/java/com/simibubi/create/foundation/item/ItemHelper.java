@@ -5,9 +5,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import javax.annotation.Nullable;
-
-import com.simibubi.create.foundation.mixin.accessor.ItemStackHandlerAccessor;
+import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
 
@@ -26,7 +24,6 @@ import com.simibubi.create.foundation.block.IBE;
 import net.createmod.catnip.data.Pair;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.Container;
 import net.minecraft.world.Containers;
@@ -46,8 +43,8 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 
 import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
 import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
-import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
 import com.simibubi.create.infrastructure.fabric.transfer.item.SlottedStackStorage;
+import net.minecraft.core.component.DataComponents;
 
 public class ItemHelper {
 
@@ -73,8 +70,8 @@ public class ItemHelper {
 		ItemStack result = out.copy();
 		result.setCount(in.getCount() * out.getCount());
 
-		while (result.getCount() > result.getOrDefault(DataComponents.MAX_STACK_SIZE, 64)) {
-			stacks.add(result.split(result.getOrDefault(DataComponents.MAX_STACK_SIZE, 64)));
+		while (result.getCount() > result.getMaxStackSize()) {
+			stacks.add(result.split(result.getMaxStackSize()));
 		}
 
 		stacks.add(result);
@@ -85,7 +82,7 @@ public class ItemHelper {
 		for (ItemStack s : stacks) {
 			if (!ItemStack.isSameItemSameComponents(stack, s))
 				continue;
-			int transferred = Math.min(s.getOrDefault(DataComponents.MAX_STACK_SIZE, 64) - s.getCount(), stack.getCount());
+			int transferred = Math.min(s.getMaxStackSize() - s.getCount(), stack.getCount());
 			s.grow(transferred);
 			stack.shrink(transferred);
 		}
@@ -312,7 +309,7 @@ public class ItemHelper {
 	}
 
 	public static boolean canItemStackAmountsStack(ItemStack a, ItemStack b) {
-		return ItemStack.isSameItemSameComponents(a, b) && a.getCount() + b.getCount() <= a.getOrDefault(DataComponents.MAX_STACK_SIZE, 64);
+		return ItemStack.isSameItemSameComponents(a, b) && a.getCount() + b.getCount() <= a.getMaxStackSize();
 	}
 
 	public static int truncateLong(long l) {
@@ -331,7 +328,7 @@ public class ItemHelper {
 		if (entityIn instanceof PackageEntity packageEntity) {
 			return packageEntity.getBox();
 		}
-		return entityIn instanceof ItemEntity ? ((ItemEntity) entityIn).getItem() : ItemStack.EMPTY;
+		return entityIn instanceof ItemEntity itemEntity ? itemEntity.getItem() : ItemStack.EMPTY;
 	}
 
 	public static void fillItemStackHandler(ItemContainerContents contents, ItemStackHandler inv) {
@@ -343,7 +340,7 @@ public class ItemHelper {
 	}
 
 	public static ItemContainerContents containerContentsFromHandler(ItemStackHandler handler) {
-		return ItemContainerContents.fromItems(((ItemStackHandlerAccessor) handler).create$getStacks());
+		return ItemContainerContents.fromItems(handler.getStacks());
 	}
 
 	public static ItemStack limitCountToMaxStackSize(ItemStack stack, boolean simulate) {

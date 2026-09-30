@@ -39,10 +39,12 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.Vec3i;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
+import net.minecraft.world.Clearable;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -55,7 +57,7 @@ import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 
-public class BeltBlockEntity extends KineticBlockEntity implements SidedStorageBlockEntity, RenderDataBlockEntity {
+public class BeltBlockEntity extends KineticBlockEntity implements Clearable, SidedStorageBlockEntity {
 	public Map<Entity, TransportedEntityInfo> passengers;
 	public Optional<DyeColor> color;
 	public int beltLength;
@@ -83,19 +85,6 @@ public class BeltBlockEntity extends KineticBlockEntity implements SidedStorageB
 		color = Optional.empty();
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.BELT.get(),
-				(be, context) -> {
-						if (!BeltBlock.canTransportObjects(be.getBlockState()))
-							return null;
-						if (!be.isRemoved() && be.itemHandler == null)
-							be.initializeItemHandler();
-						return be.itemHandler;
-				}
-		);
-	}
 
 	@Override
 	public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
@@ -190,6 +179,13 @@ public class BeltBlockEntity extends KineticBlockEntity implements SidedStorageB
 		if (!isRemoved() && itemHandler == null)
 			initializeItemHandler();
 		return itemHandler;
+	}
+
+	@Override
+	public void clearContent() {
+		if (inventory != null) {
+			inventory.getTransportedItems().clear();
+		}
 	}
 
 	@Override
@@ -437,7 +433,7 @@ public class BeltBlockEntity extends KineticBlockEntity implements SidedStorageB
 		}
 
 		if (casing != CasingType.NONE)
-			level.levelEvent(2001, worldPosition,
+			level.levelEvent(LevelEvent.PARTICLES_DESTROY_BLOCK, worldPosition,
 				Block.getId(casing == CasingType.ANDESITE ? AllBlocks.ANDESITE_CASING.getDefaultState()
 					: AllBlocks.BRASS_CASING.getDefaultState()));
 		if (blockState.getValue(BeltBlock.CASING) != shouldBlockHaveCasing)
@@ -520,8 +516,10 @@ public class BeltBlockEntity extends KineticBlockEntity implements SidedStorageB
 				if (side.getAxis() == Axis.X)
 					transportedStack.sideOffset *= -1;
 			} else {
-				float extraOffset =
-					BeltHelper.getSegmentBE(level, worldPosition.relative(movementFacing.getOpposite())) != null ? .26f
+				// This creates a smoother transition from belt to belt
+				float extraOffset = transportedStack.prevBeltPosition != 0
+					&& BeltHelper.getSegmentBE(level, worldPosition.relative(movementFacing.getOpposite())) != null
+						? .26f
 						: 0;
 				transportedStack.beltPosition =
 					getDirectionAwareBeltMovementSpeed() > 0 ? index - extraOffset : index + 1 + extraOffset;

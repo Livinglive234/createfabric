@@ -2,17 +2,6 @@ package com.simibubi.create;
 
 import java.util.Random;
 
-import com.simibubi.create.content.logistics.packagePort.AllPackagePortTargetTypes;
-
-import com.simibubi.create.content.logistics.packager.AllUnpackingHandlers;
-
-import net.minecraft.core.registries.BuiltInRegistries;
-
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.ModContainer;
-
-import net.neoforged.neoforge.common.NeoForgeMod;
-
 import org.slf4j.Logger;
 
 import com.google.gson.Gson;
@@ -28,12 +17,14 @@ import com.simibubi.create.content.equipment.potatoCannon.AllPotatoProjectileBlo
 import com.simibubi.create.content.equipment.potatoCannon.AllPotatoProjectileEntityHitActions;
 import com.simibubi.create.content.equipment.potatoCannon.AllPotatoProjectileRenderModes;
 import com.simibubi.create.content.fluids.tank.BoilerHeaters;
+import com.simibubi.create.foundation.block.CopperRegistries;
 import com.simibubi.create.content.kinetics.TorquePropagator;
 import com.simibubi.create.content.kinetics.fan.processing.AllFanProcessingTypes;
 import com.simibubi.create.content.kinetics.mechanicalArm.AllArmInteractionPointTypes;
 import com.simibubi.create.content.logistics.item.filter.attribute.AllItemAttributeTypes;
+import com.simibubi.create.content.logistics.packagePort.AllPackagePortTargetTypes;
+import com.simibubi.create.content.logistics.packager.AllInventoryIdentifiers;
 import com.simibubi.create.content.logistics.packager.AllUnpackingHandlers;
-import com.simibubi.create.content.logistics.packager.fabric.AllInventoryIdentifiers;
 import com.simibubi.create.content.logistics.packagerLink.GlobalLogisticsManager;
 import com.simibubi.create.content.redstone.link.RedstoneLinkNetworkHandler;
 import com.simibubi.create.content.schematics.ServerSchematicLoader;
@@ -48,9 +39,9 @@ import com.simibubi.create.foundation.events.CommonEvents;
 import com.simibubi.create.foundation.item.ItemDescription;
 import com.simibubi.create.foundation.item.KineticStats;
 import com.simibubi.create.foundation.item.TooltipModifier;
-import com.simibubi.create.foundation.recipe.AllIngredients;
 import com.simibubi.create.foundation.ponder.FabricStructureProcessing;
 import com.simibubi.create.foundation.recipe.AllIngredients;
+import com.simibubi.create.impl.registry.CreateDataMapsImpl;
 import com.simibubi.create.impl.registry.CreateRegistriesImpl;
 import com.simibubi.create.infrastructure.command.ServerLagger;
 import com.simibubi.create.infrastructure.config.AllConfigs;
@@ -63,16 +54,14 @@ import net.createmod.catnip.lang.FontHelper;
 import net.createmod.catnip.lang.LangBuilder;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackType;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.level.Level;
-import net.neoforged.bus.api.EventPriority;
-import net.neoforged.fml.ModLoadingContext;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.neoforged.neoforge.registries.RegisterEvent;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 public class Create implements ModInitializer {
 	public static final String ID = "create";
@@ -95,8 +84,8 @@ public class Create implements ModInitializer {
 	/**
 	 * <b>Other mods should not use this field!</b> If you are an addon developer, create your own instance of
 	 * {@link CreateRegistrate}.
-	 * </br
-	 * If you were using this instance to render a callback listener use {@link CreateRegistrateRegistrationCallback#register} instead.
+	 * <p>
+	 * If you were using this instance to register a callback listener use {@link CreateRegistrateRegistrationCallback#register} instead.
 	 */
 	private static final CreateRegistrate REGISTRATE = CreateRegistrate.create(ID)
 		.defaultCreativeTab((ResourceKey<CreativeModeTab>) null)
@@ -117,9 +106,8 @@ public class Create implements ModInitializer {
 		LOGGER.info("{} {} initializing!", NAME, CreateBuildInfo.VERSION);
 
 		AllSoundEvents.prepare();
-		AllTags.init();
 		AllCreativeModeTabs.register();
-		AllArmorMaterials.register(modEventBus);
+		AllArmorMaterials.register();
 		AllDisplaySources.register();
 		AllDisplayTargets.register();
 		AllBlocks.register();
@@ -140,16 +128,14 @@ public class Create implements ModInitializer {
 		AllPackets.register();
 		AllFeatures.register();
 		AllPlacementModifiers.register();
-		AllIngredients.register(modEventBus);
-		AllAttachmentTypes.register(modEventBus);
-		AllDataComponents.register(modEventBus);
-		AllMapDecorationTypes.register(modEventBus);
+		AllAttachmentTypes.register();
+		AllDataComponents.register();
+		AllMapDecorationTypes.register();
 		AllMountedStorageTypes.register();
 
 		AllConfigs.register();
 
-		// TODO - Make these use Registry.register and move them into the RegisterEvent
-		AllPackagePortTargetTypes.register(modEventBus);
+		AllPackagePortTargetTypes.register();
 
 		AllSchematicStateFilters.registerDefaults();
 
@@ -165,6 +151,7 @@ public class Create implements ModInitializer {
 
 		Create.init();
 		Create.onRegister();
+		// fabric: entity attributes are handled per-entity via EntityBuilder#attributes instead
 		AllSoundEvents.register();
 
 		// causes class loading issues or something
@@ -174,11 +161,10 @@ public class Create implements ModInitializer {
 		// fabric exclusive
 		AllIngredients.register();
 		CommonEvents.register();
-		AllPackets.getChannel().initServerListener();
 		FabricStructureProcessing.init();
 		AllBiomeModifiers.bootstrap(); // moved out of datagen
 		CreateRegistriesImpl.registerDatapackRegistries();
-		AllInventoryIdentifiers.registerDefaults();
+		ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new CreateDataMapsImpl());
 	}
 
 	public static void init() {
@@ -198,7 +184,7 @@ public class Create implements ModInitializer {
 			AllOpenPipeEffectHandlers.registerDefaults();
 			AllMountedDispenseItemBehaviors.registerDefaults();
 			AllUnpackingHandlers.registerDefaults();
-			AllFluids.registerFluidInteractions();
+			AllInventoryIdentifiers.registerDefaults();
 			// --
 //		});
 	}
@@ -212,10 +198,8 @@ public class Create implements ModInitializer {
 		AllPotatoProjectileEntityHitActions.init();
 		AllPotatoProjectileBlockHitActions.init();
 
-		if (event.getRegistry() == BuiltInRegistries.TRIGGER_TYPES) {
-			AllAdvancements.register();
-			AllTriggers.register();
-		}
+		AllAdvancements.register();
+		AllTriggers.register();
 	}
 
 	public static LangBuilder lang() {

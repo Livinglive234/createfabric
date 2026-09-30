@@ -5,11 +5,6 @@ import java.util.Collection;
 
 import javax.annotation.Nullable;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-
-import net.neoforged.neoforge.event.tick.PlayerTickEvent;
-
 import org.apache.commons.lang3.mutable.MutableObject;
 
 import com.jamieswhiteshirt.reachentityattributes.ReachEntityAttributes;
@@ -44,6 +39,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 
+
 public class ContraptionHandlerClient {
 
 	@Environment(EnvType.CLIENT)
@@ -51,7 +47,7 @@ public class ContraptionHandlerClient {
 		if (!(player instanceof RemotePlayer remotePlayer))
 			return;
 
-		CompoundTag data = remotePlayer.getPersistentData();
+		CompoundTag data = remotePlayer.getCustomData();
 		if (!data.contains("LastOverrideLimbSwingUpdate"))
 			return;
 
@@ -145,7 +141,7 @@ public class ContraptionHandlerClient {
 	@Environment(EnvType.CLIENT)
 	public static Couple<Vec3> getRayInputs(LocalPlayer player) {
 		Minecraft mc = Minecraft.getInstance();
-		Vec3 origin = RaycastHelper.getTraceOrigin(player);
+		Vec3 origin = player.getEyePosition();
 		double reach = player.blockInteractionRange();
 		if (mc.hitResult != null && mc.hitResult.getLocation() != null)
 			reach = Math.min(mc.hitResult.getLocation()

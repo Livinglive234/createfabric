@@ -11,15 +11,16 @@ import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.content.kinetics.transmission.SplitShaftBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 
-import dan200.computercraft.api.peripheral.PeripheralCapability;
 import net.createmod.catnip.nbt.NBTHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import dan200.computercraft.api.peripheral.PeripheralCapability;
 
 public class SequencedGearshiftBlockEntity extends SplitShaftBlockEntity {
 
@@ -71,15 +72,6 @@ public class SequencedGearshiftBlockEntity extends SplitShaftBlockEntity {
 		poweredPreviously = false;
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		if (Mods.COMPUTERCRAFT.isLoaded()) {
-			event.registerBlockEntity(
-					PeripheralCapability.get(),
-					AllBlockEntityTypes.SEQUENCED_GEARSHIFT.get(),
-					(be, context) -> be.computerBehaviour.getPeripheralCapability()
-			);
-		}
-	}
 
 	@Override
 	public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
@@ -139,7 +131,7 @@ public class SequencedGearshiftBlockEntity extends SplitShaftBlockEntity {
 		if (isPowered == isRunning)
 			return;
 		if (!level.hasNeighborSignal(worldPosition)) {
-			level.setBlock(worldPosition, getBlockState().setValue(SequencedGearshiftBlock.STATE, 0), 3);
+			level.setBlock(worldPosition, getBlockState().setValue(SequencedGearshiftBlock.STATE, 0), Block.UPDATE_ALL);
 			return;
 		}
 		if (getSpeed() == 0)
@@ -175,7 +167,7 @@ public class SequencedGearshiftBlockEntity extends SplitShaftBlockEntity {
 			sequenceContext = null;
 			timer = 0;
 			if (!level.hasNeighborSignal(worldPosition))
-				level.setBlock(worldPosition, getBlockState().setValue(SequencedGearshiftBlock.STATE, 0), 3);
+				level.setBlock(worldPosition, getBlockState().setValue(SequencedGearshiftBlock.STATE, 0), Block.UPDATE_ALL);
 			else
 				sendData();
 			return;
@@ -188,7 +180,7 @@ public class SequencedGearshiftBlockEntity extends SplitShaftBlockEntity {
 		sequenceContext = SequenceContext.fromGearshift(instruction.instruction, getTheoreticalSpeed() * getModifier(),
 			instruction.value);
 		timer = 0;
-		level.setBlock(worldPosition, getBlockState().setValue(SequencedGearshiftBlock.STATE, instructionIndex + 1), 3);
+		level.setBlock(worldPosition, getBlockState().setValue(SequencedGearshiftBlock.STATE, instructionIndex + 1), Block.UPDATE_ALL);
 	}
 
 	public Instruction getInstruction(int instructionIndex) {

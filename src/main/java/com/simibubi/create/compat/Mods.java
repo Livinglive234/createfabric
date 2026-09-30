@@ -6,7 +6,6 @@ import java.util.function.Supplier;
 import net.createmod.catnip.lang.Lang;
 import net.createmod.catnip.registry.RegisteredObjectsHelper;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.ItemLike;
@@ -24,6 +23,7 @@ public enum Mods {
 	COMPUTERCRAFT,
 	CURIOS,
 	DYNAMICTREES,
+	JEI,
 	FUNCTIONALSTORAGE,
 	OCCULTISM,
 	PACKETFIXER,
@@ -36,24 +36,20 @@ public enum Mods {
 	MODERNUI,
 	FTBCHUNKS,
 	JOURNEYMAP,
+	XAEROWORLDMAP,
 	FTBLIBRARY,
 	SODIUM,
 	INVENTORYSORTER,
-
-	// fabric mods
-	SANDWICHABLE,
+	FARMERSDELIGHT,
 	TRINKETS,
-	MODMENU,
-	BOTANIA,
-	SODIUM,
-	INDIUM;
+	SANDWICHABLE;
 
 	private final String id;
-	private final boolean loaded;
+	private final boolean isLoaded;
 
 	Mods() {
 		id = Lang.asId(name());
-		loaded = FabricLoader.getInstance().isModLoaded(id);
+		isLoaded = FabricLoader.getInstance().isModLoaded(id);
 	}
 
 	/**
@@ -88,11 +84,12 @@ public enum Mods {
 	 * @return a boolean of whether the mod is loaded or not based on mod id
 	 */
 	public boolean isLoaded() {
-		return loaded;
-    }
+		return isLoaded;
+	}
 
 	/**
 	 * Simple hook to run code if a mod is installed
+	 *
 	 * @param toRun will be run only if the mod is loaded
 	 * @return Optional.empty() if the mod is not loaded, otherwise an Optional of the return value of the given supplier
 	 */
@@ -104,6 +101,7 @@ public enum Mods {
 
 	/**
 	 * Simple hook to execute code if a mod is installed
+	 *
 	 * @param toExecute will be executed only if the mod is loaded
 	 */
 	public void executeIfInstalled(Supplier<Runnable> toExecute) {

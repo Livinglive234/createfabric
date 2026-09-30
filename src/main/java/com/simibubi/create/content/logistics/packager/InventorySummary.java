@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
-import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
-
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 
@@ -19,6 +17,7 @@ import com.google.common.collect.Lists;
 import com.mojang.serialization.Codec;
 import com.simibubi.create.content.logistics.BigItemStack;
 import com.simibubi.create.content.logistics.stockTicker.LogisticalStockResponsePacket;
+import com.simibubi.create.foundation.item.ItemHelper;
 
 import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.core.BlockPos;
@@ -26,10 +25,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
-
-import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
 import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
 
 public class InventorySummary {
@@ -67,12 +62,12 @@ public class InventorySummary {
 	}
 
 	public void add(StorageView<ItemVariant> view) {
-		int count = TransferUtil.truncateLong(view.getAmount());
+		int count = ItemHelper.truncateLong(view.getAmount());
 		add(view.getResource().toStack(count), count);
 	}
 
 	public void add(ItemVariant variant, long amount) {
-		this.add(variant.toStack(TransferUtil.truncateLong(amount)));
+		this.add(variant.toStack(ItemHelper.truncateLong(amount)));
 	}
 
 	public Map<Item, List<BigItemStack>> getItemMap() {

@@ -8,8 +8,7 @@ import javax.annotation.Nullable;
 
 import com.simibubi.create.AllBlockEntityTypes;
 import com.simibubi.create.api.connectivity.ConnectivityHandler;
-import com.simibubi.create.content.logistics.packager.fabric.InventoryIdentifier;
-import com.simibubi.create.content.logistics.packager.fabric.InventoryIdentifier.MultiBlock;
+import com.simibubi.create.api.packager.InventoryIdentifier;
 import com.simibubi.create.foundation.ICapabilityProvider;
 import com.simibubi.create.foundation.blockEntity.IMultiBlockEntityContainer;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
@@ -21,12 +20,17 @@ import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
 
 import net.createmod.catnip.nbt.NBTHelper;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.BlockPos.MutableBlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
+import net.minecraft.world.Clearable;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -39,7 +43,7 @@ import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 
 import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
 
-public class ItemVaultBlockEntity extends SmartBlockEntity implements IMultiBlockEntityContainer.Inventory, SidedStorageBlockEntity {
+public class ItemVaultBlockEntity extends SmartBlockEntity implements IMultiBlockEntityContainer.Inventory, SidedStorageBlockEntity, Clearable {
 	protected Storage<ItemVariant> itemCapability;
 	protected InventoryIdentifier invId;
 
@@ -49,7 +53,6 @@ public class ItemVaultBlockEntity extends SmartBlockEntity implements IMultiBloc
 	protected boolean updateConnectivity;
 	protected int radius;
 	protected int length;
-	protected Axis axis;
 
 	protected boolean recalculateComparatorsNextTick = false;
 
@@ -97,12 +100,85 @@ public class ItemVaultBlockEntity extends SmartBlockEntity implements IMultiBloc
 		level.blockEntityChanged(controllerBE.worldPosition);
 
 		BlockPos pos = controllerBE.getBlockPos();
-		for (int y = 0; y < controllerBE.radius; y++) {
-			for (int z = 0; z < (controllerBE.axis == Axis.X ? controllerBE.radius : controllerBE.length); z++) {
-				for (int x = 0; x < (controllerBE.axis == Axis.Z ? controllerBE.radius : controllerBE.length); x++) {
-					level.updateNeighbourForOutputSignal(pos.offset(x, y, z), getBlockState().getBlock());
+
+		int radius = controllerBE.radius;
+		int length = controllerBE.length;
+
+		Axis axis = controllerBE.getMainConnectionAxis();
+
+		int zMax = (axis == Axis.X ? radius : length);
+		int xMax = (axis == Axis.Z ? radius : length);
+
+		// Mutable position we'll use for the blocks we poke updates at.
+		MutableBlockPos updatePos = new MutableBlockPos();
+		// Mutable position we'll set to be the vault block next to the update position.
+		MutableBlockPos provokingPos = new MutableBlockPos();
+
+		for (int y = 0; y < radius; y++) {
+			for (int z = 0; z < zMax; z++) {
+				for (int x = 0; x < xMax; x++) {
+					// Emulate the effect of this line, but only for blocks along the surface of the vault:
+					// level.updateNeighbourForOutputSignal(pos.offset(x, y, z), getBlockState().getBlock());
+					// That method pokes all 6 directions in order. We want to preserve the update order
+					// but skip the wasted work of checking other blocks that are part of this vault.
+
+					var sectionX = SectionPos.blockToSectionCoord(pos.getX() + x);
+					var sectionZ = SectionPos.blockToSectionCoord(pos.getZ() + z);
+					if (!level.hasChunk(sectionX, sectionZ)) {
+						continue;
+					}
+					provokingPos.setWithOffset(pos, x, y, z);
+
+					// Technically all this work is wasted for the inner blocks of a long 3x3 vault, but
+					// this is fast enough and relatively simple.
+					Block provokingBlock = level.getBlockState(provokingPos).getBlock();
+
+					// The 6 calls below should match the order of Direction.values().
+					if (y == 0) {
+						updateComaratorsInner(level, provokingBlock, provokingPos, updatePos, Direction.DOWN);
+					}
+					if (y == radius - 1) {
+						updateComaratorsInner(level, provokingBlock, provokingPos, updatePos, Direction.UP);
+					}
+					if (z == 0) {
+						updateComaratorsInner(level, provokingBlock, provokingPos, updatePos, Direction.NORTH);
+					}
+					if (z == zMax - 1) {
+						updateComaratorsInner(level, provokingBlock, provokingPos, updatePos, Direction.SOUTH);
+					}
+					if (x == 0) {
+						updateComaratorsInner(level, provokingBlock, provokingPos, updatePos, Direction.WEST);
+					}
+					if (x == xMax - 1) {
+						updateComaratorsInner(level, provokingBlock, provokingPos, updatePos, Direction.EAST);
+					}
 				}
 			}
+		}
+	}
+
+	/**
+	 * See {@link Level#updateNeighbourForOutputSignal(BlockPos, Block)}.
+	 */
+	private static void updateComaratorsInner(Level level, Block provokingBlock, BlockPos provokingPos, MutableBlockPos updatePos, Direction direction) {
+		updatePos.setWithOffset(provokingPos, direction);
+
+		var sectionX = SectionPos.blockToSectionCoord(updatePos.getX());
+		var sectionZ = SectionPos.blockToSectionCoord(updatePos.getZ());
+		if (!level.hasChunk(sectionX, sectionZ)) {
+			return;
+		}
+
+		BlockState blockstate = level.getBlockState(updatePos);
+		// fabric: NeoForge's BlockState#onNeighborChange has no fabric port; deliver the same
+		// neighbor-changed notification via the vanilla API instead.
+		level.neighborChanged(blockstate, updatePos, provokingBlock, provokingPos, false);
+		if (blockstate.isRedstoneConductor(level, updatePos)) {
+			updatePos.move(direction);
+			blockstate = level.getBlockState(updatePos);
+			// fabric: NeoForge's BlockState#getWeakChanges has no fabric port; always notifying is
+			// behavior-preserving (neighborChanged is safe to call redundantly), just slightly less optimized.
+			level.neighborChanged(blockstate, updatePos, provokingBlock, provokingPos, false);
 		}
 	}
 
@@ -162,7 +238,7 @@ public class ItemVaultBlockEntity extends SmartBlockEntity implements IMultiBloc
 		BlockState state = getBlockState();
 		if (ItemVaultBlock.isVault(state)) {
 			state = state.setValue(ItemVaultBlock.LARGE, false);
-			getLevel().setBlock(worldPosition, state, 22);
+			getLevel().setBlock(worldPosition, state, Block.UPDATE_CLIENTS | Block.UPDATE_INVISIBLE | Block.UPDATE_KNOWN_SHAPE);
 		}
 
 		itemCapability = null;
@@ -243,6 +319,11 @@ public class ItemVaultBlockEntity extends SmartBlockEntity implements IMultiBloc
 		}
 	}
 
+	@Override
+	public void clearContent() {
+		inventory.clear();
+	}
+
 	public ItemStackHandler getInventoryOfBlock() {
 		return inventory;
 	}
@@ -292,7 +373,7 @@ public class ItemVaultBlockEntity extends SmartBlockEntity implements IMultiBloc
 		Storage<ItemVariant> combinedInvWrapper = new CombinedStorage<>(List.of(invs));
 		combinedInvWrapper = new VersionedInventoryWrapper(combinedInvWrapper);
 		itemCapability = combinedInvWrapper;
-		this.invId = new MultiBlock(vaultPositions);
+		this.invId = new InventoryIdentifier.MultiBlock(vaultPositions);
 	}
 
 	public static int getMaxLength(int radius) {
@@ -311,7 +392,7 @@ public class ItemVaultBlockEntity extends SmartBlockEntity implements IMultiBloc
 	public void notifyMultiUpdated() {
 		BlockState state = this.getBlockState();
 		if (ItemVaultBlock.isVault(state)) { // safety
-			level.setBlock(getBlockPos(), state.setValue(ItemVaultBlock.LARGE, radius > 2), 6);
+			level.setBlock(getBlockPos(), state.setValue(ItemVaultBlock.LARGE, radius > 2), Block.UPDATE_CLIENTS | Block.UPDATE_INVISIBLE);
 		}
 		itemCapability = null;
 		setChanged();

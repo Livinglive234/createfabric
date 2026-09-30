@@ -136,6 +136,17 @@ public class ItemStackHandler implements SlottedStackStorage {
 		return this.getInternalSlot(slot).getStack();
 	}
 
+	public List<ItemStack> getStacks() {
+		List<ItemStack> stacks = new ArrayList<>(this.slots.size());
+		for (Slot slot : this.slots)
+			stacks.add(slot.getStack());
+		return stacks;
+	}
+
+	public void clear() {
+		setSize(this.slots.size());
+	}
+
 	public void setStackInSlot(int slot, ItemStack stack) {
 		this.getInternalSlot(slot).setNewStack(stack);
 	}

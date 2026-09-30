@@ -8,18 +8,13 @@
   "type": "create:crushing",
   "ingredients": [
     {
-      "type": "neoforge:compound",
-      "ingredients": [
-        {
-          "item": "minecraft:end_stone"
-        }
-      ]
+      "item": "minecraft:end_stone"
     }
   ],
   "processing_time": 350,
   "results": [
     {
-      "item": "exnihilosequentia:crushed_end_stone"
+      "id": "exnihilosequentia:crushed_end_stone"
     }
   ]
 }

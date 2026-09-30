@@ -8,22 +8,23 @@ import com.simibubi.create.api.contraption.BlockMovementChecks;
 import com.simibubi.create.foundation.utility.AdventureUtil;
 import com.simibubi.create.foundation.utility.fabric.ReachUtil;
 
-import net.createmod.catnip.platform.CatnipServices;
+import io.github.fabricators_of_create.porting_lib.level.events.BlockEvent;
+
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.levelWrappers.RayTraceLevel;
 import net.createmod.catnip.placement.IPlacementHelper;
+import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
-import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
@@ -32,14 +33,16 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult.Type;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.context.BlockPlaceContext;
 
 public class SuperGlueHandler {
 
-	public static void glueListensForBlockPlacement(BlockPlaceContext context, BlockPos pos, BlockState state) {
-		LevelAccessor world = context.getLevel();
-		Player entity = context.getPlayer();
+	public static void glueListensForBlockPlacement(BlockEvent.EntityPlaceEvent event) {
+		LevelAccessor world = (LevelAccessor) event.getLevel();
+		BlockPos pos = event.getPos();
 
-		if (entity == null || AdventureUtil.isAdventure(entity))
+		if (!(event.getEntity() instanceof Player entity) || AdventureUtil.isAdventure(entity))
 			return;
 		if (world.isClientSide())
 			return;
@@ -52,7 +55,7 @@ public class SuperGlueHandler {
 				CatnipServices.NETWORK.sendToClientsTrackingAndSelf(entity, new GlueEffectPacket(pos, direction, true));
 		}
 
-		glueInOffHandAppliesOnBlockPlace(context.getLevel().getBlockState(context.getClickedPos().relative(context.getClickedFace().getOpposite())), pos, entity);
+		glueInOffHandAppliesOnBlockPlace(event.getPlacedAgainst(), pos, entity);
 	}
 
 	public static void glueInOffHandAppliesOnBlockPlace(BlockState placedAgainst, BlockPos pos, Player placer) {
@@ -100,8 +103,8 @@ public class SuperGlueHandler {
 				CatnipServices.NETWORK.sendToClientsTrackingEntity(entity,
 					new GlueEffectPacket(gluePos, face, true));
 			}
-			if (placer.level() instanceof ServerLevel serverLevel)
-				itemstack.hurtAndBreak(1, serverLevel, placer, $ -> SuperGlueItem.onBroken(placer));
+
+			itemstack.hurtAndBreak(1, placer, EquipmentSlot.MAINHAND);
 		}
 	}
 

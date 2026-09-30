@@ -23,9 +23,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-
 public class SuperGlueItem extends Item {
 
 	public static InteractionResult glueItemAlwaysPlacesWhenUsed(Player player, Level world, InteractionHand hand, BlockHitResult hitResult) {
@@ -33,7 +30,7 @@ public class SuperGlueItem extends Item {
 			BlockState blockState = world
 				.getBlockState(hitResult
 					.getBlockPos());
-			if (blockState.getBlock()instanceof AbstractChassisBlock cb)
+			if (blockState.getBlock() instanceof AbstractChassisBlock cb)
 				if (cb.getGlueableSide(blockState, hitResult.getDirection()) != null)
 					return InteractionResult.PASS;
 		}
@@ -51,8 +48,6 @@ public class SuperGlueItem extends Item {
 	public boolean canAttackBlock(BlockState pState, Level pLevel, BlockPos pPos, Player pPlayer) {
 		return false;
 	}
-
-	public static void onBroken(Player player) {}
 
 	@Environment(EnvType.CLIENT)
 	public static void spawnParticles(Level world, BlockPos pos, Direction direction, boolean fullBlock) {

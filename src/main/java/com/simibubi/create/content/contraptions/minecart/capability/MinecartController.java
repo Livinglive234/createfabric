@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import io.github.fabricators_of_create.porting_lib.util.MinecartAndRailUtil;
 
@@ -290,6 +290,9 @@ public class MinecartController implements INBTSerializable<CompoundTag> {
 			return;
 
 		@Nullable AbstractMinecart cart = cart();
+		if (cart == null)
+			return;
+
 		if (stall && cart != null) {
 			stallData.set(internal, Optional.of(new StallData(cart)));
 			sendData();

@@ -3,12 +3,16 @@ package com.simibubi.create.content.logistics.packager.repackager;
 import java.util.List;
 
 import com.simibubi.create.AllBlockEntityTypes;
+import com.simibubi.create.compat.Mods;
+import com.simibubi.create.content.logistics.BigItemStack;
 import com.simibubi.create.content.logistics.box.PackageItem;
 import com.simibubi.create.content.logistics.crate.BottomlessItemHandler;
-import com.simibubi.create.content.logistics.packager.PackageDefragmenter;
 import com.simibubi.create.content.logistics.packager.PackagerBlockEntity;
 import com.simibubi.create.content.logistics.packager.PackagerItemHandler;
 import com.simibubi.create.content.logistics.packager.PackagingRequest;
+import com.simibubi.create.compat.computercraft.events.PackageEvent;
+import com.simibubi.create.compat.computercraft.events.RepackageEvent;
+import com.simibubi.create.foundation.item.ItemHelper;
 
 import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
 import io.github.fabricators_of_create.porting_lib.transfer.callbacks.TransactionCallback;
@@ -25,23 +29,13 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.StorageUtil;
-import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
-import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
-import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
-
-import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
-import io.github.fabricators_of_create.porting_lib.transfer.callbacks.TransactionCallback;
-
 public class RepackagerBlockEntity extends PackagerBlockEntity {
 
-	public PackageDefragmenter defragmenter;
+	public PackageRepackageHelper repackageHelper;
 
 	public RepackagerBlockEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
 		super(typeIn, pos, state);
-		defragmenter = new PackageDefragmenter();
+		repackageHelper = new PackageRepackageHelper();
 	}
 
 	public boolean unwrapBox(ItemStack box, TransactionContext ctx) {
@@ -60,18 +54,17 @@ public class RepackagerBlockEntity extends PackagerBlockEntity {
 		if (!targetIsCreativeCrate && !anySpace)
 			return false;
 
-		TransactionSuccessCallback.register(ctx, () -> {
-			previouslyUnwrapped = box;
-			animationInward = true;
-			animationTicks = CYCLE;
-			notifyUpdate();
-		});
-
+		computerBehaviour.prepareComputerEvent(new PackageEvent(box, "package_received"));
+		previouslyUnwrapped = box;
+		animationInward = true;
+		animationTicks = CYCLE;
+		notifyUpdate();
 		return true;
 	}
 
 	@Override
-	public void recheckIfLinksPresent() {}
+	public void recheckIfLinksPresent() {
+	}
 
 	@Override
 	public boolean redstoneModeActive() {
@@ -79,14 +72,16 @@ public class RepackagerBlockEntity extends PackagerBlockEntity {
 	}
 
 	public void attemptToSend(List<PackagingRequest> queuedRequests) {
-		if (queuedRequests == null && (!heldBox.isEmpty() || animationTicks != 0))
+		if (!heldBox.isEmpty() || animationTicks != 0 || buttonCooldown > 0)
+			return;
+		if (!queuedExitingPackages.isEmpty())
 			return;
 
 		Storage<ItemVariant> targetInv = targetInventory.getInventory();
 		if (targetInv == null || targetInv instanceof PackagerItemHandler)
 			return;
 
-		attemptToDefrag(targetInv);
+		attemptToRepackage(targetInv);
 		if (heldBox.isEmpty())
 			return;
 
@@ -95,8 +90,8 @@ public class RepackagerBlockEntity extends PackagerBlockEntity {
 			PackageItem.addAddress(heldBox, signBasedAddress);
 	}
 
-	protected void attemptToDefrag(Storage<ItemVariant> targetInv) {
-		defragmenter.clear();
+	protected void attemptToRepackage(Storage<ItemVariant> targetInv) {
+		repackageHelper.clear();
 		int completedOrderId = -1;
 
 		for (StorageView<ItemVariant> view : targetInv.nonEmptyViews()) {
@@ -104,7 +99,9 @@ public class RepackagerBlockEntity extends PackagerBlockEntity {
 			if (!PackageItem.isPackage(resource))
 				continue;
 
-			if (!defragmenter.isFragmented(resource)) {
+			ItemStack extracted = resource.toStack(ItemHelper.truncateLong(view.getAmount()));
+
+			if (!repackageHelper.isFragmented(extracted)) {
 				try (Transaction t = Transaction.openOuter()) {
 					if (view.extract(resource, 1, t) == 1) {
 						t.commit();
@@ -112,13 +109,13 @@ public class RepackagerBlockEntity extends PackagerBlockEntity {
 						animationInward = false;
 						animationTicks = CYCLE;
 						notifyUpdate();
+						return;
 					}
 				}
-				return;
+				continue;
 			}
 
-			ItemStack stack = resource.toStack(TransferUtil.truncateLong(view.getAmount()));
-			completedOrderId = defragmenter.addPackageFragment(stack);
+			completedOrderId = repackageHelper.addPackageFragment(extracted);
 			if (completedOrderId != -1)
 				break;
 		}
@@ -126,14 +123,14 @@ public class RepackagerBlockEntity extends PackagerBlockEntity {
 		if (completedOrderId == -1)
 			return;
 
-		List<ItemStack> boxesToExport = defragmenter.repack(completedOrderId);
+		List<BigItemStack> boxesToExport = repackageHelper.repack(completedOrderId, level.getRandom());
 
 		try (Transaction t = Transaction.openOuter()) {
 			for (StorageView<ItemVariant> view : targetInv.nonEmptyViews()) {
 				ItemVariant resource = view.getResource();
 				if (!PackageItem.isPackage(resource))
 					continue;
-				if (PackageItem.getOrderId(resource) != completedOrderId)
+				if (PackageItem.getOrderId(resource.toStack()) != completedOrderId)
 					continue;
 				view.extract(resource, view.getAmount(), t);
 			}
@@ -143,14 +140,14 @@ public class RepackagerBlockEntity extends PackagerBlockEntity {
 				return;
 			}
 
-			heldBox = boxesToExport.get(0)
+			heldBox = boxesToExport.get(0).stack
 				.copy();
 			animationInward = false;
 			animationTicks = CYCLE;
 
 			for (int i = 1; i < boxesToExport.size(); i++) {
-				ItemStack stack = boxesToExport.get(i);
-				if (targetInv.insert(ItemVariant.of(stack), stack.getCount(), t) != stack.getCount()) {
+				BigItemStack box = boxesToExport.get(i);
+				if (targetInv.insert(ItemVariant.of(box.stack), box.count, t) != box.count) {
 					return;
 				}
 			}
@@ -158,15 +155,16 @@ public class RepackagerBlockEntity extends PackagerBlockEntity {
 			t.commit();
 		}
 
-		notifyUpdate();
-	}
+		if (boxesToExport.isEmpty())
+			return;
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-			Capabilities.ItemHandler.BLOCK,
-			AllBlockEntityTypes.REPACKAGER.get(),
-			(be, context) -> be.inventory
-		);
+		if (computerBehaviour.hasAttachedComputer()) {
+			for (BigItemStack box : boxesToExport) {
+				computerBehaviour.prepareComputerEvent(new RepackageEvent(box.stack, box.count));
+			}
+		}
+		queuedExitingPackages.addAll(boxesToExport);
+		notifyUpdate();
 	}
 
 }

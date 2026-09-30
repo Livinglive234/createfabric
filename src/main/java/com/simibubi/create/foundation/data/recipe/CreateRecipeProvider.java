@@ -1,61 +1,41 @@
 package com.simibubi.create.foundation.data.recipe;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider;
-
 import net.minecraft.core.HolderLookup;
-
-import org.jetbrains.annotations.NotNull;
 
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllItems;
-import com.simibubi.create.AllTags;
-import com.simibubi.create.Create;
+import com.simibubi.create.AllTags.AllItemTags;
 
-import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
-import net.minecraft.data.recipes.RecipeOutput;
-import net.minecraft.data.recipes.RecipeProvider;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.ItemLike;
 
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider;
+import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
 
 import io.github.fabricators_of_create.porting_lib.tags.Tags;
+import com.simibubi.create.AllTags;
 
-public abstract class CreateRecipeProvider extends FabricRecipeProvider {
+public abstract class CreateRecipeProvider {
 
-	protected final List<GeneratedRecipe> all = new ArrayList<>();
-
-	public CreateRecipeProvider(FabricDataOutput output, CompletableFuture<HolderLookup.Provider> registries) {
-		super(output, registries);
-	}
-
-	@Override
-	public void buildRecipes(@NotNull RecipeOutput pRecipeOutput) {
-		all.forEach(c -> c.register(pRecipeOutput));
-		Create.LOGGER.info("{} registered {} recipe{}", getName(), all.size(), all.size() == 1 ? "" : "s");
-	}
-
-	protected GeneratedRecipe register(GeneratedRecipe recipe) {
-		all.add(recipe);
-		return recipe;
-	}
-
-	@FunctionalInterface
-	public interface GeneratedRecipe {
-		void register(RecipeOutput output);
-	}
-
-	protected static class Marker {
+	public static void registerAllProcessing(FabricDataGenerator.Pack pack) {
+		pack.addProvider((o, r) -> new CreateCrushingRecipeGen(o, r));
+		pack.addProvider((o, r) -> new CreateMillingRecipeGen(o, r));
+		pack.addProvider((o, r) -> new CreateCuttingRecipeGen(o, r));
+		pack.addProvider((o, r) -> new CreateWashingRecipeGen(o, r));
+		pack.addProvider((o, r) -> new CreatePolishingRecipeGen(o, r));
+		pack.addProvider((o, r) -> new CreateDeployingRecipeGen(o, r));
+		pack.addProvider((o, r) -> new CreateMixingRecipeGen(o, r));
+		pack.addProvider((o, r) -> new CreateCompactingRecipeGen(o, r));
+		pack.addProvider((o, r) -> new CreatePressingRecipeGen(o, r));
+		pack.addProvider((o, r) -> new CreateFillingRecipeGen(o, r));
+		pack.addProvider((o, r) -> new CreateEmptyingRecipeGen(o, r));
+		pack.addProvider((o, r) -> new CreateHauntingRecipeGen(o, r));
+		pack.addProvider((o, r) -> new CreateItemApplicationRecipeGen(o, r));
 	}
 
 	protected static class I {
@@ -169,7 +149,7 @@ public abstract class CreateRecipeProvider extends FabricRecipeProvider {
 		}
 
 		static TagKey<Item> wheatFlour() {
-			return AllTags.commonItemTag("flours/wheat");
+			return AllItemTags.WHEAT_FLOURS.tag;
 		}
 
 		static TagKey<Item> copper() {

@@ -16,6 +16,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.dispenser.BlockSource;
 import net.minecraft.core.dispenser.DefaultDispenseItemBehavior;
 import net.minecraft.core.dispenser.DispenseItemBehavior;
+import net.minecraft.core.dispenser.ProjectileDispenseBehavior;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -28,7 +29,12 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.Vec3;
 
-import io.github.fabricators_of_create.porting_lib.event.common.TagsUpdatedCallback;
+import io.github.fabricators_of_create.porting_lib.core.util.ServerLifecycleHooks;
+
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.resources.ResourceManager;
 
 public enum DispenserBehaviorConverter implements SimpleRegistry.Provider<Item, MountedDispenseBehavior> {
 	INSTANCE;
@@ -60,7 +66,17 @@ public enum DispenserBehaviorConverter implements SimpleRegistry.Provider<Item, 
 	@Override
 	public void onRegister(Runnable invalidate) {
 		// invalidate if the blacklist tag might've changed
-		TagsUpdatedCallback.EVENT.register(registries -> invalidate.run());
+		ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
+			@Override
+			public ResourceLocation getFabricId() {
+				return Create.asResource("dispenser_behavior_converter");
+			}
+
+			@Override
+			public void onResourceManagerReload(ResourceManager manager) {
+				invalidate.run();
+			}
+		});
 	}
 
 	@Nullable

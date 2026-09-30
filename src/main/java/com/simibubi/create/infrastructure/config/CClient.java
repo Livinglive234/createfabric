@@ -1,10 +1,11 @@
 package com.simibubi.create.infrastructure.config;
 
 
-import com.simibubi.create.infrastructure.fabric.util.FluidUnit;
+import com.simibubi.create.content.logistics.stockTicker.StockKeeperRequestScreen.SearchSyncMode;
 
 import net.createmod.catnip.config.ConfigBase;
 import net.createmod.catnip.config.ui.ConfigAnnotations;
+import com.simibubi.create.infrastructure.fabric.util.FluidUnit;
 
 public class CClient extends ConfigBase {
 
@@ -21,8 +22,6 @@ public class CClient extends ConfigBase {
 	public final ConfigFloat fanParticleDensity = f(.5f, 0, 1, "fanParticleDensity",
 			Comments.fanParticleDensity);
 	public final ConfigFloat filterItemRenderDistance = f(10f, 1, "filterItemRenderDistance", Comments.filterItemRenderDistance);
-	public final ConfigBool rainbowDebug = b(false, "enableRainbowDebug",
-			Comments.rainbowDebug);
 	// no group
 	public final ConfigInt mainMenuConfigButtonRow = i(2, 0, 4, "mainMenuConfigButtonRow",
 			Comments.mainMenuConfigButtonRow);
@@ -73,6 +72,12 @@ public class CClient extends ConfigBase {
 	public final ConfigFloat ambientVolumeCap = f(.1f, 0, 1, "ambientVolumeCap",
 			Comments.ambientVolumeCap);
 
+	//integration
+	public final ConfigGroup integration = group(1, "recipeViewerIntegration",
+		Comments.integration);
+	public final ConfigEnum<SearchSyncMode> syncRecipeViewerSearch = e(SearchSyncMode.SYNC_BOTH, "syncRecipeViewerSearch",
+		Comments.syncRecipeViewerSearch);
+
 	//train group
 	public final ConfigGroup trains = group(1, "trains", Comments.trains);
 	public final ConfigFloat mountedZoomMultiplier = f(3, 0, "mountedZoomMultiplier", Comments.mountedZoomMultiplier);
@@ -105,7 +110,6 @@ public class CClient extends ConfigBase {
 				"[in Blocks]",
 				"Maximum Distance to the player at which items in Blocks' filter slots will be displayed"
 		};
-		static String rainbowDebug = "Show kinetic debug information on blocks while the F3-Menu is open.";
 		static String[] mainMenuConfigButtonRow = new String[]{
 				"Choose the menu row that the Create config button appears on in the main menu",
 				"Set to 0 to disable the button altogether"
@@ -157,6 +161,8 @@ public class CClient extends ConfigBase {
 		static String fluidFogSettings = "Configure your vision range when submerged in Create's custom fluids";
 		static String honeyTransparencyMultiplier = "The vision range through honey will be multiplied by this factor";
 		static String chocolateTransparencyMultiplier = "The vision range though chocolate will be multiplied by this factor";
+		static String integration = "Mod Integration and Recipe Viewer";
+		static String syncRecipeViewerSearch = "How Recipe Viewer search should interact with Stock Keepers";
 	}
 
 }

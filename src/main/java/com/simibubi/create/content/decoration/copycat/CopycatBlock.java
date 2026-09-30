@@ -3,14 +3,13 @@ package com.simibubi.create.content.decoration.copycat;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import io.github.fabricators_of_create.porting_lib.block.CustomFrictionBlock;
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomFrictionBlock;
 
-import io.github.fabricators_of_create.porting_lib.block.CustomLandingEffectsBlock;
-import io.github.fabricators_of_create.porting_lib.block.CustomRunningEffectsBlock;
-import io.github.fabricators_of_create.porting_lib.block.ExplosionResistanceBlock;
-import io.github.fabricators_of_create.porting_lib.block.LightEmissiveBlock;
-
-import io.github.fabricators_of_create.porting_lib.enchant.EnchantmentBonusBlock;
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomLandingEffectsBlock;
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomRunningEffectsBlock;
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomSoundTypeBlock;
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.ExplosionResistanceBlock;
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.LightEmissiveBlock;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -64,26 +63,15 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-import java.util.function.BiFunction;
-import java.util.function.Function;
-
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.block.BlockPickInteractionAware;
-
-import io.github.fabricators_of_create.porting_lib.block.CustomFrictionBlock;
-import io.github.fabricators_of_create.porting_lib.block.CustomLandingEffectsBlock;
-import io.github.fabricators_of_create.porting_lib.block.CustomRunningEffectsBlock;
-import io.github.fabricators_of_create.porting_lib.block.CustomSoundTypeBlock;
-import io.github.fabricators_of_create.porting_lib.block.ExplosionResistanceBlock;
-import io.github.fabricators_of_create.porting_lib.block.LightEmissiveBlock;
-import io.github.fabricators_of_create.porting_lib.block.ValidSpawnBlock;
-import io.github.fabricators_of_create.porting_lib.enchant.EnchantmentBonusBlock;
-
+// TODO fabric-port: ValidSpawnBlock isn't present in the current Porting-Lib snapshot; drops mob-spawn-validity override
+// TODO fabric-port: EnchantmentBonusBlock isn't present in the current Porting-Lib snapshot either, and vanilla's
+// Block no longer has a getEnchantPowerBonus hook to override at all - copycat blocks can no longer pass through a
+// wrapped material's enchanting-table power bonus (e.g. mimicking a bookshelf)
+// TODO fabric-port: forge reworked friction/light-emission around NeoForge's ModelData/AuxiliaryLightManager and added
+// canHarvestBlock/hasDynamicLightEmission - this still uses the older Porting-Lib maybeMaterialAs approach
 public abstract class CopycatBlock extends Block implements IBE<CopycatBlockEntity>, IWrenchable,
 		CustomFrictionBlock, CustomSoundTypeBlock, LightEmissiveBlock, ExplosionResistanceBlock,
-		BlockPickInteractionAware, CustomLandingEffectsBlock, CustomRunningEffectsBlock, EnchantmentBonusBlock,
-		ValidSpawnBlock {
+		BlockPickInteractionAware, CustomLandingEffectsBlock, CustomRunningEffectsBlock {
 
 	public CopycatBlock(Properties pProperties) {
 		super(pProperties);
@@ -122,7 +110,7 @@ public abstract class CopycatBlock extends Block implements IBE<CopycatBlockEnti
 
 	@Override
 	protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
-								 if (player == null || AdventureUtil.isAdventure(pPlayer))
+		if (player == null || AdventureUtil.isAdventure(player))
 			return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
 
 		Direction face = hitResult.getDirection();
@@ -355,7 +343,7 @@ public abstract class CopycatBlock extends Block implements IBE<CopycatBlockEnti
 		return maybeMaterialAs(
 				level, pos, BlockPickInteractionAware.class,
 				(mat, block) -> block.getPickedStack(mat, level, pos, player, result),
-				mat -> mat.getBlock().getCloneItemStack(level, pos, mat)
+				mat -> level instanceof LevelReader lr ? mat.getBlock().getCloneItemStack(lr, pos, mat) : new ItemStack(mat.getBlock())
 		);
 	}
 
@@ -375,15 +363,6 @@ public abstract class CopycatBlock extends Block implements IBE<CopycatBlockEnti
 				level, pos, CustomRunningEffectsBlock.class,
 				(material, block) -> block.addRunningEffects(material, level, pos, entity),
 				material -> false // default to vanilla, true cancels
-		);
-	}
-
-	@Override
-	public float getEnchantPowerBonus(BlockState state, LevelReader level, BlockPos pos) {
-		return maybeMaterialAs(
-				level, pos, EnchantmentBonusBlock.class,
-				(material, block) -> block.getEnchantPowerBonus(material, level, pos),
-				material -> EnchantmentBonusBlock.super.getEnchantPowerBonus(material, level, pos)
 		);
 	}
 

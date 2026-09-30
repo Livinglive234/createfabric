@@ -6,7 +6,7 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.function.Predicate;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.content.fluids.pipes.EncasedPipeBlock;
@@ -88,7 +88,7 @@ public abstract class FluidTransportBehaviour extends BlockEntityBehaviour {
 			boolean sendUpdate = false;
 			for (PipeConnection connection : connections) {
 				sendUpdate |= connection.flipFlowsIfPressureReversed();
-				connection.manageSource(world, pos);
+				connection.manageSource(world, pos, blockEntity);
 			}
 			if (sendUpdate)
 				blockEntity.notifyUpdate();

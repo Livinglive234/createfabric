@@ -114,11 +114,7 @@ public class BeltFunnelInteractionHandler {
 			funnelBE.flap(true);
 			funnelBE.onTransfer(toInsert);
 			currentItem.stack = remainder;
-			beltInventory.belt.sendData();
-			// fabric: fully inserted, early exit to avoid inserting an empty stack on next loop
-			if (remainder.isEmpty()) {
-				return false;
-			}
+			beltInventory.belt.notifyUpdate();
 			if (blocking)
 				return true;
 		}

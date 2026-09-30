@@ -1,16 +1,21 @@
 package com.simibubi.create.foundation.item;
 
-import com.simibubi.create.foundation.blockEntity.SyncedBlockEntity;
+import java.util.function.BiPredicate;
+import java.util.function.Consumer;
 
+import org.jetbrains.annotations.NotNull;
+
+import com.simibubi.create.foundation.blockEntity.SyncedBlockEntity;
 import com.simibubi.create.infrastructure.fabric.item.ItemUtils;
 import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
 
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 
-import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
-
-import java.util.function.Consumer;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ItemStack;
 
 public class SmartInventory extends ItemStackHandler {
 
@@ -19,8 +24,17 @@ public class SmartInventory extends ItemStackHandler {
 	protected boolean stackNonStackables;
 	protected int stackSize;
 
+	private SyncedBlockEntity blockEntity;
+	private Consumer<Integer> updateCallback;
+	private BiPredicate<Integer, ItemStack> isValid = super::isItemValid;
+
 	public SmartInventory(int slots, SyncedBlockEntity be) {
 		this(slots, be, 64, false);
+	}
+
+	public SmartInventory(int slots, SyncedBlockEntity be, BiPredicate<Integer, ItemStack> isValid) {
+		this(slots, be, 64, false);
+		this.isValid = isValid;
 	}
 
 	public SmartInventory(int slots, SyncedBlockEntity be, int stackSize, boolean stackNonStackables) {
@@ -85,11 +99,6 @@ public class SmartInventory extends ItemStackHandler {
 		return super.extract(resource, maxAmount, transaction);
 	}
 
-	// fabric: merge SyncedStackHandler, it exists only to be wrapped, and removing it allows avoiding extending RecipeWrapper
-
-	private SyncedBlockEntity blockEntity;
-	private Consumer<Integer> updateCallback;
-
 	@Override
 	protected void onContentsChanged(int slot) {
 		super.onContentsChanged(slot);
@@ -102,4 +111,24 @@ public class SmartInventory extends ItemStackHandler {
 	public int getSlotLimit(int slot) {
 		return Math.min(stackNonStackables ? 64 : super.getSlotLimit(slot), stackSize);
 	}
+
+	@Override
+	public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+		return isValid.test(slot, stack);
+	}
+
+	public int getStackLimit(int slot, @NotNull ItemStack stack) {
+		return Math.min(getSlotLimit(slot), stack.getMaxStackSize());
+	}
+
+	@Override
+	public CompoundTag serializeNBT(HolderLookup.Provider registries) {
+		return super.serializeNBT(registries);
+	}
+
+	@Override
+	public void deserializeNBT(HolderLookup.Provider registries, CompoundTag nbt) {
+		super.deserializeNBT(registries, nbt);
+	}
+
 }

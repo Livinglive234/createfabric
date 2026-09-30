@@ -1,7 +1,5 @@
 package com.simibubi.create.content.trains.entity;
 
-import java.util.Objects;
-
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.content.contraptions.render.ContraptionEntityRenderer;
 
@@ -14,6 +12,7 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.phys.Vec3;
+import java.util.Objects;
 
 public class CarriageContraptionEntityRenderer extends ContraptionEntityRenderer<CarriageContraptionEntity> {
 
@@ -98,8 +97,9 @@ public class CarriageContraptionEntityRenderer extends ContraptionEntityRenderer
 	}
 
 	public static int getBogeyLightCoords(CarriageContraptionEntity entity, CarriageBogey bogey, float partialTicks) {
-		var lightPos = BlockPos.containing(
-			Objects.requireNonNullElseGet(bogey.getAnchorPosition(), () -> entity.getLightProbePosition(partialTicks)));
+		var anchorPosition = bogey.getAnchorPosition();
+
+		var lightPos = BlockPos.containing(anchorPosition == null ? entity.getLightProbePosition(partialTicks) : anchorPosition);
 
 		return LightTexture.pack(entity.level().getBrightness(LightLayer.BLOCK, lightPos),
 			entity.level().getBrightness(LightLayer.SKY, lightPos));

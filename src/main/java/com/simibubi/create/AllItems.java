@@ -3,18 +3,19 @@ package com.simibubi.create;
 import static com.simibubi.create.AllTags.AllItemTags.CREATE_INGOTS;
 import static com.simibubi.create.AllTags.AllItemTags.CRUSHED_RAW_MATERIALS;
 import static com.simibubi.create.AllTags.AllItemTags.PLATES;
-import static com.simibubi.create.AllTags.commonItemTag;
-import static com.simibubi.create.foundation.data.recipe.CompatMetals.ALUMINUM;
-import static com.simibubi.create.foundation.data.recipe.CompatMetals.LEAD;
-import static com.simibubi.create.foundation.data.recipe.CompatMetals.NICKEL;
-import static com.simibubi.create.foundation.data.recipe.CompatMetals.OSMIUM;
-import static com.simibubi.create.foundation.data.recipe.CompatMetals.PLATINUM;
-import static com.simibubi.create.foundation.data.recipe.CompatMetals.QUICKSILVER;
-import static com.simibubi.create.foundation.data.recipe.CompatMetals.SILVER;
-import static com.simibubi.create.foundation.data.recipe.CompatMetals.TIN;
-import static com.simibubi.create.foundation.data.recipe.CompatMetals.URANIUM;
+import static com.simibubi.create.foundation.data.recipe.CommonMetal.ALUMINUM;
+import static com.simibubi.create.foundation.data.recipe.CommonMetal.LEAD;
+import static com.simibubi.create.foundation.data.recipe.CommonMetal.NICKEL;
+import static com.simibubi.create.foundation.data.recipe.CommonMetal.OSMIUM;
+import static com.simibubi.create.foundation.data.recipe.CommonMetal.PLATINUM;
+import static com.simibubi.create.foundation.data.recipe.CommonMetal.QUICKSILVER;
+import static com.simibubi.create.foundation.data.recipe.CommonMetal.SILVER;
+import static com.simibubi.create.foundation.data.recipe.CommonMetal.TIN;
+import static com.simibubi.create.foundation.data.recipe.CommonMetal.URANIUM;
 
 import com.simibubi.create.AllTags.AllItemTags;
+import com.simibubi.create.api.data.datamaps.BlazeBurnerFuel;
+import com.simibubi.create.api.registry.CreateDataMaps;
 import com.simibubi.create.content.contraptions.glue.SuperGlueItem;
 import com.simibubi.create.content.contraptions.minecart.MinecartCouplingItem;
 import com.simibubi.create.content.contraptions.mounted.MinecartContraptionItem;
@@ -56,7 +57,10 @@ import com.simibubi.create.content.legacy.ShadowSteelItem;
 import com.simibubi.create.content.logistics.box.PackageItem;
 import com.simibubi.create.content.logistics.box.PackageStyles;
 import com.simibubi.create.content.logistics.box.PackageStyles.PackageStyle;
+import com.simibubi.create.content.logistics.filter.AttributeFilterItem;
 import com.simibubi.create.content.logistics.filter.FilterItem;
+import com.simibubi.create.content.logistics.filter.ListFilterItem;
+import com.simibubi.create.content.logistics.filter.PackageFilterItem;
 import com.simibubi.create.content.logistics.tableCloth.ShoppingListItem;
 import com.simibubi.create.content.materials.ExperienceNuggetItem;
 import com.simibubi.create.content.processing.burner.BlazeBurnerBlockItem;
@@ -69,8 +73,7 @@ import com.simibubi.create.content.trains.schedule.ScheduleItem;
 import com.simibubi.create.foundation.data.AssetLookup;
 import com.simibubi.create.foundation.data.BuilderTransformers;
 import com.simibubi.create.foundation.data.CreateRegistrate;
-import com.simibubi.create.foundation.data.recipe.CompatMetals;
-import com.simibubi.create.foundation.item.CombustibleItem;
+import com.simibubi.create.foundation.data.recipe.CommonMetal;
 import com.simibubi.create.foundation.item.ItemDescription;
 import com.simibubi.create.foundation.item.TagDependentIngredientItem;
 import com.simibubi.create.infrastructure.fabric.HelmetOverlay;
@@ -91,9 +94,9 @@ import net.minecraft.world.item.ArmorMaterials;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.SwordItem;
-import net.neoforged.neoforge.common.Tags;
+import io.github.fabricators_of_create.porting_lib.tags.Tags;
+import net.fabricmc.fabric.api.tag.convention.v2.ConventionalItemTags;
 
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.registry.FuelRegistry;
 
 public class AllItems {
@@ -104,22 +107,21 @@ public class AllItems {
 	}
 
 	public static final ItemEntry<Item>
-		WHEAT_FLOUR = taggedIngredient("wheat_flour", commonItemTag("flours/wheat"), commonItemTag("flours")),
-		DOUGH = taggedIngredient("dough", commonItemTag("doughs"), commonItemTag("doughs/wheat")),
+		WHEAT_FLOUR = taggedIngredient("wheat_flour", AllItemTags.FLOURS.tag, AllItemTags.WHEAT_FLOURS.tag),
+		DOUGH = taggedIngredient("dough", AllItemTags.FOODS_DOUGH_WHEAT.tag),
 		CINDER_FLOUR = ingredient("cinder_flour"), ROSE_QUARTZ = ingredient("rose_quartz"),
 		POLISHED_ROSE_QUARTZ = ingredient("polished_rose_quartz"), POWDERED_OBSIDIAN = ingredient("powdered_obsidian"),
-		STURDY_SHEET = taggedIngredient("sturdy_sheet", commonItemTag("obsidian_plates"), PLATES.tag),
+		STURDY_SHEET = taggedIngredient("sturdy_sheet", AllItemTags.OBSIDIAN_PLATES.tag, PLATES.tag),
 		PROPELLER = ingredient("propeller"), WHISK = ingredient("whisk"), BRASS_HAND = ingredient("brass_hand"),
 		CRAFTER_SLOT_COVER = ingredient("crafter_slot_cover"), ELECTRON_TUBE = ingredient("electron_tube"),
 		TRANSMITTER = ingredient("transmitter"), PULP = ingredient("pulp");
 
-	public static final ItemEntry<CombustibleItem> CARDBOARD = REGISTRATE.item("cardboard", CombustibleItem::new)
-		.tag(commonItemTag("plates/cardboard"))
-		.onRegister(i -> i.setBurnTime(1000))
+	public static final ItemEntry<Item> CARDBOARD = REGISTRATE.item("cardboard", Item::new)
+		.tag(AllItemTags.CARDBOARD_PLATES.tag, PLATES.tag)
+		.burnTime(1000)
 		.register();
 
 	public static final ItemEntry<SequencedAssemblyItem>
-
 		INCOMPLETE_PRECISION_MECHANISM = sequencedIngredient("incomplete_precision_mechanism"),
 		INCOMPLETE_REINFORCED_SHEET = sequencedIngredient("unprocessed_obsidian_sheet"),
 		INCOMPLETE_TRACK = sequencedIngredient("incomplete_track");
@@ -130,19 +132,21 @@ public class AllItems {
 		.tag(AllItemTags.UPRIGHT_ON_BELT.tag)
 		.register();
 
-	public static final ItemEntry<CombustibleItem> BLAZE_CAKE = REGISTRATE.item("blaze_cake", CombustibleItem::new)
-		.tag(AllItemTags.BLAZE_BURNER_FUEL_SPECIAL.tag, AllItemTags.UPRIGHT_ON_BELT.tag)
-		.onRegister(i -> i.setBurnTime(6400))
+	public static final ItemEntry<Item> BLAZE_CAKE = REGISTRATE.item("blaze_cake", Item::new)
+		.tag(AllItemTags.UPRIGHT_ON_BELT.tag)
+		.onRegister(item -> CreateDataMaps.SUPERHEATED_BLAZE_BURNER_FUELS.put(item, new BlazeBurnerFuel(3200)))
+		.burnTime(6400)
 		.register();
 
-	public static final ItemEntry<CombustibleItem> CREATIVE_BLAZE_CAKE =
-		REGISTRATE.item("creative_blaze_cake", CombustibleItem::new)
+	public static final ItemEntry<Item> CREATIVE_BLAZE_CAKE =
+		REGISTRATE.item("creative_blaze_cake", Item::new)
 			.properties(p -> p.rarity(Rarity.EPIC))
 			.tag(AllItemTags.UPRIGHT_ON_BELT.tag)
-			.onRegister(i -> i.setBurnTime(Short.MAX_VALUE)) // fabric: furnaces are limited to Short values without Forge patches
+			.burnTime(Short.MAX_VALUE) // fabric: furnaces are limited to Short values without Forge patches
 			.register();
 
 	public static final ItemEntry<Item> BAR_OF_CHOCOLATE = REGISTRATE.item("bar_of_chocolate", Item::new)
+		.tag(ConventionalItemTags.FOODS, AllItemTags.FOODS_CHOCOLATE.tag)
 		.properties(p -> p.food(new FoodProperties.Builder().nutrition(6)
 			.saturationModifier(0.3F)
 			.build()))
@@ -150,25 +154,28 @@ public class AllItems {
 		.register();
 
 	public static final ItemEntry<Item> SWEET_ROLL = REGISTRATE.item("sweet_roll", Item::new)
+		.tag(ConventionalItemTags.FOODS)
 		.properties(p -> p.food(new FoodProperties.Builder().nutrition(6)
 			.saturationModifier(0.8F)
 			.build()))
 		.register();
 
 	public static final ItemEntry<Item> CHOCOLATE_BERRIES = REGISTRATE.item("chocolate_glazed_berries", Item::new)
+		.tag(ConventionalItemTags.FOODS, ConventionalItemTags.BERRY_FOODS)
 		.properties(p -> p.food(new FoodProperties.Builder().nutrition(7)
 			.saturationModifier(0.8F)
 			.build()))
 		.register();
 
 	public static final ItemEntry<Item> HONEYED_APPLE = REGISTRATE.item("honeyed_apple", Item::new)
+		.tag(ConventionalItemTags.FOODS, ConventionalItemTags.FRUIT_FOODS)
 		.properties(p -> p.food(new FoodProperties.Builder().nutrition(8)
 			.saturationModifier(0.8F)
 			.build()))
 		.register();
 
 	public static final ItemEntry<BuildersTeaItem> BUILDERS_TEA = REGISTRATE.item("builders_tea", BuildersTeaItem::new)
-		.tag(AllItemTags.UPRIGHT_ON_BELT.tag)
+		.tag(AllItemTags.UPRIGHT_ON_BELT.tag, ConventionalItemTags.FOODS, AllItemTags.DRINKS_TEA.tag)
 		.properties(p -> p
 			.stacksTo(16)
 			.food(new FoodProperties.Builder()
@@ -184,6 +191,7 @@ public class AllItems {
 
 	public static final ItemEntry<CardboardSwordItem> CARDBOARD_SWORD =
 		REGISTRATE.item("cardboard_sword", CardboardSwordItem::new)
+			.burnTime(1000)
 			.properties(p -> p.stacksTo(1))
 			.properties(p -> p.attributes(SwordItem.createAttributes(AllToolMaterials.CARDBOARD, 3, 1)))
 			.onRegister(i -> FuelRegistry.INSTANCE.add(i, 1000))
@@ -192,11 +200,11 @@ public class AllItems {
 			.register();
 
 	public static final ItemEntry<Item> RAW_ZINC =
-		taggedIngredient("raw_zinc", commonItemTag("raw_materials/zinc"), commonItemTag("raw_materials"));
+		taggedIngredient("raw_zinc", CommonMetal.ZINC.rawOres, ConventionalItemTags.RAW_MATERIALS);
 
 	public static final ItemEntry<Item> ANDESITE_ALLOY = taggedIngredient("andesite_alloy", CREATE_INGOTS.tag),
-		ZINC_INGOT = taggedIngredient("zinc_ingot", commonItemTag("zinc_ingots"), CREATE_INGOTS.tag),
-		BRASS_INGOT = taggedIngredient("brass_ingot", commonItemTag("brass_ingots"), CREATE_INGOTS.tag);
+		ZINC_INGOT = taggedIngredient("zinc_ingot", CommonMetal.ZINC.ingots, CREATE_INGOTS.tag),
+		BRASS_INGOT = taggedIngredient("brass_ingot", CommonMetal.BRASS.ingots, CREATE_INGOTS.tag);
 
 	public static final ItemEntry<ChromaticCompoundItem> CHROMATIC_COMPOUND =
 		REGISTRATE.item("chromatic_compound", ChromaticCompoundItem::new)
@@ -214,10 +222,10 @@ public class AllItems {
 			.properties(p -> p.rarity(Rarity.UNCOMMON))
 			.register();
 
-	public static final ItemEntry<Item>
-		COPPER_NUGGET = taggedIngredient("copper_nugget", commonItemTag("copper_nuggets"), net.neoforged.neoforge.common.Tags.Items.NUGGETS),
-		ZINC_NUGGET = taggedIngredient("zinc_nugget", commonItemTag("zinc_nuggets"), net.neoforged.neoforge.common.Tags.Items.NUGGETS),
-		BRASS_NUGGET = taggedIngredient("brass_nugget", commonItemTag("brass_nuggets"), net.neoforged.neoforge.common.Tags.Items.NUGGETS);
+	public static final ItemEntry<Item> COPPER_NUGGET =
+		taggedIngredient("copper_nugget", CommonMetal.COPPER.nuggets, Tags.Items.NUGGETS),
+		ZINC_NUGGET = taggedIngredient("zinc_nugget", CommonMetal.ZINC.nuggets, Tags.Items.NUGGETS),
+		BRASS_NUGGET = taggedIngredient("brass_nugget", CommonMetal.BRASS.nuggets, Tags.Items.NUGGETS);
 
 	public static final ItemEntry<ExperienceNuggetItem> EXP_NUGGET =
 		REGISTRATE.item("experience_nugget", ExperienceNuggetItem::new)
@@ -226,11 +234,11 @@ public class AllItems {
 			.lang("Nugget of Experience")
 			.register();
 
-	public static final ItemEntry<Item>
-		COPPER_SHEET = taggedIngredient("copper_sheet", commonItemTag("copper_plates"), PLATES.tag),
-		BRASS_SHEET = taggedIngredient("brass_sheet", commonItemTag("brass_plates"), PLATES.tag),
-		IRON_SHEET = taggedIngredient("iron_sheet", commonItemTag("iron_plates"), PLATES.tag),
-		GOLDEN_SHEET = taggedIngredient("golden_sheet", commonItemTag("gold_plates"), PLATES.tag, ItemTags.PIGLIN_LOVED),
+	public static final ItemEntry<Item> COPPER_SHEET =
+		taggedIngredient("copper_sheet", CommonMetal.COPPER.plates, PLATES.tag),
+		BRASS_SHEET = taggedIngredient("brass_sheet", CommonMetal.BRASS.plates, PLATES.tag),
+		IRON_SHEET = taggedIngredient("iron_sheet", CommonMetal.IRON.plates, PLATES.tag),
+		GOLDEN_SHEET = taggedIngredient("golden_sheet", CommonMetal.GOLD.plates, PLATES.tag, ItemTags.PIGLIN_LOVED),
 
 	CRUSHED_IRON = taggedIngredient("crushed_raw_iron", CRUSHED_RAW_MATERIALS.tag),
 		CRUSHED_GOLD = taggedIngredient("crushed_raw_gold", CRUSHED_RAW_MATERIALS.tag, ItemTags.PIGLIN_LOVED),
@@ -262,12 +270,6 @@ public class AllItems {
 
 	public static final ItemEntry<GogglesItem> GOGGLES = REGISTRATE.item("goggles", GogglesItem::new)
 		.properties(p -> p.stacksTo(1))
-		.properties(p -> {
-			if (p instanceof FabricItemSettings fp) {
-				fp.equipmentSlot(GogglesItem::getEquipmentSlot);
-			}
-			return p;
-		})
 		.onRegister(CreateRegistrate.itemModel(() -> GogglesModel::new))
 		.lang("Engineer's Goggles")
 		.register();
@@ -275,6 +277,7 @@ public class AllItems {
 	public static final ItemEntry<SuperGlueItem> SUPER_GLUE = REGISTRATE.item("super_glue", SuperGlueItem::new)
 		.properties(p -> p.stacksTo(1)
 			.durability(99))
+		.tag(ItemTags.DURABILITY_ENCHANTABLE)
 		.register();
 
 	public static final ItemEntry<MinecartCouplingItem> MINECART_COUPLING =
@@ -310,60 +313,56 @@ public class AllItems {
 					COPPER_BACKTANK_PLACEABLE))
 			.properties(p -> p.durability(-1)) // fabric: Item#canBeDepleted() isn't enough to disable durability, so we need to set its maxDamage to -1 as well
 			.model(AssetLookup.customGenericItemModel("_", "item"))
-			.tag(AllItemTags.PRESSURIZED_AIR_SOURCES.tag, AllItemTags.DIVING_ARMOR.tag)
+			.tag(AllItemTags.PRESSURIZED_AIR_SOURCES.tag)
 			.tag(ItemTags.CHEST_ARMOR)
 			.register(),
 
-		NETHERITE_BACKTANK = REGISTRATE
-			.item("netherite_backtank",
-				p -> new BacktankItem.Layered(ArmorMaterials.NETHERITE, p, Create.asResource("netherite_diving"),
-					NETHERITE_BACKTANK_PLACEABLE))
-			.model(AssetLookup.customGenericItemModel("_", "item"))
-			.properties(p -> p.fireResistant().durability(-1)) // fabric: Item#canBeDepleted() isn't enough to disable durability, so we need to set its maxDamage to -1 as well
-			.tag(AllItemTags.PRESSURIZED_AIR_SOURCES.tag, AllItemTags.DIVING_ARMOR.tag)
-			.tag(ItemTags.CHEST_ARMOR)
-			.register();
+	NETHERITE_BACKTANK = REGISTRATE
+		.item("netherite_backtank",
+			p -> new BacktankItem.Layered(ArmorMaterials.NETHERITE, p, Create.asResource("netherite_diving"),
+				NETHERITE_BACKTANK_PLACEABLE))
+		.model(AssetLookup.customGenericItemModel("_", "item"))
+		.properties(p -> p.fireResistant().durability(-1)) // fabric: Item#canBeDepleted() isn't enough to disable durability, so we need to set its maxDamage to -1 as well
+		.tag(AllItemTags.PRESSURIZED_AIR_SOURCES.tag, AllItemTags.DIVING_ARMOR.tag)
+		.tag(ItemTags.CHEST_ARMOR)
+		.register();
 
 	public static final ItemEntry<? extends DivingHelmetItem>
+		COPPER_DIVING_HELMET = REGISTRATE
+		.item("copper_diving_helmet",
+			p -> new DivingHelmetItem(AllArmorMaterials.COPPER, p, Create.asResource("copper_diving")))
+		.properties(p -> p.durability(Type.HELMET.getDurability(7)))
+		.tag(ItemTags.HEAD_ARMOR)
+		.register(),
 
-		COPPER_DIVING_HELMET =
-		REGISTRATE
-			.item("copper_diving_helmet",
-				p -> new DivingHelmetItem(AllArmorMaterials.COPPER, p, Create.asResource("copper_diving")))
-			.properties(p -> p.durability(Type.HELMET.getDurability(7)))
-			.tag(ItemTags.HEAD_ARMOR, AllItemTags.DIVING_ARMOR.tag)
-			.register(),
-
-		NETHERITE_DIVING_HELMET = REGISTRATE
-			.item("netherite_diving_helmet",
-				p -> new DivingHelmetItem(ArmorMaterials.NETHERITE, p, Create.asResource("netherite_diving")))
-			.properties(p -> p.fireResistant().durability(Type.HELMET.getDurability(37)))
-			.tag(ItemTags.HEAD_ARMOR, AllItemTags.DIVING_ARMOR.tag)
-			.register();
+	NETHERITE_DIVING_HELMET = REGISTRATE
+		.item("netherite_diving_helmet",
+			p -> new DivingHelmetItem(ArmorMaterials.NETHERITE, p, Create.asResource("netherite_diving")))
+		.properties(p -> p.fireResistant().durability(Type.HELMET.getDurability(37)))
+		.tag(ItemTags.HEAD_ARMOR)
+		.register();
 
 	public static final ItemEntry<? extends DivingBootsItem>
+		COPPER_DIVING_BOOTS = REGISTRATE
+		.item("copper_diving_boots",
+			p -> new DivingBootsItem(AllArmorMaterials.COPPER, p, Create.asResource("copper_diving")))
+		.properties(p -> p.durability(Type.BOOTS.getDurability(7)))
+		.tag(ItemTags.FOOT_ARMOR)
+		.register(),
 
-		COPPER_DIVING_BOOTS =
-		REGISTRATE
-			.item("copper_diving_boots",
-				p -> new DivingBootsItem(AllArmorMaterials.COPPER, p, Create.asResource("copper_diving")))
-			.properties(p -> p.durability(Type.BOOTS.getDurability(7)))
-			.tag(ItemTags.FOOT_ARMOR, AllItemTags.DIVING_ARMOR.tag)
-			.register(),
-
-		NETHERITE_DIVING_BOOTS = REGISTRATE
-			.item("netherite_diving_boots",
-				p -> new DivingBootsItem(ArmorMaterials.NETHERITE, p, Create.asResource("netherite_diving")))
-			.properties(p -> p.fireResistant().durability(Type.BOOTS.getDurability(37)))
-			.tag(ItemTags.FOOT_ARMOR, AllItemTags.DIVING_ARMOR.tag)
-			.register();
+	NETHERITE_DIVING_BOOTS = REGISTRATE
+		.item("netherite_diving_boots",
+			p -> new DivingBootsItem(ArmorMaterials.NETHERITE, p, Create.asResource("netherite_diving")))
+		.properties(p -> p.fireResistant().durability(Type.BOOTS.getDurability(37)))
+		.tag(ItemTags.FOOT_ARMOR)
+		.register();
 
 	public static final ItemEntry<? extends BaseArmorItem>
 
 		CARDBOARD_HELMET = REGISTRATE.item("cardboard_helmet", p -> new CardboardArmorItem(ArmorItem.Type.HELMET, p))
 			.properties(p -> p.durability(Type.HELMET.getDurability(4)))
-			.tag(ItemTags.HEAD_ARMOR, ItemTags.TRIMMABLE_ARMOR)
-			.onRegister(i -> FuelRegistry.INSTANCE.add(i, 1000))
+			.tag(ItemTags.HEAD_ARMOR)
+			.burnTime(1000)
 			.onRegisterAfter(Registries.ITEM, v -> ItemDescription.useKey(v, "item.create.cardboard_armor"))
 			.model(TrimmableArmorModelGenerator::generate)
 			.onRegister(item -> HelmetOverlay.REGISTRY.register(item, new CardboardArmorStealthOverlay()))
@@ -372,8 +371,8 @@ public class AllItems {
 		CARDBOARD_CHESTPLATE =
 			REGISTRATE.item("cardboard_chestplate", p -> new CardboardArmorItem(ArmorItem.Type.CHESTPLATE, p))
 				.properties(p -> p.durability(Type.CHESTPLATE.getDurability(4)))
-				.tag(ItemTags.CHEST_ARMOR, ItemTags.TRIMMABLE_ARMOR)
-				.onRegister(i -> FuelRegistry.INSTANCE.add(i, 1000))
+				.tag(ItemTags.CHEST_ARMOR)
+				.burnTime(1000)
 				.onRegisterAfter(Registries.ITEM, v -> ItemDescription.useKey(v, "item.create.cardboard_armor"))
 				.model(TrimmableArmorModelGenerator::generate)
 				.register(),
@@ -381,19 +380,19 @@ public class AllItems {
 		CARDBOARD_LEGGINGS =
 			REGISTRATE.item("cardboard_leggings", p -> new CardboardArmorItem(ArmorItem.Type.LEGGINGS, p))
 				.properties(p -> p.durability(Type.LEGGINGS.getDurability(4)))
-				.tag(ItemTags.LEG_ARMOR, ItemTags.TRIMMABLE_ARMOR)
-				.onRegister(i -> FuelRegistry.INSTANCE.add(i, 1000))
+				.tag(ItemTags.LEG_ARMOR)
+				.burnTime(1000)
 				.onRegisterAfter(Registries.ITEM, v -> ItemDescription.useKey(v, "item.create.cardboard_armor"))
 				.model(TrimmableArmorModelGenerator::generate)
 				.register(),
 
 		CARDBOARD_BOOTS = REGISTRATE.item("cardboard_boots", p -> new CardboardArmorItem(ArmorItem.Type.BOOTS, p))
 			.properties(p -> p.durability(Type.BOOTS.getDurability(4)))
-			.tag(ItemTags.FOOT_ARMOR, ItemTags.TRIMMABLE_ARMOR)
-			.onRegister(i -> FuelRegistry.INSTANCE.add(i, 1000))
-			.onRegisterAfter(Registries.ITEM, v -> ItemDescription.useKey(v, "item.create.cardboard_armor"))
-			.model(TrimmableArmorModelGenerator::generate)
-			.register();
+			.tag(ItemTags.FOOT_ARMOR)
+			.burnTime(1000)
+		.onRegisterAfter(Registries.ITEM, v -> ItemDescription.useKey(v, "item.create.cardboard_armor"))
+		.model(TrimmableArmorModelGenerator::generate)
+		.register();
 
 	public static final ItemEntry<SandPaperItem> SAND_PAPER = REGISTRATE.item("sand_paper", SandPaperItem::new)
 		.transform(CreateRegistrate.customRenderedItem(() -> SandPaperItemRenderer::new))
@@ -439,12 +438,13 @@ public class AllItems {
 			.properties(p -> p.durability(100))
 			.transform(CreateRegistrate.customRenderedItem(() -> PotatoCannonItemRenderer::new))
 			.model(AssetLookup.itemModelWithPartials())
-			.tag(net.neoforged.neoforge.common.Tags.Items.ENCHANTABLES)
+			.tag(Tags.Items.ENCHANTABLES, ItemTags.DURABILITY_ENCHANTABLE, ItemTags.BOW_ENCHANTABLE)
 			.register();
 
 	public static final ItemEntry<ExtendoGripItem> EXTENDO_GRIP = REGISTRATE.item("extendo_grip", ExtendoGripItem::new)
 		.properties(p -> p.rarity(Rarity.UNCOMMON))
 		.transform(CreateRegistrate.customRenderedItem(() -> ExtendoGripItemRenderer::new))
+		.tag(ItemTags.DURABILITY_ENCHANTABLE)
 		.model(AssetLookup.itemModelWithPartials())
 		.register();
 
@@ -485,14 +485,14 @@ public class AllItems {
 		}
 	}
 
-	public static final ItemEntry<FilterItem> FILTER = REGISTRATE.item("filter", FilterItem::regular)
+	public static final ItemEntry<ListFilterItem> FILTER = REGISTRATE.item("filter", FilterItem::regular)
 		.lang("List Filter")
-		.register(),
+		.register();
 
-	ATTRIBUTE_FILTER = REGISTRATE.item("attribute_filter", FilterItem::attribute)
-		.register(),
+	public static final ItemEntry<AttributeFilterItem> ATTRIBUTE_FILTER = REGISTRATE.item("attribute_filter", FilterItem::attribute)
+		.register();
 
-	PACKAGE_FILTER = REGISTRATE.item("package_filter", FilterItem::address)
+	public static final ItemEntry<PackageFilterItem> PACKAGE_FILTER = REGISTRATE.item("package_filter", FilterItem::address)
 		.register();
 
 	public static final ItemEntry<ScheduleItem> SCHEDULE = REGISTRATE.item("schedule", ScheduleItem::new)
@@ -543,11 +543,10 @@ public class AllItems {
 			.register();
 	}
 
-	private static ItemEntry<TagDependentIngredientItem> compatCrushedOre(CompatMetals metal) {
-		String metalName = metal.getName();
+	private static ItemEntry<TagDependentIngredientItem> compatCrushedOre(CommonMetal metal) {
 		return REGISTRATE
-			.item("crushed_raw_" + metalName,
-				props -> new TagDependentIngredientItem(props, AllTags.commonItemTag(metalName + "_ores")))
+			.item("crushed_raw_" + metal,
+				props -> new TagDependentIngredientItem(props, metal.ores.items()))
 			.tag(CRUSHED_RAW_MATERIALS.tag)
 			.register();
 	}

@@ -8,31 +8,22 @@
   "type": "create:crushing",
   "ingredients": [
     {
-      "type": "neoforge:compound",
-      "ingredients": [
-        {
-          "item": "simplefarming:rice"
-        }
-      ]
+      "item": "simplefarming:rice"
     }
   ],
   "processing_time": 150,
   "results": [
     {
-      "item": {
-        "id": "create:wheat_flour"
-      }
+      "id": "create:wheat_flour"
     },
     {
       "chance": 0.25,
       "count": 2,
-      "item": {
-        "id": "create:wheat_flour"
-      }
+      "id": "create:wheat_flour"
     },
     {
       "chance": 0.25,
-      "item": "simplefarming:rice_seeds"
+      "id": "simplefarming:rice_seeds"
     }
   ]
 }

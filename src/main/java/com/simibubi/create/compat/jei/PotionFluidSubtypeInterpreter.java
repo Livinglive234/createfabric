@@ -15,7 +15,9 @@ import mezz.jei.api.ingredients.subtypes.ISubtypeInterpreter;
 import mezz.jei.api.ingredients.subtypes.UidContext;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.item.alchemy.Potion;
 import net.minecraft.world.item.alchemy.PotionContents;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 
 /* From JEI's Potion item subtype interpreter */
 public class PotionFluidSubtypeInterpreter implements ISubtypeInterpreter<IJeiFluidIngredient> {
@@ -25,9 +27,10 @@ public class PotionFluidSubtypeInterpreter implements ISubtypeInterpreter<IJeiFl
 		if (ingredient.getComponentsPatch().isEmpty())
 			return null;
 
-		PotionContents contents = ingredient.getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
-		String potionTypeString = ingredient.getDescriptionId();
-		String bottleType = ingredient.getOrDefault(AllDataComponents.POTION_FLUID_BOTTLE_TYPE, BottleType.REGULAR).name();
+		FluidVariant variant = ingredient.getVariant();
+		PotionContents contents = variant.getComponentMap().getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
+		String potionTypeString = Potion.getName(contents.potion(), "potion");
+		String bottleType = variant.getComponentMap().getOrDefault(AllDataComponents.POTION_FLUID_BOTTLE_TYPE, BottleType.REGULAR).name();
 
 		StringBuilder stringBuilder = new StringBuilder(potionTypeString);
 		List<MobEffectInstance> effects = contents.customEffects();

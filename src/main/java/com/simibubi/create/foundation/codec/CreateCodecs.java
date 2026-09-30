@@ -4,9 +4,9 @@ import java.util.function.Function;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
+import com.simibubi.create.foundation.fluid.FluidIngredient;
 import com.simibubi.create.foundation.item.ItemSlots;
-
-import net.neoforged.neoforge.items.ItemStackHandler;
+import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
 
 public class CreateCodecs {
 	public static final Codec<Long> NON_NEGATIVE_LONG = Codec.LONG.validate(
@@ -24,9 +24,9 @@ public class CreateCodecs {
 		String::valueOf
 	);
 
-	public static final Codec<ItemStackHandler> ITEM_STACK_HANDLER = ItemSlots.CODEC.xmap(
+	public static final Codec<ItemStackHandler> ITEM_STACK_HANDLER = Codec.lazyInitialized(() -> ItemSlots.CODEC.xmap(
 		slots -> slots.toHandler(ItemStackHandler::new), ItemSlots::fromHandler
-	);
+	));
 
 	public static Codec<Integer> boundedIntStr(int min) {
 		return INT_STR.validate(i -> i >= min ? DataResult.success(i) : DataResult.error(() -> "Value under minimum of " + min));
@@ -44,4 +44,6 @@ public class CreateCodecs {
 			)
 		);
 	}
+
+	public static final Codec<FluidIngredient> SIZED_FLUID_INGREDIENT = FluidIngredient.CODEC;
 }

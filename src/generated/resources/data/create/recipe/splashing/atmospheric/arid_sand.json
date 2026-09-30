@@ -8,24 +8,17 @@
   "type": "create:splashing",
   "ingredients": [
     {
-      "type": "neoforge:compound",
-      "ingredients": [
-        {
-          "item": "atmospheric:arid_sand"
-        }
-      ]
+      "item": "atmospheric:arid_sand"
     }
   ],
   "results": [
     {
       "chance": 0.25,
-      "item": {
-        "id": "minecraft:clay_ball"
-      }
+      "id": "minecraft:clay_ball"
     },
     {
       "chance": 0.05,
-      "item": "atmospheric:aloe_kernels"
+      "id": "atmospheric:aloe_kernels"
     }
   ]
 }

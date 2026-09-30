@@ -13,6 +13,7 @@ import com.simibubi.create.content.contraptions.ContraptionHandler;
 import com.simibubi.create.content.contraptions.actors.psi.PortableFluidInterfaceBlockEntity;
 import com.simibubi.create.content.contraptions.actors.psi.PortableItemInterfaceBlockEntity;
 import com.simibubi.create.content.contraptions.actors.trainControls.ControlsServerHandler;
+import com.simibubi.create.content.contraptions.chassis.StickerBlockEntity;
 import com.simibubi.create.content.contraptions.glue.SuperGlueHandler;
 import com.simibubi.create.content.contraptions.glue.SuperGlueItem;
 import com.simibubi.create.content.contraptions.minecart.CouplingHandler;
@@ -57,6 +58,7 @@ import com.simibubi.create.content.kinetics.drill.CobbleGenOptimisation;
 import com.simibubi.create.content.kinetics.gauge.SpeedGaugeBlockEntity;
 import com.simibubi.create.content.kinetics.gauge.StressGaugeBlockEntity;
 import com.simibubi.create.content.kinetics.millstone.MillstoneBlockEntity;
+import com.simibubi.create.content.kinetics.motor.CreativeMotorBlockEntity;
 import com.simibubi.create.content.kinetics.saw.SawBlockEntity;
 import com.simibubi.create.content.kinetics.speedController.SpeedControllerBlockEntity;
 import com.simibubi.create.content.kinetics.transmission.sequencer.SequencedGearshiftBlockEntity;
@@ -69,7 +71,9 @@ import com.simibubi.create.content.logistics.packagePort.frogport.FrogportBlockE
 import com.simibubi.create.content.logistics.packagePort.postbox.PostboxBlockEntity;
 import com.simibubi.create.content.logistics.packager.PackagerBlockEntity;
 import com.simibubi.create.content.logistics.packager.repackager.RepackagerBlockEntity;
+import com.simibubi.create.content.logistics.redstoneRequester.RedstoneRequesterBlockEntity;
 import com.simibubi.create.content.logistics.stockTicker.StockTickerBlockEntity;
+import com.simibubi.create.content.logistics.tableCloth.TableClothBlockEntity;
 import com.simibubi.create.content.logistics.tunnel.BeltTunnelBlockEntity;
 import com.simibubi.create.content.logistics.tunnel.BrassTunnelBlockEntity;
 import com.simibubi.create.content.logistics.vault.ItemVaultBlockEntity;
@@ -80,7 +84,10 @@ import com.simibubi.create.content.processing.burner.BlazeBurnerHandler;
 import com.simibubi.create.content.redstone.displayLink.ClickToLinkBlockItem;
 import com.simibubi.create.content.redstone.link.LinkHandler;
 import com.simibubi.create.content.redstone.link.controller.LinkedControllerServerHandler;
+import com.simibubi.create.content.redstone.nixieTube.NixieTubeBlockEntity;
 import com.simibubi.create.content.trains.entity.CarriageEntityHandler;
+import com.simibubi.create.content.trains.observer.TrackObserverBlockEntity;
+import com.simibubi.create.content.trains.signal.SignalBlockEntity;
 import com.simibubi.create.content.trains.station.StationBlockEntity;
 import com.simibubi.create.content.trains.schedule.ScheduleItemEntityInteraction;
 import com.simibubi.create.foundation.block.ItemUseOverrides;
@@ -91,6 +98,7 @@ import com.simibubi.create.foundation.map.StationMapDecorationRenderer;
 import com.simibubi.create.foundation.pack.DynamicPack;
 import com.simibubi.create.foundation.pack.DynamicPackSource;
 import com.simibubi.create.foundation.recipe.RecipeFinder;
+import com.simibubi.create.foundation.recipe.trie.RecipeTrieFinder;
 import com.simibubi.create.foundation.utility.ServerSpeedProvider;
 import com.simibubi.create.foundation.utility.TickBasedCache;
 import com.simibubi.create.infrastructure.command.AllCommands;
@@ -108,6 +116,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -132,12 +141,19 @@ import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 
 import io.github.fabricators_of_create.porting_lib.entity.events.EntityDataEvents;
 import io.github.fabricators_of_create.porting_lib.entity.events.EntityEvents;
-import io.github.fabricators_of_create.porting_lib.entity.events.EntityMountEvents;
-import io.github.fabricators_of_create.porting_lib.entity.events.LivingAttackEvent;
-import io.github.fabricators_of_create.porting_lib.entity.events.LivingEntityEvents;
-import io.github.fabricators_of_create.porting_lib.entity.events.LivingEntityEvents.LivingVisibilityEvent;
-import io.github.fabricators_of_create.porting_lib.event.common.AddPackFindersEvent;
-import io.github.fabricators_of_create.porting_lib.event.common.BlockEvents;
+import io.github.fabricators_of_create.porting_lib.entity.events.EntityMountEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingAttackEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingChangeTargetEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingDropsEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingExperienceDropEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingHurtEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingKnockBackEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingEvents.LivingVisibilityEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.ProjectileImpactEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerEvents;
+import io.github.fabricators_of_create.porting_lib.entity.events.tick.EntityTickEvent;
+import io.github.fabricators_of_create.porting_lib.level.events.BlockEvent;
+import io.github.fabricators_of_create.porting_lib.resources.events.AddPackFindersEvent;
 
 public class CommonEvents {
 
@@ -177,9 +193,9 @@ public class CommonEvents {
 		Create.LOGISTICS.tick(world);
 	}
 
-	@SubscribeEvent
 	public static void onEntityTick(EntityTickEvent.Pre event) {
-		CapabilityMinecartController.entityTick(event);
+		if (event.getEntity() instanceof AbstractMinecart cart)
+			CapabilityMinecartController.entityTick(cart);
 
 		if (event.getEntity() instanceof LivingEntity livingEntity) {
 			Level level = livingEntity.level();
@@ -201,8 +217,8 @@ public class CommonEvents {
 		AllCommands.register(dispatcher);
 	}
 
-	public static void onEntityEnterSection(Entity entity, long packedOldPos, long packedNewPos) {
-		CarriageEntityHandler.onEntityEnterSection(entity, packedOldPos, packedNewPos);
+	public static void onEntityEnterSection(EntityEvents.EnteringSection event) {
+		CarriageEntityHandler.onEntityEnterSection(event.getEntity(), event.getPackedOldPos(), event.getPackedNewPos());
 	}
 
 	public static void addReloadListeners() {
@@ -233,8 +249,8 @@ public class CommonEvents {
 //		CapabilityMinecartController.attach(cart);
 //	}
 
-	public static void startTracking(Entity target, ServerPlayer player) {
-		CapabilityMinecartController.startTracking(target);
+	public static void startTracking(PlayerEvents.StartTracking event) {
+		CapabilityMinecartController.startTracking(event.getTarget());
 	}
 
 	public static void leftClickEmpty(ServerPlayer player) {
@@ -264,10 +280,10 @@ public class CommonEvents {
 		event.addRepositorySource(new DynamicPackSource("create:dynamic_data", PackType.SERVER_DATA, Pack.Position.BOTTOM, dynamicPack));
 	}
 
-	@net.neoforged.bus.api.SubscribeEvent
-	public static void onRegisterMapDecorationRenderers(RegisterMapDecorationRenderersEvent event) {
-		event.register(AllMapDecorationTypes.STATION_MAP_DECORATION.value(), new StationMapDecorationRenderer());
-	}
+	// TODO fabric: no fabric equivalent registry found yet for custom MapDecorationType renderers
+//	public static void onRegisterMapDecorationRenderers(RegisterMapDecorationRenderersEvent event) {
+//		event.register(AllMapDecorationTypes.STATION_MAP_DECORATION.value(), new StationMapDecorationRenderer());
+//	}
 
 	public static void register() {
 		// Fabric Events
@@ -281,9 +297,9 @@ public class CommonEvents {
 		ServerPlayConnectionEvents.DISCONNECT.register(CommonEvents::playerLoggedOut);
 		AttackEntityCallback.EVENT.register(CommonEvents::onEntityAttackedByPlayer);
 		CommandRegistrationCallback.EVENT.register(CommonEvents::registerCommands);
-		EntityEvents.START_TRACKING_TAIL.register(CommonEvents::startTracking);
-		EntityEvents.ENTERING_SECTION.register(CommonEvents::onEntityEnterSection);
-		LivingEntityEvents.TICK.register(CommonEvents::onUpdateLivingEntity);
+		PlayerEvents.StartTracking.EVENT.register(CommonEvents::startTracking);
+		EntityEvents.EnteringSection.EVENT.register(CommonEvents::onEntityEnterSection);
+		EntityTickEvent.Pre.EVENT.register(CommonEvents::onEntityTick);
 		ServerPlayConnectionEvents.JOIN.register(CommonEvents::playerLoggedIn);
 		AddPackFindersEvent.EVENT.register(CommonEvents::addPackFinders);
 		PipeCollisionEvent.FLOW.register(FluidReactions::handlePipeFlowCollisionFallback);
@@ -313,30 +329,39 @@ public class CommonEvents {
 		AttackBlockCallback.EVENT.register(ZapperInteractionHandler::leftClickingBlocksWithTheZapperSelectsTheBlock);
 		UseEntityCallback.EVENT.register(ScheduleItemEntityInteraction::interactWithConductor);
 		ServerTickEvents.END_WORLD_TICK.register(HauntedBellPulser::hauntedBellCreatesPulse);
-		EntityMountEvents.MOUNT.register(CouplingHandler::preventEntitiesFromMoutingOccupiedCart);
-		LivingEntityEvents.EXPERIENCE_DROP.register(DeployerFakePlayer::deployerKillsDoNotSpawnXP);
-		LivingEntityEvents.HURT.register(ExtendoGripItem::bufferLivingAttackEvent);
-		LivingEntityEvents.KNOCKBACK_STRENGTH.register(ExtendoGripItem::attacksByExtendoGripHaveMoreKnockback);
-		LivingEntityEvents.TICK.register(ExtendoGripItem::holdingExtendoGripIncreasesRange);
-		LivingEntityEvents.TICK.register(DivingBootsItem::accellerateDescentUnderwater);
-		LivingEntityEvents.TICK.register(DivingHelmetItem::breatheUnderwater);
-		LivingEntityEvents.DROPS.register(CrushingWheelBlockEntity::handleCrushedMobDrops);
-		LivingEntityEvents.LOOTING_LEVEL.register(CrushingWheelBlockEntity::crushingIsFortunate);
-		LivingEntityEvents.DROPS.register(DeployerFakePlayer::deployerCollectsDropsFromKilledEntities);
+		EntityMountEvent.EVENT.register(CouplingHandler::preventEntitiesFromMoutingOccupiedCart);
+		LivingExperienceDropEvent.EVENT.register(DeployerFakePlayer::deployerKillsDoNotSpawnXP);
+		LivingHurtEvent.EVENT.register(ExtendoGripItem::bufferLivingAttackEvent);
+		LivingKnockBackEvent.EVENT.register(ExtendoGripItem::attacksByExtendoGripHaveMoreKnockback);
+		EntityTickEvent.Pre.EVENT.register(ExtendoGripItem::holdingExtendoGripIncreasesRange);
+		EntityTickEvent.Pre.EVENT.register(event -> {
+			if (event.getEntity() instanceof LivingEntity livingEntity)
+				DivingBootsItem.accelerateDescentUnderwater(livingEntity);
+		});
+		EntityTickEvent.Pre.EVENT.register(event -> {
+			if (event.getEntity() instanceof LivingEntity livingEntity)
+				DivingHelmetItem.breatheUnderwater(livingEntity);
+		});
+		LivingDropsEvent.EVENT.register(CrushingWheelBlockEntity::handleCrushedMobDrops);
+		// TODO fabric: no looting-level-override event available in porting-lib; CrushingWheelBlockEntity::crushingIsFortunate never existed here either
+		LivingDropsEvent.EVENT.register(DeployerFakePlayer::deployerCollectsDropsFromKilledEntities);
 		ServerEntityEvents.EQUIPMENT_CHANGE.register(NetheriteDivingHandler::onLivingEquipmentChange);
-		LivingEntityEvents.CHANGE_TARGET.register(DeployerFakePlayer::entitiesDontRetaliate);
-		EntityEvents.SIZE.register(DeployerFakePlayer::deployerHasEyesOnHisFeet);
-		BlockEvents.POST_PROCESS_PLACE.register(SymmetryHandler::onBlockPlaced);
-		BlockEvents.POST_PROCESS_PLACE.register(SuperGlueHandler::glueListensForBlockPlacement);
-		EntityEvents.PROJECTILE_IMPACT.register(BlazeBurnerHandler::onThrowableImpact);
+		LivingChangeTargetEvent.EVENT.register(DeployerFakePlayer::entitiesDontRetaliate);
+		EntityEvents.Size.EVENT.register(DeployerFakePlayer::deployerHasEyesOnHisFeet);
+		BlockEvent.EntityPlaceEvent.EVENT.register(SymmetryHandler::onBlockPlaced);
+		BlockEvent.EntityPlaceEvent.EVENT.register(SuperGlueHandler::glueListensForBlockPlacement);
+		ProjectileImpactEvent.EVENT.register(BlazeBurnerHandler::onThrowableImpact);
 		EntityDataEvents.LOAD.register(ExtendoGripItem::addReachToJoiningPlayersHoldingExtendo);
 		PlayerBlockBreakEvents.BEFORE.register(SymmetryHandler::onBlockDestroyed);
 		PlayerBlockBreakEvents.AFTER.register(ExtendoGripItem::consumeDurabilityOnBlockBreak);
-		BlockEvents.POST_PROCESS_PLACE.register(ExtendoGripItem::consumeDurabilityOnPlace);
-		EntityEvents.SIZE.register(CardboardArmorHandler::playerHitboxChangesWhenHidingAsBox);
-		LivingVisibilityEvent.VISIBILITY.register(CardboardArmorHandler::playersStealthWhenWearingCardboard);
-		LivingEntityEvents.TICK.register(CardboardArmorHandler::mobsMayLoseTargetWhenItIsWearingCardboard);
+		BlockEvent.EntityPlaceEvent.EVENT.register(ExtendoGripItem::consumeDurabilityOnPlace);
+		EntityEvents.Size.EVENT.register(CardboardArmorHandler::playerHitboxChangesWhenHidingAsBox);
+		LivingVisibilityEvent.EVENT.register(CardboardArmorHandler::playersStealthWhenWearingCardboard);
+		EntityTickEvent.Pre.EVENT.register(event -> {
+			if (event.getEntity() instanceof LivingEntity livingEntity)
+				CardboardArmorHandler.mobsMayLoseTargetWhenItIsWearingCardboard(livingEntity);
+		});
 		AttackBlockCallback.EVENT.register(CardboardSwordItem::cardboardSwordsMakeNoiseOnClick);
-		LivingAttackEvent.ATTACK.register(CardboardSwordItem::cardboardSwordsCannotHurtYou);
+		LivingAttackEvent.EVENT.register(CardboardSwordItem::cardboardSwordsCannotHurtYou);
 	}
 }

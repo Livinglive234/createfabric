@@ -3,7 +3,6 @@ package com.simibubi.create.content.contraptions.mounted;
 import java.util.List;
 import java.util.UUID;
 
-import com.simibubi.create.AllAttachmentTypes;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.content.contraptions.AssemblyException;
 import com.simibubi.create.content.contraptions.IDisplayAssemblyExceptions;
@@ -40,6 +39,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.RailShape;
 import net.minecraft.world.phys.Vec3;
+import com.simibubi.create.AllAttachmentTypes;
 
 
 
@@ -294,7 +294,7 @@ public class CartAssemblerBlockEntity extends SmartBlockEntity implements IDispl
 
 		CartMovementMode(AllIcons icon) {
 			this.icon = icon;
-			translationKey = "contraptions.cart_movement_mode." + Lang.asId(name());
+			translationKey = "create.contraptions.cart_movement_mode." + Lang.asId(name());
 		}
 
 		@Override

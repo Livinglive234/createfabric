@@ -8,22 +8,17 @@
   "type": "create:mixing",
   "ingredients": [
     {
-      "type": "neoforge:compound",
-      "ingredients": [
-        {
-          "item": "regions_unexplored:peat_dirt"
-        }
-      ]
+      "item": "regions_unexplored:peat_dirt"
     },
     {
-      "type": "fluid_stack",
+      "type": "neoforge:single",
       "amount": 250,
       "fluid": "minecraft:water"
     }
   ],
   "results": [
     {
-      "item": "regions_unexplored:peat_mud"
+      "id": "regions_unexplored:peat_mud"
     }
   ]
 }

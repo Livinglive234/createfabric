@@ -1,6 +1,6 @@
 package com.simibubi.create.content.kinetics.mechanicalArm;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.api.registry.CreateBuiltInRegistries;
 import com.simibubi.create.content.contraptions.StructureTransform;
@@ -20,10 +20,12 @@ import net.minecraft.world.phys.Vec3;
 
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageUtil;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.ResourceAmount;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 
-import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
 import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemHandlerHelper;
 import io.github.fabricators_of_create.porting_lib.util.StorageProvider;
 
 public class ArmInteractionPoint {
@@ -116,7 +118,8 @@ public class ArmInteractionPoint {
 		Storage<ItemVariant> handler = getHandler();
 		if (handler == null)
 			return ItemStack.EMPTY;
-		return TransferUtil.extractAnyItem(handler, amount);
+		ResourceAmount<ItemVariant> extracted = StorageUtil.extractAny(handler, amount, ctx);
+		return extracted == null ? ItemStack.EMPTY : extracted.resource().toStack(ItemHelper.truncateLong(extracted.amount()));
 	}
 
 	public ItemStack extract(TransactionContext ctx) {

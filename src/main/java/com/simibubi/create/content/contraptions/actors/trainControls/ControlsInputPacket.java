@@ -20,7 +20,6 @@ import net.minecraft.world.phys.Vec3;
 
 public record ControlsInputPacket(List<Integer> activatedButtons, boolean press, int contraptionEntityId,
 								  BlockPos controlsPos, boolean stopControlling) implements ServerboundPacketPayload {
-
 	public static final StreamCodec<ByteBuf, ControlsInputPacket> STREAM_CODEC = StreamCodec.composite(
 			CatnipStreamCodecBuilders.list(ByteBufCodecs.VAR_INT), ControlsInputPacket::activatedButtons,
 			ByteBufCodecs.BOOL, ControlsInputPacket::press,
@@ -51,8 +50,7 @@ public record ControlsInputPacket(List<Integer> activatedButtons, boolean press,
 			return;
 		}
 
-		if (ace.toGlobalVector(Vec3.atCenterOf(controlsPos), 0)
-				.closerThan(player.position(), 16))
+		if (ace.canInteractWithBlock(player, controlsPos, 16))
 			ControlsServerHandler.receivePressed(world, ace, controlsPos, uniqueID, activatedButtons, press);
 	}
 

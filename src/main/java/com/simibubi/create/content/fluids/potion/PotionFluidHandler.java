@@ -5,9 +5,9 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
 import com.simibubi.create.AllDataComponents;
+import com.simibubi.create.AllTags.AllItemTags;
 import com.simibubi.create.content.fluids.potion.PotionFluid.BottleType;
 import com.simibubi.create.foundation.fluid.FluidHelper;
-import com.simibubi.create.foundation.fluid.FluidIngredient;
 
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
 
@@ -18,6 +18,7 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -42,13 +43,15 @@ import net.minecraft.world.level.material.Fluids;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import com.simibubi.create.foundation.fluid.FluidIngredient;
 
 public class PotionFluidHandler {
 	private static final Component NO_EFFECT = Component.translatable("effect.none").withStyle(ChatFormatting.GRAY);
 
 	public static boolean isPotionItem(ItemStack stack) {
-		return stack.getItem() instanceof PotionItem && !(stack.getRecipeRemainder()
-			.getItem() instanceof BucketItem);
+		return stack.getItem() instanceof PotionItem
+			&& !(stack.getItem().getCraftingRemainingItem() instanceof BucketItem)
+			&& !AllItemTags.NOT_POTION.matches(stack);
 	}
 
 	public static Pair<FluidStack, ItemStack> emptyPotion(ItemStack stack, boolean simulate) {
@@ -59,8 +62,9 @@ public class PotionFluidHandler {
 	}
 
 	public static FluidIngredient potionIngredient(Holder<Potion> potion, int amount) {
-		return FluidIngredient.fromFluidStack(FluidHelper.copyStackWithAmount(PotionFluidHandler
-			.getFluidFromPotionItem(PotionContents.createItemStack(Items.POTION, potion)), amount));
+		FluidStack stack = FluidHelper.copyStackWithAmount(PotionFluidHandler
+			.getFluidFromPotionItem(PotionContents.createItemStack(Items.POTION, potion)), amount);
+		return FluidIngredient.fromFluidStack(stack);
 	}
 
 	public static FluidStack getFluidFromPotionItem(ItemStack stack) {
@@ -69,8 +73,9 @@ public class PotionFluidHandler {
 		if (potion.is(Potions.WATER) && potion.customEffects().isEmpty() && bottleTypeFromItem == BottleType.REGULAR)
 			return new FluidStack(Fluids.WATER, 250);
 		FluidStack fluid = getFluidFromPotion(potion, bottleTypeFromItem, 250);
-		fluid.set(AllDataComponents.POTION_FLUID_BOTTLE_TYPE, bottleTypeFromItem);
-		return fluid;
+		FluidVariant withBottleType = fluid.getVariant().withComponentChanges(
+			DataComponentPatch.builder().set(AllDataComponents.POTION_FLUID_BOTTLE_TYPE, bottleTypeFromItem).build());
+		return new FluidStack(withBottleType, fluid.getAmount());
 	}
 
 	public static FluidStack getFluidFromPotion(PotionContents potionContents, BottleType bottleType, int amount) {
@@ -113,7 +118,7 @@ public class PotionFluidHandler {
 	// Modified version of PotionContents#addPotionTooltip
 	@Environment(EnvType.CLIENT)
 	public static void addPotionTooltip(FluidVariant fs, Consumer<Component> tooltipAdder, float durationFactor) {
-		PotionContents contents = fs.getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
+		PotionContents contents = fs.getComponentMap().getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
 		Iterable<MobEffectInstance> effects = contents.getAllEffects();
 
 		List<Pair<Holder<Attribute>, AttributeModifier>> list = Lists.newArrayList();

@@ -8,21 +8,14 @@
   "type": "create:milling",
   "ingredients": [
     {
-      "type": "neoforge:compound",
-      "ingredients": [
-        {
-          "item": "regions_unexplored:black_snowbelle"
-        }
-      ]
+      "item": "regions_unexplored:black_snowbelle"
     }
   ],
   "processing_time": 50,
   "results": [
     {
       "count": 2,
-      "item": {
-        "id": "minecraft:black_dye"
-      }
+      "id": "minecraft:black_dye"
     }
   ]
 }

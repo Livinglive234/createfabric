@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.jetbrains.annotations.ApiStatus.Internal;
+import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.Create;
@@ -63,6 +64,8 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 
 import io.github.fabricators_of_create.porting_lib.transfer.callbacks.TransactionCallback;
+
+import com.simibubi.create.infrastructure.fabric.transfer.TransactionSuccessCallback;
 
 public class AllArmInteractionPointTypes {
 	static {

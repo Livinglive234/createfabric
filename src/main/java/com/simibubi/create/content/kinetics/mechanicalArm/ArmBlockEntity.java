@@ -3,7 +3,9 @@ package com.simibubi.create.content.kinetics.mechanicalArm;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Nullable;
+import net.minecraft.world.Clearable;
+
+import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.Create;
 import com.simibubi.create.api.contraption.transformable.TransformableBlockEntity;
@@ -50,12 +52,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkSource;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
-
 import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
 
-public class ArmBlockEntity extends KineticBlockEntity implements TransformableBlockEntity {
+public class ArmBlockEntity extends KineticBlockEntity implements TransformableBlockEntity, Clearable {
 
 	// Server
 	List<ArmInteractionPoint> inputs;
@@ -309,7 +309,10 @@ public class ArmBlockEntity extends KineticBlockEntity implements TransformableB
 				if (!armInteractionPoint.isValid())
 					continue;
 
-			ItemStack remainder = armInteractionPoint.insert(held, true);
+			ItemStack remainder;
+			try (Transaction simulation = t.openNested()) {
+				remainder = armInteractionPoint.insert(held, simulation);
+			}
 			if (ItemStack.matches(remainder, heldItem))
 				continue;
 
@@ -657,7 +660,7 @@ public class ArmBlockEntity extends KineticBlockEntity implements TransformableB
 
 		SelectionMode(AllIcons icon) {
 			this.icon = icon;
-			this.translationKey = "mechanical_arm.selection_mode." + Lang.asId(name());
+			this.translationKey = "create.mechanical_arm.selection_mode." + Lang.asId(name());
 		}
 
 		@Override
@@ -669,6 +672,11 @@ public class ArmBlockEntity extends KineticBlockEntity implements TransformableB
 		public String getTranslationKey() {
 			return translationKey;
 		}
+	}
+
+	@Override
+	public void clearContent() {
+		heldItem = ItemStack.EMPTY;
 	}
 
 	private static class Client {

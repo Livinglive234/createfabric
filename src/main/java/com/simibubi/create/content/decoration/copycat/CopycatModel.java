@@ -3,7 +3,7 @@ package com.simibubi.create.content.decoration.copycat;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 import com.simibubi.create.AllBlocks;
 
@@ -44,14 +44,18 @@ import net.fabricmc.fabric.api.renderer.v1.render.RenderContext.QuadTransform;
 import net.fabricmc.fabric.api.rendering.data.v1.RenderAttachedBlockView;
 
 import io.github.fabricators_of_create.porting_lib.models.CustomParticleIconModel;
+import javax.annotation.Nullable;
 
+// TODO fabric-port: Forge rewrote copycat model data around NeoForge's ModelData/ModelProperty system
+// (emissivity tracking, external face hiding via hidesNeighborFace). This still uses the older
+// RenderAttachedBlockView-based approach and needs a follow-up port to pick those up.
 public abstract class CopycatModel extends ForwardingBakedModel implements CustomParticleIconModel {
 
 	public CopycatModel(BakedModel originalModel) {
 		wrapped = originalModel;
 	}
 
-	private void gatherOcclusionData(BlockAndTintGetter world, BlockPos pos, BlockState state, BlockState material,
+	private void gatherOcclusionData(BlockAndTintGetter level, BlockPos pos, BlockState state, BlockState material,
 		OcclusionData occlusionData, CopycatBlock copycatBlock) {
 		MutableBlockPos mutablePos = new MutableBlockPos();
 		for (Direction face : Iterate.directions) {
@@ -148,7 +152,7 @@ public abstract class CopycatModel extends ForwardingBakedModel implements Custo
 		}
 
 		public boolean isOccluded(Direction face) {
-			return face == null ? false : occluded[face.get3DDataValue()];
+			return face != null && occluded[face.get3DDataValue()];
 		}
 	}
 

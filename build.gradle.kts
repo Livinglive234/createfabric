@@ -11,8 +11,16 @@ val flywheelVersion = "1.0.1-11"
 val ponderVersion = "1.0.44"
 val registrateVersion = "1.3.77-MC1.21.1"
 val milkLibVersion = "1.2.60"
+// https://mvn.devos.one/#/snapshots/io/github/fabricators_of_create/Porting-Lib
+val portingLibVersion = "3.1.0-beta.91+1.21.1"
+val portingLibExtensionsVersion = "3.1.0-beta.54+1.21.1"
+val portingLibModules = listOf(
+    "accessors", "base", "blocks", "brewing", "client_events", "common", "core", "data",
+    "entity", "fluids", "items", "level_events", "mixin_extensions", "models", "resources", "tags", "transfer"
+)
 
 // external dependencies
+val reachEntityAttributesVersion = "2.5.0"
 val configApiVersion = "21.1.3"
 val nightConfigVersion =  "3.6.3"
 val jsr305Version = "3.0.2"
@@ -34,6 +42,10 @@ val botaniaVersion = "1.19.2-436-FABRIC"
 val modmenuVersion = "11.0.3"
 // https://modrinth.com/mod/sandwichable/versions
 val sandwichableVersion = "1.3.1+1.20.1"
+// https://modrinth.com/mod/farmers-delight-refabricated/versions
+// NOTE: versions after 3.2.5 mis-declare their "accessWidener" fabric.mod.json field as a v2 ClassTweaker file,
+// which Loom's AccessWidenerJarProcessor can't parse (upstream packaging bug) - pinned to the last known-good build.
+val farmersDelightVersion = "1.21.1-3.2.5"
 // https://modrinth.com/mod/sodium
 val sodiumVersion = "mc1.21.1-0.6.9-fabric"
 // https://github.com/emilyploszaj/trinkets/releases/
@@ -42,6 +54,13 @@ val trinketsVersion = "3.10.0"
 val ccaVersion = "6.1.2"
 // https://modrinth.com/mod/journeymap
 val jmVersion = "1.21.1-6.0.0-beta.39+fabric"
+// https://modrinth.com/mod/xaeros-minimap/versions
+val xaerosMinimapVersion = "fabric-1.21.1-26.5.0"
+// https://modrinth.com/mod/xaeros-world-map/versions
+val xaerosWorldMapVersion = "fabric-1.21.1-1.46.0"
+// https://chocolateminecraft.com/maven/xaero/lib/xaerolib-fabric-1.21.1/ - required transitively by
+// both xaero mods above (xaero.lib.client.gui.ScreenBase etc.), not published on Modrinth for fabric
+val xaeroLibVersion = "1.7.3"
 // check the jm jar, it's JiJ
 val jmApiVersion = "1.20-1.9-SNAPSHOT"
 
@@ -50,7 +69,7 @@ val ccRuntime = false
 val recipeViewer = "emi" // jei, rei, or emi
 
 plugins {
-    id("fabric-loom") version "1.10.+"
+    id("fabric-loom") version "1.13.+"
     id("maven-publish")
 }
 
@@ -69,7 +88,8 @@ repositories {
     maven("https://maven.parchmentmc.org") // Parchment
     maven("https://maven.fabricmc.net") // FAPI, Loader
     maven("https://maven.createmod.net") // Ponder, Flywheel
-    maven("https://mvn.devos.one/snapshots") // Registrate, Forge Tags, Milk Lib
+    maven("https://mvn.devos.one/snapshots") // Registrate, Forge Tags, Milk Lib, Porting Lib
+    maven("https://mvn.devos.one/releases") // Porting Lib releases
     maven("https://raw.githubusercontent.com/Fuzss/modresources/main/maven") // Forge Config API Port
     maven("https://maven.shedaniel.me") // REI and deps
     maven("https://api.modrinth.com/maven") { // LazyDFU, Sodium, Sandwichable
@@ -85,6 +105,7 @@ repositories {
     maven("https://maven.saps.dev/releases") // FTB
     maven("https://maven.architectury.dev") // Architectury API
     maven("https://jm.gserv.me/repository/maven-public/") // Journey map
+    maven("https://chocolateminecraft.com/maven") // XaeroLib, required by Xaero's Minimap/World Map
 }
 
 val ponder = file("Ponder")
@@ -108,7 +129,13 @@ dependencies {
     modApi(include("fuzs.forgeconfigapiport:forgeconfigapiport-fabric:$configApiVersion")!!)
     modApi(include("dev.engine-room.flywheel:flywheel-fabric-$minecraftVersion:$flywheelVersion")!!)
     modApi(include("io.github.tropheusj:milk-lib:$milkLibVersion")!!)
+    modApi(include("com.jamieswhiteshirt:reach-entity-attributes:$reachEntityAttributesVersion")!!)
     api(include("com.google.code.findbugs:jsr305:$jsr305Version")!!)
+
+    for (module in portingLibModules) {
+        modApi(include("io.github.fabricators_of_create.Porting-Lib:$module:$portingLibVersion")!!)
+    }
+    modApi(include("io.github.fabricators_of_create.Porting-Lib:extensions:$portingLibExtensionsVersion")!!)
 
     if (ponder.exists()) {
         implementation("net.createmod.ponder:Ponder-Fabric-$minecraftVersion:$ponderVersion") { isTransitive = false }
@@ -126,7 +153,11 @@ dependencies {
     modCompileOnly("vazkii.botania:Botania:$botaniaVersion") { isTransitive = false }
     modCompileOnly("com.terraformersmc:modmenu:$modmenuVersion")
     modCompileOnly("maven.modrinth:sandwichable:$sandwichableVersion")
+    modCompileOnly("maven.modrinth:farmers-delight-refabricated:$farmersDelightVersion")
     modCompileOnly("maven.modrinth:sodium:$sodiumVersion")
+    modCompileOnly("maven.modrinth:xaeros-minimap:$xaerosMinimapVersion")
+    modCompileOnly("maven.modrinth:xaeros-world-map:$xaerosWorldMapVersion")
+    modCompileOnly("xaero.lib:xaerolib-fabric-1.21.1:$xaeroLibVersion")
 
     modCompileOnly("dev.emi:trinkets:$trinketsVersion")
     // for Trinkets
@@ -135,9 +166,12 @@ dependencies {
 
     // FIXME - Use gradle.properties for these versions, make change to concealed for this
     modCompileOnly("dev.architectury:architectury-fabric:9.1.12")
-    modCompileOnly("dev.ftb.mods:ftb-chunks-fabric:2001.3.1")
-    modCompileOnly("dev.ftb.mods:ftb-teams-fabric:2001.3.0")
-    modCompileOnly("dev.ftb.mods:ftb-library-fabric:2001.2.4")
+    // FIXME fabric-port: these dev.ftb.mods:*-fabric coordinates/versions don't exist on any configured
+    // repository (404 on maven.squiddev.cc) - stale pin from before this ever resolved. FTB Chunks/Teams/Library
+    // compat (FTBIntegration.java, FTBChunksTrainMap.java) needs the correct current maven + version.
+    // modCompileOnly("dev.ftb.mods:ftb-chunks-fabric:2001.3.1")
+    // modCompileOnly("dev.ftb.mods:ftb-teams-fabric:2001.3.0")
+    // modCompileOnly("dev.ftb.mods:ftb-library-fabric:2001.2.4")
 
     modCompileOnly("maven.modrinth:journeymap:$jmVersion")
     modCompileOnly("info.journeymap:journeymap-api:$jmApiVersion")

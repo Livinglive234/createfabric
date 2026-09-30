@@ -3,8 +3,6 @@ package com.simibubi.create.content.redstone.displayLink.source;
 import com.simibubi.create.content.redstone.displayLink.DisplayLinkContext;
 import com.simibubi.create.content.redstone.displayLink.target.DisplayTargetStats;
 
-import io.github.fabricators_of_create.porting_lib.enchant.EnchantmentBonusBlock;
-
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -14,11 +12,8 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.EnchantmentTableBlock;
-import net.minecraft.world.level.block.entity.EnchantmentTableBlockEntity;
+import net.minecraft.world.level.block.EnchantingTableBlock;
 import net.minecraft.world.level.block.state.BlockState;
-
-import io.github.fabricators_of_create.porting_lib.enchant.EnchantmentBonusBlock;
 
 public class EnchantPowerDisplaySource extends NumericSingleLineDisplaySource {
 
@@ -27,23 +22,21 @@ public class EnchantPowerDisplaySource extends NumericSingleLineDisplaySource {
 
 	@Override
 	protected MutableComponent provideLine(DisplayLinkContext context, DisplayTargetStats stats) {
-		if (!(context.getSourceBlockEntity() instanceof EnchantingTableBlockEntity))
-			return ZERO.copy();
-
 		BlockPos pos = context.getSourcePos();
 		Level level = context.level();
+		if (!(level.getBlockState(pos).getBlock() instanceof EnchantingTableBlock))
+			return ZERO.copy();
+
 		float enchantPower = 0;
 
+		// TODO fabric: NeoForge's BlockState#getEnchantPowerBonus / porting-lib's EnchantmentBonusBlock have no
+		// fabric port, so only plain bookshelves contribute bonus enchanting power here
 		for(BlockPos offset : EnchantingTableBlock.BOOKSHELF_OFFSETS) {
 			if (!EnchantingTableBlock.isValidBookShelf(level, pos, offset))
 				continue;
 			BlockPos bookPos = pos.offset(offset);
 			BlockState state = level.getBlockState(bookPos);
-			enchantPower += state.getBlock() instanceof EnchantmentBonusBlock bonus
-					? bonus.getEnchantPowerBonus(state, level, pos)
-					: state.is(Blocks.BOOKSHELF)
-						? 1
-						: 0;
+			enchantPower += state.is(Blocks.BOOKSHELF) ? 1 : 0;
 		}
 
 

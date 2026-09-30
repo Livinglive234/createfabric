@@ -38,17 +38,17 @@ public class GenericItemEmptying {
 		return TransferUtil.getFluidContained(stack).isPresent();
 	}
 
-	public static Pair<FluidStack, ItemStack> emptyItem(Level world, ItemStack stack, boolean simulate) {
+	public static Pair<FluidStack, ItemStack> emptyItem(Level level, ItemStack stack, boolean simulate) {
 		FluidStack resultingFluid = FluidStack.EMPTY;
 		ItemStack resultingItem = ItemStack.EMPTY;
 
 		if (PotionFluidHandler.isPotionItem(stack))
 			return PotionFluidHandler.emptyPotion(stack, simulate);
 
-		Optional<RecipeHolder<Recipe<SingleRecipeInput>>> recipe = AllRecipeTypes.EMPTYING.find(new SingleRecipeInput(stack), world);
+		Optional<RecipeHolder<Recipe<SingleRecipeInput>>> recipe = AllRecipeTypes.EMPTYING.find(new SingleRecipeInput(stack), level);
 		if (recipe.isPresent()) {
 			EmptyingRecipe emptyingRecipe = (EmptyingRecipe) recipe.get().value();
-			List<ItemStack> results = emptyingRecipe.rollResults();
+			List<ItemStack> results = emptyingRecipe.rollResults(level.random);
 			if (!simulate)
 				stack.shrink(1);
 			resultingItem = results.isEmpty() ? ItemStack.EMPTY : results.get(0);

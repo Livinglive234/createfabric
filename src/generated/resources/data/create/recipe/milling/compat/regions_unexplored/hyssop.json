@@ -8,33 +8,22 @@
   "type": "create:milling",
   "ingredients": [
     {
-      "type": "neoforge:compound",
-      "ingredients": [
-        {
-          "item": "regions_unexplored:hyssop"
-        }
-      ]
+      "item": "regions_unexplored:hyssop"
     }
   ],
   "processing_time": 50,
   "results": [
     {
       "count": 2,
-      "item": {
-        "id": "minecraft:purple_dye"
-      }
+      "id": "minecraft:purple_dye"
     },
     {
       "chance": 0.1,
-      "item": {
-        "id": "minecraft:magenta_dye"
-      }
+      "id": "minecraft:magenta_dye"
     },
     {
       "chance": 0.1,
-      "item": {
-        "id": "minecraft:green_dye"
-      }
+      "id": "minecraft:green_dye"
     }
   ]
 }

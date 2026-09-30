@@ -2,13 +2,13 @@ package com.simibubi.create.content.logistics.tunnel;
 
 import com.simibubi.create.foundation.item.ItemHelper;
 
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ItemStack;
 
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
+import net.minecraft.core.component.DataComponents;
 
 public class BrassTunnelItemHandler implements SingleSlotStorage<ItemVariant> {
 
@@ -29,9 +29,9 @@ public class BrassTunnelItemHandler implements SingleSlotStorage<ItemVariant> {
 
 		if (!blockEntity.canTakeItems())
 			return 0;
-		int toInsert = Math.min(ItemHelper.truncateLong(maxAmount), resource.getItem().getMaxStackSize());
+		long toInsert = Math.min(ItemHelper.truncateLong(maxAmount), resource.getItem().getMaxStackSize());
 
-		blockEntity.setStackToDistribute(resource.toStack(toInsert), null, transaction);
+		blockEntity.setStackToDistribute(resource.toStack(ItemHelper.truncateLong(toInsert)), null, transaction);
 		return toInsert;
 	}
 
@@ -70,4 +70,5 @@ public class BrassTunnelItemHandler implements SingleSlotStorage<ItemVariant> {
 			return ItemStack.EMPTY;
 		return stack;
 	}
+
 }

@@ -54,20 +54,26 @@ public class TreeFertilizerItem extends Item {
 			for (BlockPos pos : world.blocksAdded.keySet()) {
 				BlockPos actualPos = pos.offset(saplingPos).below(10);
 				BlockState newState = world.blocksAdded.get(pos);
+				BlockState oldState = context.getLevel().getBlockState(actualPos);
 
 				// Don't replace Bedrock
-				if (context.getLevel()
-					.getBlockState(actualPos)
-					.getDestroySpeed(context.getLevel(), actualPos) == -1)
+				if (oldState.getDestroySpeed(context.getLevel(), actualPos) == -1)
 					continue;
 				// Don't replace solid blocks with leaves
 				if (!newState.isRedstoneConductor(world, pos)
-					&& !context.getLevel()
-						.getBlockState(actualPos)
-						.getCollisionShape(context.getLevel(), actualPos)
+					&& !oldState.getCollisionShape(context.getLevel(), actualPos)
 						.isEmpty())
 					continue;
 
+				// Don't drop blocks that are: unchanged, the same as the fertilized sapling,
+				// or normally replaceable by trees without dropping an item
+				boolean shouldDrop = !(oldState.getBlock() == block ||
+					oldState.getBlock() == newState.getBlock() ||
+					oldState.is(BlockTags.REPLACEABLE_BY_TREES) ||
+					oldState.is(BlockTags.MANGROVE_ROOTS_CAN_GROW_THROUGH) ||
+					oldState.is(BlockTags.MANGROVE_LOGS_CAN_GROW_THROUGH));
+
+				context.getLevel().destroyBlock(actualPos, shouldDrop);
 				context.getLevel()
 					.setBlockAndUpdate(actualPos, newState);
 			}
@@ -86,7 +92,7 @@ public class TreeFertilizerItem extends Item {
 	private BlockState withStage(BlockState original, int stage) {
 		if (!original.hasProperty(BlockStateProperties.STAGE))
 			return original;
-		return original.setValue(BlockStateProperties.STAGE, 1);
+		return original.setValue(BlockStateProperties.STAGE, stage);
 	}
 
 	private static class TreesDreamWorld extends PlacementSimulationServerLevel {
@@ -115,6 +121,14 @@ public class TreeFertilizerItem extends Item {
 			if (newState.getBlock() == Blocks.PODZOL)
 				return true;
 			return super.setBlock(pos, newState, flags);
+		}
+
+		// fabric: porting-lib version-skew diamond conflict between two "extensions" module
+		// snapshotParticipant() default methods, see ContraptionWorld.java for details
+		@Override
+		@SuppressWarnings({"unchecked", "rawtypes"})
+		public net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant snapshotParticipant() {
+			throw new UnsupportedOperationException();
 		}
 	}
 

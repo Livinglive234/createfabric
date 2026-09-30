@@ -8,19 +8,14 @@
   "type": "create:crushing",
   "ingredients": [
     {
-      "type": "neoforge:compound",
-      "ingredients": [
-        {
-          "item": "immersiveengineering:coke"
-        }
-      ]
+      "item": "immersiveengineering:coke"
     }
   ],
   "processing_time": 200,
   "results": [
     {
       "count": 9,
-      "item": "immersiveengineering:dust_coke"
+      "id": "immersiveengineering:dust_coke"
     }
   ]
 }

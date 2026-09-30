@@ -28,11 +28,6 @@ public class ItemHandlerWrapper implements Storage<ItemVariant> {
 	}
 
 	@Override
-	public long simulateInsert(ItemVariant resource, long maxAmount, @Nullable TransactionContext transaction) {
-		return wrapped.simulateInsert(resource, maxAmount, transaction);
-	}
-
-	@Override
 	public boolean supportsExtraction() {
 		return wrapped.supportsExtraction();
 	}
@@ -43,18 +38,8 @@ public class ItemHandlerWrapper implements Storage<ItemVariant> {
 	}
 
 	@Override
-	public long simulateExtract(ItemVariant resource, long maxAmount, @Nullable TransactionContext transaction) {
-		return wrapped.simulateExtract(resource, maxAmount, transaction);
-	}
-
-	@Override
 	public Iterator<StorageView<ItemVariant>> iterator() {
 		return wrapped.iterator();
-	}
-
-	@Override
-	public @Nullable StorageView<ItemVariant> exactView(ItemVariant resource) {
-		return wrapped.exactView(resource);
 	}
 
 	@Override

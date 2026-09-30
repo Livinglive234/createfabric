@@ -19,8 +19,7 @@ import net.minecraft.world.level.block.state.BlockState;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public abstract class SyncedBlockEntity extends BlockEntity implements CustomDataPacketHandlingBlockEntity, CustomUpdateTagHandlingBlockEntity {
-
+public abstract class SyncedBlockEntity extends BlockEntity {
 	public SyncedBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);
 	}
@@ -70,5 +69,4 @@ public abstract class SyncedBlockEntity extends BlockEntity implements CustomDat
 	public HolderGetter<Block> blockHolderGetter() {
 		return level != null ? level.holderLookup(Registries.BLOCK) : BuiltInRegistries.BLOCK.asLookup();
 	}
-
 }

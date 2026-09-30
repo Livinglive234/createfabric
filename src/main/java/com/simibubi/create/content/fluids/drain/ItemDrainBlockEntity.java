@@ -33,6 +33,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.Clearable;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -42,11 +43,10 @@ import net.minecraft.world.phys.Vec3;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
 import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
 
-public class ItemDrainBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, SidedStorageBlockEntity {
+public class ItemDrainBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, Clearable, SidedStorageBlockEntity {
 
 	public static final int FILLING_TIME = 20;
 
@@ -81,27 +81,6 @@ public class ItemDrainBlockEntity extends SmartBlockEntity implements IHaveGoggl
 		}
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.ITEM_DRAIN.get(),
-				(be, context) -> {
-					if (context != null && context.getAxis().isHorizontal())
-						return be.itemHandlers.get(context);
-					return null;
-				}
-		);
-
-		event.registerBlockEntity(
-				Capabilities.FluidHandler.BLOCK,
-				AllBlockEntityTypes.ITEM_DRAIN.get(),
-				(be, context) -> {
-					if (context != Direction.UP)
-						return be.internalTank.getCapability();
-					return null;
-				}
-		);
-	}
 
 	@Override
 	public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
@@ -317,6 +296,11 @@ public class ItemDrainBlockEntity extends SmartBlockEntity implements IHaveGoggl
 	public void setHeldItem(TransportedItemStack heldItem, Direction insertedFrom) {
 		this.heldItem = heldItem;
 		this.heldItem.insertedFrom = insertedFrom;
+	}
+
+	@Override
+	public void clearContent() {
+		this.heldItem = null;
 	}
 
 	@Override

@@ -6,7 +6,6 @@ import net.minecraft.world.item.ItemStack;
 
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.CombinedSlottedStorage;
-import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 
 import com.simibubi.create.infrastructure.fabric.transfer.item.SlottedStackStorage;
 
@@ -51,18 +50,8 @@ public class CombinedSlottedStackStorage<S extends SlottedStackStorage> extends 
 	}
 
 	@Override
-	public boolean isItemValid(int slot, ItemVariant resource, int count) {
-		return this.getFromStorage(slot, (storage, index) -> storage.isItemValid(index, resource, count));
-	}
-
-	@Override
-	public long insertSlot(int slot, ItemVariant resource, long maxAmount, TransactionContext transaction) {
-		return this.getFromStorage(slot, (storage, index) -> storage.insertSlot(index, resource, maxAmount, transaction));
-	}
-
-	@Override
-	public long extractSlot(int slot, ItemVariant resource, long maxAmount, TransactionContext transaction) {
-		return this.getFromStorage(slot, (storage, index) -> storage.extractSlot(index, resource, maxAmount, transaction));
+	public boolean isItemValid(int slot, ItemStack stack) {
+		return this.getFromStorage(slot, (storage, index) -> storage.isItemValid(index, stack));
 	}
 
 	@FunctionalInterface

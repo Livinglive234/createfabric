@@ -88,7 +88,7 @@ public abstract class CreateEmiRecipe<T extends Recipe<?>> implements EmiRecipe 
 			this.input = input.build();
 		} else {
 			this.input = recipe.getIngredients().stream().map(EmiIngredient::of).toList();
-			if (recipe instanceof ProcessingRecipe<?> processing) {
+			if (recipe instanceof ProcessingRecipe<?, ?> processing) {
 				ImmutableList.Builder<EmiStack> builder = ImmutableList.builder();
 				for (ProcessingOutput output : processing.getRollableResults()) {
 					builder.add(EmiStack.of(output.getStack()).setChance(output.getChance()));

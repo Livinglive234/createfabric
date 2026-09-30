@@ -6,18 +6,12 @@ import java.util.function.Predicate;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.tterrag.registrate.fabric.EnvExecutor;
 
-import com.simibubi.create.foundation.utility.DistExecutor;
-
-import net.createmod.catnip.platform.CatnipServices;
-import net.createmod.catnip.math.BlockFace;
+import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.data.Couple;
 import net.createmod.catnip.data.Iterate;
+import net.createmod.catnip.math.BlockFace;
 import net.createmod.catnip.math.VecHelper;
-import net.createmod.catnip.animation.LerpedFloat;
-
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-
+import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -31,6 +25,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.Vec3;
@@ -91,11 +86,11 @@ public class PipeConnection {
 		return true;
 	}
 
-	public void manageSource(Level world, BlockPos pos) {
+	public void manageSource(Level world, BlockPos pos, BlockEntity blockEntity) {
 		if (!source.isPresent() && !determineSource(world, pos))
 			return;
 		FlowSource flowSource = source.get();
-		flowSource.manageSource(world);
+		flowSource.manageSource(world, blockEntity);
 	}
 
 	public boolean manageFlows(Level world, BlockPos pos, FluidStack internalFluid,
@@ -369,7 +364,6 @@ public class PipeConnection {
 	public static final int SPLASH_PARTICLE_AMOUNT = 1;
 	public static final float IDLE_PARTICLE_SPAWN_CHANCE = 1 / 1000f;
 	public static final float RIM_RADIUS = 1 / 4f + 1 / 64f;
-	public static final RandomSource r = RandomSource.create();
 
 	public void spawnSplashOnRim(Level world, BlockPos pos, FluidStack fluid) {
 		CatnipServices.PLATFORM.executeOnClientOnly(() -> () -> spawnSplashOnRimInner(world, pos, fluid));
@@ -379,15 +373,15 @@ public class PipeConnection {
 		CatnipServices.PLATFORM.executeOnClientOnly(() -> () -> spawnParticlesInner(world, pos, fluid));
 	}
 
-	@Environment(EnvType.CLIENT)
-	private void spawnParticlesInner(Level world, BlockPos pos, FluidStack fluid) {
-		if (world == Minecraft.getInstance().level)
+	@OnlyIn(Dist.CLIENT)
+	private void spawnParticlesInner(Level level, BlockPos pos, FluidStack fluid) {
+		if (level == Minecraft.getInstance().level)
 			if (!isRenderEntityWithinDistance(pos))
 				return;
 		if (hasOpenEnd())
-			spawnPouringLiquid(world, pos, fluid, 1);
-		else if (r.nextFloat() < IDLE_PARTICLE_SPAWN_CHANCE)
-			spawnRimParticles(world, pos, fluid, 1);
+			spawnPouringLiquid(level, pos, fluid, 1);
+		else if (level.random.nextFloat() < IDLE_PARTICLE_SPAWN_CHANCE)
+			spawnRimParticles(level, pos, fluid, 1);
 	}
 
 	@Environment(EnvType.CLIENT)

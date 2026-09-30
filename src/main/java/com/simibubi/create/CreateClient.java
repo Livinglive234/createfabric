@@ -5,11 +5,11 @@ import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.simibubi.create.compat.Mods;
 import com.simibubi.create.compat.ftb.FTBIntegration;
+import com.simibubi.create.compat.pojav.PojavChecker;
 import com.simibubi.create.compat.sodium.SodiumCompat;
 import com.simibubi.create.compat.trinkets.Trinkets;
 import com.simibubi.create.content.contraptions.glue.SuperGlueSelectionHandler;
-import com.simibubi.create.content.contraptions.render.ContraptionRenderInfo;
-import com.simibubi.create.content.contraptions.render.ContraptionRenderInfoManager;
+import com.simibubi.create.content.contraptions.render.ContraptionEntityRenderer;
 import com.simibubi.create.content.decoration.encasing.CasingConnectivity;
 import com.simibubi.create.content.equipment.armor.RemainingAirOverlay;
 import com.simibubi.create.content.equipment.bell.SoulPulseEffectHandler;
@@ -57,6 +57,8 @@ import net.minecraft.network.chat.MutableComponent;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import com.simibubi.create.content.contraptions.render.ContraptionRenderInfo;
+import com.simibubi.create.content.contraptions.render.ContraptionRenderInfoManager;
 
 public class CreateClient implements ClientModInitializer {
 
@@ -87,6 +89,7 @@ public class CreateClient implements ClientModInitializer {
 
 		Mods.FTBLIBRARY.executeIfInstalled(() -> () -> FTBIntegration.init());
 		Mods.SODIUM.executeIfInstalled(() -> () -> SodiumCompat.init());
+		PojavChecker.init();
 
 		// clientInit start
 
@@ -102,7 +105,7 @@ public class CreateClient implements ClientModInitializer {
 		SuperByteBufferCache.getInstance().registerCompartment(CachedBuffers.DIRECTIONAL_PARTIAL);
 		SuperByteBufferCache.getInstance().registerCompartment(KineticBlockEntityRenderer.KINETIC_BLOCK);
 		SuperByteBufferCache.getInstance().registerCompartment(WaterWheelRenderer.WATER_WHEEL);
-		SuperByteBufferCache.getInstance().registerCompartment(ContraptionRenderInfo.CONTRAPTION, 20);
+		SuperByteBufferCache.getInstance().registerCompartment(ContraptionEntityRenderer.CONTRAPTION, 20);
 
 		AllKeys.register();
 		AllPartialModels.init();
@@ -133,18 +136,15 @@ public class CreateClient implements ClientModInitializer {
 
 	private static void registerOverlays() {
 		HudRenderCallback.EVENT.register((graphics, partialTicks) -> {
-			Window window = Minecraft.getInstance().getWindow();
-			Gui gui = Minecraft.getInstance().gui;
-
-			RemainingAirOverlay.render(graphics, window.getGuiScaledWidth(), window.getGuiScaledHeight()); // Create's Remaining Air
-			TrainHUD.renderOverlay(graphics, partialTicks, window); // Create's Train Driver HUD
-			GoggleOverlayRenderer.renderOverlay(graphics, partialTicks, window.getGuiScaledWidth(), window.getGuiScaledHeight()); // Create's Goggle Information
-			BlueprintOverlayRenderer.renderOverlay(gui, graphics, partialTicks, window); // Create's Blueprints
-			LinkedControllerClientHandler.renderOverlay(graphics, partialTicks, window); // Create's Linked Controller
-			SCHEMATIC_HANDLER.renderOverlay(graphics, partialTicks, window); // Create's Schematics
-			ToolboxHandlerClient.renderOverlay(graphics, partialTicks, window); // Create's Toolboxes
-			VALUE_SETTINGS_HANDLER.render(graphics, window.getGuiScaledWidth(), window.getGuiScaledHeight()); // Create's Value Settings
-			TrackPlacementOverlay.renderOverlay(gui, graphics); // Create's Track Placement
+			RemainingAirOverlay.INSTANCE.render(graphics, partialTicks); // Create's Remaining Air
+			TrainHUD.OVERLAY.render(graphics, partialTicks); // Create's Train Driver HUD
+			GoggleOverlayRenderer.renderOverlay(graphics, partialTicks); // Create's Goggle Information
+			BlueprintOverlayRenderer.renderOverlay(graphics, partialTicks); // Create's Blueprints
+			LinkedControllerClientHandler.renderOverlay(graphics, partialTicks); // Create's Linked Controller
+			SCHEMATIC_HANDLER.render(graphics, partialTicks); // Create's Schematics
+			ToolboxHandlerClient.renderOverlay(graphics, partialTicks); // Create's Toolboxes
+			VALUE_SETTINGS_HANDLER.render(graphics, partialTicks); // Create's Value Settings
+			TrackPlacementOverlay.INSTANCE.render(graphics, partialTicks); // Create's Track Placement
 		});
 	}
 
@@ -170,7 +170,6 @@ public class CreateClient implements ClientModInitializer {
 
 	public static void invalidateRenderers() {
 		SCHEMATIC_HANDLER.updateRenderers();
-		ContraptionRenderInfoManager.resetAll();
 	}
 
 	public static void checkGraphicsFanciness() {

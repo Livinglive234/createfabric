@@ -9,7 +9,7 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 
 public class PackagePortAutomationInventoryWrapper extends ItemHandlerWrapper {
 
-	private PackagePortBlockEntity ppbe;
+	private final PackagePortBlockEntity ppbe;
 
 	public PackagePortAutomationInventoryWrapper(Storage<ItemVariant> wrapped, PackagePortBlockEntity ppbe) {
 		super(wrapped);
@@ -20,8 +20,9 @@ public class PackagePortAutomationInventoryWrapper extends ItemHandlerWrapper {
 	public long extract(ItemVariant resource, long maxAmount, TransactionContext transaction) {
 		if (!PackageItem.isPackage(resource))
 			return 0;
+
 		String filterString = ppbe.getFilterString();
-		if (filterString == null || PackageItem.matchAddress(resource, filterString))
+		if (filterString == null || !PackageItem.matchAddress(resource, filterString))
 			return 0;
 
 		return super.extract(resource, maxAmount, transaction);
@@ -34,7 +35,6 @@ public class PackagePortAutomationInventoryWrapper extends ItemHandlerWrapper {
 		String filterString = ppbe.getFilterString();
 		if (filterString != null && PackageItem.matchAddress(resource, filterString))
 			return 0;
-
 		return super.insert(resource, maxAmount, transaction);
 	}
 }

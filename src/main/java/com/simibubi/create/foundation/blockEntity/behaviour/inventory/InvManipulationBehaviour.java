@@ -2,18 +2,11 @@ package com.simibubi.create.foundation.blockEntity.behaviour.inventory;
 
 import java.util.function.Predicate;
 
-import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
-
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.Level;
-
 import org.jetbrains.annotations.Nullable;
 
 import com.google.common.base.Predicates;
+import com.simibubi.create.api.packager.InventoryIdentifier;
+import com.simibubi.create.content.logistics.packager.IdentifiedInventory;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BehaviourType;
 import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringBehaviour;
@@ -59,6 +52,16 @@ public class InvManipulationBehaviour extends CapManipulationBehaviourBase<ItemV
 		behaviourType = type;
 	}
 
+	@Nullable
+	public IdentifiedInventory getIdentifiedInventory() {
+		Storage<ItemVariant> inventory = this.getInventory();
+		if (inventory == null)
+			return null;
+
+		InventoryIdentifier identifier = InventoryIdentifier.get(this.getWorld(), this.getTarget().getOpposite());
+		return new IdentifiedInventory(identifier, inventory);
+	}
+
 	@Override
 	protected StorageProvider<ItemVariant> getProvider(BlockPos pos, boolean bypassSided) {
 		return bypassSided
@@ -85,10 +88,7 @@ public class InvManipulationBehaviour extends CapManipulationBehaviourBase<ItemV
 			return ItemStack.EMPTY;
 
 		Predicate<ItemStack> test = getFilterTest(filter);
-		ItemStack simulatedItems = ItemHelper.extract(inventory, test, mode, amount, true);
-		if (shouldSimulate || simulatedItems.isEmpty())
-			return simulatedItems;
-		return ItemHelper.extract(inventory, test, mode, amount, false);
+		return ItemHelper.extract(inventory, test, mode, amount, shouldSimulate);
 	}
 
 	public ItemStack insert(ItemStack stack) {

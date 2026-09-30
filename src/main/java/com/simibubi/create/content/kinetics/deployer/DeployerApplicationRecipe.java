@@ -6,9 +6,6 @@ import java.util.Set;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllRecipeTypes;
 import com.simibubi.create.AllTags.AllItemTags;
-import com.simibubi.create.compat.recipeViewerCommon.SequencedAssemblySubCategoryType;
-import com.simibubi.create.content.processing.recipe.ProcessingRecipeBuilder;
-import com.simibubi.create.content.processing.recipe.ProcessingRecipeBuilder.ProcessingRecipeParams;
 import com.simibubi.create.content.processing.sequenced.IAssemblyRecipe;
 import com.simibubi.create.foundation.utility.CreateLang;
 
@@ -20,16 +17,18 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.ItemLike;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import com.simibubi.create.compat.recipeViewerCommon.SequencedAssemblySubCategoryType;
+import com.simibubi.create.content.processing.recipe.ProcessingRecipeBuilder;
+import net.minecraft.world.item.crafting.Recipe;
 
 public class DeployerApplicationRecipe extends ItemApplicationRecipe implements IAssemblyRecipe {
 
-	public DeployerApplicationRecipe(ProcessingRecipeParams params) {
+	public DeployerApplicationRecipe(ItemApplicationRecipeParams params) {
 		super(AllRecipeTypes.DEPLOYING, params);
 	}
 
@@ -43,7 +42,7 @@ public class DeployerApplicationRecipe extends ItemApplicationRecipe implements 
 				sandpaperRecipe.id().getNamespace(),
 				sandpaperRecipe.id().getPath() + "_using_deployer"
 		);
-		DeployerApplicationRecipe recipe = new ProcessingRecipeBuilder<>(DeployerApplicationRecipe::new, id)
+		DeployerApplicationRecipe recipe = new ItemApplicationRecipe.Builder<>(DeployerApplicationRecipe::new, id)
 				.require(sandpaperRecipe.value().getIngredients()
 						.get(0))
 						.require(AllItemTags.SANDPAPER.tag)

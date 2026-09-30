@@ -58,11 +58,9 @@ public class AllPotatoProjectileBlockHitActions {
 			if (!level.getBlockState(placePos)
 				.canBeReplaced())
 				return false;
-			if (!(cropBlock.value() instanceof SpecialPlantable specialPlantable))
-				return false;
-			if (specialPlantable.canPlacePlantAtPosition(projectile, level, placePos, null))
-				specialPlantable.spawnPlantAtPosition(projectile, level, placePos, null);
-			return true;
+			// TODO fabric: NeoForge's SpecialPlantable has no fabric port, so crops relying on it
+			// (rather than a plain BlockItem) can't be planted by the potato cannon
+			return false;
 		}
 
 		@Override
@@ -97,7 +95,7 @@ public class AllPotatoProjectileBlockHitActions {
 
 			if (face == Direction.UP) {
 				levelAccessor.setBlock(placePos, block.value()
-					.defaultBlockState(), 3);
+					.defaultBlockState(), Block.UPDATE_ALL);
 			} else if (levelAccessor instanceof Level level) {
 				double y = ray.getLocation().y - 0.5;
 				if (!level.isEmptyBlock(placePos.above()))

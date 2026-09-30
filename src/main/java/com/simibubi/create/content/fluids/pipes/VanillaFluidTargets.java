@@ -7,7 +7,6 @@ import com.simibubi.create.AllFluids;
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
 
 import net.fabricmc.fabric.api.transfer.v1.fluid.CauldronFluidContent;
-
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 
@@ -20,11 +19,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.Fluids;
 
-import net.fabricmc.fabric.api.transfer.v1.fluid.CauldronFluidContent;
-import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
-import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
-
-import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
+import com.simibubi.create.infrastructure.fabric.transfer.TransactionSuccessCallback;
 
 public class VanillaFluidTargets {
 
@@ -38,16 +33,16 @@ public class VanillaFluidTargets {
 
 	public static FluidStack drainBlock(Level level, BlockPos pos, BlockState state, TransactionContext ctx) {
 		if (state.hasProperty(BlockStateProperties.LEVEL_HONEY) && state.getValue(LEVEL_HONEY) >= 5) {
-			level.updateSnapshots(ctx);
-			level.setBlock(pos, state.setValue(LEVEL_HONEY, 0), 3);
+			TransactionSuccessCallback.register(ctx,
+				() -> level.setBlock(pos, state.setValue(LEVEL_HONEY, 0), Block.UPDATE_ALL));
 			return new FluidStack(AllFluids.HONEY.get()
 				.getSource(), FluidConstants.BOTTLE);
 		}
 
 		if (state.is(Blocks.LAVA_CAULDRON)) {
-			level.updateSnapshots(ctx);
-			level.setBlock(pos, Blocks.CAULDRON.defaultBlockState(), 3);
-			return new FluidStack(Fluids.LAVA, FluidConstants.BUCKET);
+			TransactionSuccessCallback.register(ctx,
+				() -> level.setBlock(pos, Blocks.CAULDRON.defaultBlockState(), Block.UPDATE_ALL));
+			return new FluidStack(Fluids.LAVA, 1000);
 		}
 
 		Block block = state.getBlock();
@@ -55,9 +50,9 @@ public class VanillaFluidTargets {
 		if (content != null && block instanceof LayeredCauldronBlock lcb) {
 			if (!lcb.isFull(state))
 				return FluidStack.EMPTY;
-			level.updateSnapshots(ctx);
-			level.setBlock(pos, Blocks.CAULDRON.defaultBlockState(), 3);
-			return new FluidStack(content.fluid, FluidConstants.BUCKET);
+			TransactionSuccessCallback.register(ctx,
+				() -> level.setBlock(pos, Blocks.CAULDRON.defaultBlockState(), Block.UPDATE_ALL));
+			return new FluidStack(Fluids.WATER, 1000);
 		}
 
 		return FluidStack.EMPTY;

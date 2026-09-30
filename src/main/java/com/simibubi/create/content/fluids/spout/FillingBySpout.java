@@ -12,14 +12,12 @@ import com.simibubi.create.foundation.fluid.FluidIngredient;
 
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
 
-import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.Level;
-
-import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
+import net.minecraft.world.Container;
 import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandlerContainer;
 
 public class FillingBySpout {
@@ -60,20 +58,20 @@ public class FillingBySpout {
 		return GenericItemFilling.getRequiredAmountForItem(world, stack, availableFluid);
 	}
 
-	public static ItemStack fillItem(Level world, long requiredAmount, ItemStack stack, FluidStack availableFluid) {
+	public static ItemStack fillItem(Level level, int requiredAmount, ItemStack stack, FluidStack availableFluid) {
 		FluidStack toFill = availableFluid.copy();
 		toFill.setAmount(requiredAmount);
 
 		SingleRecipeInput input = new SingleRecipeInput(stack);
 
 		RecipeHolder<FillingRecipe> fillingRecipe = SequencedAssemblyRecipe
-			.getRecipe(world, input, AllRecipeTypes.FILLING.getType(), FillingRecipe.class,
-				matchItemAndFluid(world, availableFluid, input))
+			.getRecipe(level, input, AllRecipeTypes.FILLING.getType(), FillingRecipe.class,
+				matchItemAndFluid(level, availableFluid, input))
 			.filter(fr -> fr.value().getRequiredFluid()
 					.test(toFill))
 				.orElseGet(() -> {
-					for (RecipeHolder<Recipe<SingleRecipeInput>> recipe : world.getRecipeManager()
-						.getRecipesFor(AllRecipeTypes.FILLING.getType(), input, world)) {
+					for (RecipeHolder<Recipe<SingleRecipeInput>> recipe : level.getRecipeManager()
+						.getRecipesFor(AllRecipeTypes.FILLING.getType(), input, level)) {
 						FillingRecipe fr = (FillingRecipe) recipe.value();
 						FluidIngredient requiredFluid = fr.getRequiredFluid();
 						if (requiredFluid.test(toFill))
@@ -83,13 +81,13 @@ public class FillingBySpout {
 				});
 
 		if (fillingRecipe != null) {
-			List<ItemStack> results = fillingRecipe.value().rollResults();
+			List<ItemStack> results = fillingRecipe.value().rollResults(level.random);
 			availableFluid.shrink(requiredAmount);
 			stack.shrink(1);
 			return results.isEmpty() ? ItemStack.EMPTY : results.get(0);
 		}
 
-		return GenericItemFilling.fillItem(world, requiredAmount, stack, availableFluid);
+		return GenericItemFilling.fillItem(level, requiredAmount, stack, availableFluid);
 	}
 
 	private static Predicate<RecipeHolder<FillingRecipe>> matchItemAndFluid(Level world, FluidStack availableFluid, SingleRecipeInput input) {

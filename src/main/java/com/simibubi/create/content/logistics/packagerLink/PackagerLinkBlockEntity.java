@@ -5,35 +5,36 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
 
 import com.simibubi.create.AllSoundEvents;
+import com.simibubi.create.content.logistics.packager.IdentifiedInventory;
 import com.simibubi.create.content.logistics.packager.InventorySummary;
 import com.simibubi.create.content.logistics.packager.PackagerBlockEntity;
 import com.simibubi.create.content.logistics.packager.PackagingRequest;
-import com.simibubi.create.content.logistics.packager.fabric.InventoryIdentifier;
 import com.simibubi.create.content.logistics.packager.repackager.RepackagerBlockEntity;
-import com.simibubi.create.content.logistics.stockTicker.PackageOrder;
+import com.simibubi.create.content.logistics.stockTicker.PackageOrderWithCrafts;
 import com.simibubi.create.content.redstone.displayLink.LinkWithBulbBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 
-import net.createmod.catnip.platform.CatnipServices;
 import net.createmod.catnip.data.Pair;
 import net.createmod.catnip.math.AngleHelper;
 import net.createmod.catnip.math.VecHelper;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.AttachFace;
 import net.minecraft.world.phys.Vec3;
+import com.simibubi.create.content.logistics.stockTicker.PackageOrder;
+import net.createmod.catnip.platform.CatnipServices;
+import net.minecraft.server.level.ServerLevel;
 
 public class PackagerLinkBlockEntity extends LinkWithBulbBlockEntity {
 
@@ -46,7 +47,7 @@ public class PackagerLinkBlockEntity extends LinkWithBulbBlockEntity {
 		placedBy = null;
 	}
 
-	public InventorySummary fetchSummaryFromPackager(@Nullable InventoryIdentifier identifier) {
+	public InventorySummary fetchSummaryFromPackager(@Nullable IdentifiedInventory ignoredHandler) {
 		PackagerBlockEntity packager = getPackager();
 		if (packager == null)
 			return InventorySummary.EMPTY;
@@ -70,8 +71,8 @@ public class PackagerLinkBlockEntity extends LinkWithBulbBlockEntity {
 			vec3 = vec3.add(0, 0.25, 0);
 
 		vec3 = vec3.add(Vec3.atLowerCornerOf(state.getOptionalValue(PackagerLinkBlock.FACING)
-			.orElse(Direction.SOUTH)
-			.getNormal())
+				.orElse(Direction.SOUTH)
+				.getNormal())
 			.scale(f * 0.125));
 
 		pulse();
@@ -79,8 +80,8 @@ public class PackagerLinkBlockEntity extends LinkWithBulbBlockEntity {
 	}
 
 	public Pair<PackagerBlockEntity, PackagingRequest> processRequest(ItemStack stack, int amount, String address,
-		int linkIndex, MutableBoolean finalLink, int orderId, @Nullable PackageOrder orderContext,
-		@Nullable InventoryIdentifier identifier) {
+		int linkIndex, MutableBoolean finalLink, int orderId, @Nullable PackageOrderWithCrafts context,
+		@Nullable IdentifiedInventory ignoredHandler) {
 		PackagerBlockEntity packager = getPackager();
 		if (packager == null)
 			return null;
@@ -93,7 +94,7 @@ public class PackagerLinkBlockEntity extends LinkWithBulbBlockEntity {
 			return null;
 		int toWithdraw = Math.min(amount, availableCount);
 		return Pair.of(packager,
-			PackagingRequest.create(stack, toWithdraw, address, linkIndex, finalLink, 0, orderId, orderContext));
+			PackagingRequest.create(stack, toWithdraw, address, linkIndex, finalLink, 0, orderId, context));
 	}
 
 	@Override

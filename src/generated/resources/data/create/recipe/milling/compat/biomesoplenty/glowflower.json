@@ -8,27 +8,18 @@
   "type": "create:milling",
   "ingredients": [
     {
-      "type": "neoforge:compound",
-      "ingredients": [
-        {
-          "item": "biomesoplenty:glowflower"
-        }
-      ]
+      "item": "biomesoplenty:glowflower"
     }
   ],
   "processing_time": 50,
   "results": [
     {
       "count": 2,
-      "item": {
-        "id": "minecraft:cyan_dye"
-      }
+      "id": "minecraft:cyan_dye"
     },
     {
       "chance": 0.1,
-      "item": {
-        "id": "minecraft:white_dye"
-      }
+      "id": "minecraft:white_dye"
     }
   ]
 }

@@ -1,5 +1,7 @@
 package com.simibubi.create.compat.rei.category;
 
+import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -62,7 +64,7 @@ public class SpoutCategory extends CreateRecipeCategory<FillingRecipe> {
 			if (stack.getItem() instanceof PotionItem) {
 				FluidStack fluidFromPotionItem = PotionFluidHandler.getFluidFromPotionItem(stack);
 				Ingredient bottle = Ingredient.of(Items.GLASS_BOTTLE);
-				consumer.accept(new ProcessingRecipeBuilder<>(FillingRecipe::new, Create.asResource("potions"))
+				consumer.accept(new StandardProcessingRecipe.Builder<>(FillingRecipe::new, Create.asResource("potions"))
 					.withItemIngredients(bottle)
 					.withFluidIngredients(FluidIngredient.fromFluidStack(fluidFromPotionItem))
 					.withSingleItemOutput(stack)
@@ -95,7 +97,7 @@ public class SpoutCategory extends CreateRecipeCategory<FillingRecipe> {
 								.getKey(stack.getItem());
 						ResourceLocation fluidName = BuiltInRegistries.FLUID
 								.getKey(fluidCopy.getFluid());
-						consumer.accept(new ProcessingRecipeBuilder<>(FillingRecipe::new,
+						consumer.accept(new StandardProcessingRecipe.Builder<>(FillingRecipe::new,
 								Create.asResource("fill_" + itemName.getNamespace() + "_" + itemName.getPath()
 										+ "_with_" + fluidName.getNamespace() + "_" + fluidName.getPath()))
 								.withItemIngredients(bucket)

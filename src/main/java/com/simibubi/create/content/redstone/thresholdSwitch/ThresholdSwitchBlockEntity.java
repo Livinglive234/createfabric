@@ -34,6 +34,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.Mth;
+import net.minecraft.world.Clearable;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -50,8 +51,7 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
 import io.github.fabricators_of_create.porting_lib.util.StorageProvider;
 
-public class ThresholdSwitchBlockEntity extends SmartBlockEntity {
-
+public class ThresholdSwitchBlockEntity extends SmartBlockEntity implements Clearable {
 	public int onWhenAbove;
 	public int offWhenBelow;
 
@@ -228,7 +228,7 @@ public class ThresholdSwitchBlockEntity extends SmartBlockEntity {
 			if (currentLevel == -1)
 				return;
 
-			level.setBlock(worldPosition, getBlockState().setValue(ThresholdSwitchBlock.LEVEL, 0), 3);
+			level.setBlock(worldPosition, getBlockState().setValue(ThresholdSwitchBlock.LEVEL, 0), Block.UPDATE_ALL);
 			currentLevel = -1;
 			redstoneState = false;
 			sendData();
@@ -320,6 +320,11 @@ public class ThresholdSwitchBlockEntity extends SmartBlockEntity {
 		if (level.isClientSide)
 			return;
 		updateCurrentLevel();
+	}
+
+	@Override
+	public void clearContent() {
+		filtering.setFilter(ItemStack.EMPTY);
 	}
 
 	@Override

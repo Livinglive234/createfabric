@@ -1,5 +1,6 @@
 package com.simibubi.create.content.fluids.transfer;
 
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -8,9 +9,7 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
-import org.jetbrains.annotations.Nullable;
-
-import com.simibubi.create.AllPackets;
+import com.google.common.base.Predicates;
 import com.simibubi.create.AllTags.AllFluidTags;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
@@ -18,17 +17,10 @@ import com.simibubi.create.foundation.fluid.FluidHelper;
 import com.simibubi.create.foundation.mixin.fabric.SortedArraySetAccessor;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
-import net.createmod.catnip.platform.CatnipServices;
 import net.createmod.catnip.data.Iterate;
-import net.createmod.catnip.nbt.NBTHelper;
 import net.createmod.catnip.math.VecHelper;
-
-import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
-import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributes;
-import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
-
-import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
-
+import net.createmod.catnip.nbt.NBTHelper;
+import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -51,13 +43,15 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
 
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
+import org.jetbrains.annotations.Nullable;
+import com.simibubi.create.AllPackets;
 
 public abstract class FluidManipulationBehaviour extends BlockEntityBehaviour {
-
-	public static record BlockPosEntry(BlockPos pos, int distance) {
-	};
+	public record BlockPosEntry(BlockPos pos, int distance) {
+	}
 
 	public static class ChunkNotLoadedException extends Exception {
+		@Serial
 		private static final long serialVersionUID = 1L;
 	}
 
@@ -159,22 +153,14 @@ public abstract class FluidManipulationBehaviour extends BlockEntityBehaviour {
 		int compareDistance = Integer.compare(e2.distance, e1.distance);
 		if (compareDistance != 0)
 			return compareDistance;
-		int distanceCompared = Double.compare(VecHelper.getCenterOf(pos2)
-						.distanceToSqr(centerOfRoot),
-				VecHelper.getCenterOf(pos1)
-						.distanceToSqr(centerOfRoot));
-		// fabric: since we're using a set for the queue, we need to only have them equal if they're really equal.
-		if (distanceCompared != 0)
-			return distanceCompared;
-		// equidistant, go by X and Z
-		int xCompared = Integer.compare(pos2.getX(), pos1.getX());
-		if (xCompared != 0)
-			return xCompared;
-		return Integer.compare(pos2.getZ(), pos1.getZ());
+		return Double.compare(VecHelper.getCenterOf(pos2)
+				.distanceToSqr(centerOfRoot),
+			VecHelper.getCenterOf(pos1)
+				.distanceToSqr(centerOfRoot));
 	}
 
 	protected Fluid search(Fluid fluid, List<BlockPosEntry> frontier, Set<BlockPos> visited,
-		BiConsumer<BlockPos, Integer> add, boolean searchDownward) throws ChunkNotLoadedException {
+						   BiConsumer<BlockPos, Integer> add, boolean searchDownward) throws ChunkNotLoadedException {
 		Level world = getWorld();
 		int maxBlocks = maxBlocks();
 		int maxRange = maxRange();
@@ -263,9 +249,9 @@ public abstract class FluidManipulationBehaviour extends BlockEntityBehaviour {
 			nbt.put("LastPos", NbtUtils.writeBlockPos(rootPos));
 		if (affectedArea != null) {
 			nbt.put("AffectedAreaFrom",
-					NbtUtils.writeBlockPos(new BlockPos(affectedArea.minX(), affectedArea.minY(), affectedArea.minZ())));
+				NbtUtils.writeBlockPos(new BlockPos(affectedArea.minX(), affectedArea.minY(), affectedArea.minZ())));
 			nbt.put("AffectedAreaTo",
-					NbtUtils.writeBlockPos(new BlockPos(affectedArea.maxX(), affectedArea.maxY(), affectedArea.maxZ())));
+				NbtUtils.writeBlockPos(new BlockPos(affectedArea.maxX(), affectedArea.maxY(), affectedArea.maxZ())));
 		}
 		super.write(nbt, registries, clientPacket);
 	}
@@ -277,15 +263,15 @@ public abstract class FluidManipulationBehaviour extends BlockEntityBehaviour {
 			rootPos = NBTHelper.readBlockPos(nbt, "LastPos");
 		if (nbt.contains("AffectedAreaFrom") && nbt.contains("AffectedAreaTo"))
 			affectedArea = BoundingBox.fromCorners(NBTHelper.readBlockPos(nbt, "AffectedAreaFrom"),
-					NBTHelper.readBlockPos(nbt, "AffectedAreaTo"));
+				NBTHelper.readBlockPos(nbt, "AffectedAreaTo"));
 		super.read(nbt, registries, clientPacket);
 	}
 
 	public enum BottomlessFluidMode implements Predicate<Fluid> {
-		ALLOW_ALL(fluid -> true),
-		DENY_ALL(fluid -> false),
-		ALLOW_BY_TAG(fluid -> AllFluidTags.BOTTOMLESS_ALLOW.matches(fluid)),
-		DENY_BY_TAG(fluid -> !AllFluidTags.BOTTOMLESS_DENY.matches(fluid));
+		ALLOW_ALL(Predicates.alwaysTrue()),
+		DENY_ALL(Predicates.alwaysFalse()),
+		ALLOW_BY_TAG(AllFluidTags.BOTTOMLESS_ALLOW::matches),
+		DENY_BY_TAG(Predicates.not(AllFluidTags.BOTTOMLESS_DENY::matches));
 
 		private final Predicate<Fluid> predicate;
 
@@ -299,11 +285,11 @@ public abstract class FluidManipulationBehaviour extends BlockEntityBehaviour {
 		}
 	}
 
-
 	/**
 	 * Quickly copy the given set.
 	 * This is a shallow copy, so entries must be immutable.
 	 */
+	@SuppressWarnings("unchecked")
 	public static <T> SortedArraySet<T> copySet(SortedArraySet<T> set) {
 		int size = set.size();
 		SortedArraySetAccessor<T> access = (SortedArraySetAccessor<T>) set;
@@ -322,8 +308,8 @@ public abstract class FluidManipulationBehaviour extends BlockEntityBehaviour {
 	 * Remove the first entry from the given set.
 	 * identical to {@code set.remove(set.first())}
 	 */
+	@SuppressWarnings("unchecked")
 	public static <T> void dequeue(SortedArraySet<T> set) {
 		((SortedArraySetAccessor<T>) set).create$callRemoveInternal(0);
 	}
-
 }

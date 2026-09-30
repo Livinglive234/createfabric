@@ -8,7 +8,7 @@ import com.simibubi.create.AllDataComponents;
 import com.simibubi.create.AllTags.AllItemTags;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.content.logistics.BigItemStack;
-import com.simibubi.create.content.logistics.stockTicker.PackageOrder;
+import com.simibubi.create.content.logistics.stockTicker.PackageOrderWithCrafts;
 import com.simibubi.create.content.logistics.stockTicker.StockTickerBlockEntity;
 import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.utility.CreateLang;
@@ -43,6 +43,7 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.phys.BlockHitResult;
+import com.simibubi.create.content.logistics.stockTicker.PackageOrder;
 
 public class RedstoneRequesterBlock extends Block implements IBE<RedstoneRequesterBlockEntity>, IWrenchable, WeakPowerCheckingBlock {
 
@@ -92,8 +93,7 @@ public class RedstoneRequesterBlock extends Block implements IBE<RedstoneRequest
 		return onBlockEntityUse(level, pos, be -> be.use(player));
 	}
 
-	public static void programRequester(ServerPlayer player, StockTickerBlockEntity be, PackageOrder order,
-		String address, PackageOrder orderContext) {
+	public static void programRequester(ServerPlayer player, StockTickerBlockEntity be, PackageOrderWithCrafts order, String address) {
 		ItemStack stack = player.getMainHandItem();
 		boolean isRequester = AllBlocks.REDSTONE_REQUESTER.isIn(stack);
 		boolean isShopCloth = AllItemTags.TABLE_CLOTHS.matches(stack);
@@ -104,7 +104,7 @@ public class RedstoneRequesterBlock extends Block implements IBE<RedstoneRequest
 			.dimension()
 			.location()
 			.toString();
-		AutoRequestData autoRequestData = new AutoRequestData(order, orderContext, address, be.getBlockPos(), targetDim, false);
+		AutoRequestData autoRequestData = new AutoRequestData(order, address, be.getBlockPos(), targetDim, false);
 
 		autoRequestData.writeToItem(BlockPos.ZERO, stack);
 
@@ -139,15 +139,13 @@ public class RedstoneRequesterBlock extends Block implements IBE<RedstoneRequest
 	}
 
 	@Override
-	public void setPlacedBy(Level pLevel, BlockPos requesterPos, BlockState pState, LivingEntity pPlacer,
-		ItemStack pStack) {
+	public void setPlacedBy(Level pLevel, BlockPos requesterPos, BlockState pState, LivingEntity pPlacer, ItemStack pStack) {
 		Player player = pPlacer instanceof Player ? (Player) pPlacer : null;
 		withBlockEntityDo(pLevel, requesterPos, rrbe -> {
 			AutoRequestData data = AutoRequestData.readFromItem(pLevel, player, requesterPos, pStack);
 			if (data == null)
 				return;
 			rrbe.encodedRequest = data.encodedRequest();
-			rrbe.encodedRequestContext = data.encodedRequestContext();
 			rrbe.encodedTargetAdress = data.encodedTargetAddress();
 		});
 	}

@@ -4,8 +4,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.simibubi.create.foundation.render.RenderTypes;
 
-import io.github.fabricators_of_create.porting_lib.util.ItemRendererHelper;
-
 import net.createmod.catnip.data.Iterate;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -18,7 +16,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 
-import io.github.fabricators_of_create.porting_lib.util.ItemRendererHelper;
+import io.github.fabricators_of_create.porting_lib.mixin.accessors.client.accessor.ItemRendererAccessor;
 
 public class PartialItemModelRenderer {
 
@@ -82,13 +80,14 @@ public class PartialItemModelRenderer {
 				.getItemRenderer();
 //		IModelData data = EmptyModelData.INSTANCE;
 
+		ItemRendererAccessor accessor = (ItemRendererAccessor) ir;
 		for (Direction direction : Iterate.directions) {
 			random.setSeed(42L);
-			ItemRendererHelper.renderQuadList(ir, ms, buffer, model.getQuads(null, direction, random), stack, light, overlay);
+			accessor.port_lib$renderQuadList(ms, buffer, model.getQuads(null, direction, random), stack, light, overlay);
 		}
 
 		random.setSeed(42L);
-		ItemRendererHelper.renderQuadList(ir, ms, buffer, model.getQuads(null, null, random), stack, light, overlay);
+		accessor.port_lib$renderQuadList(ms, buffer, model.getQuads(null, null, random), stack, light, overlay);
 	}
 
 }

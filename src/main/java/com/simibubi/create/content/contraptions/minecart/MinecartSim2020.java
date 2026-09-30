@@ -4,10 +4,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.mojang.datafixers.util.Pair;
-import com.simibubi.create.AllAttachmentTypes;
 import com.simibubi.create.content.contraptions.minecart.capability.MinecartController;
-
-import io.github.fabricators_of_create.porting_lib.util.MinecartAndRailUtil;
 
 import net.createmod.catnip.math.VecHelper;
 import net.minecraft.Util;
@@ -22,13 +19,17 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.RailShape;
 import net.minecraft.world.phys.Vec3;
 
-import io.github.fabricators_of_create.porting_lib.util.MinecartAndRailUtil;
+import com.simibubi.create.AllAttachmentTypes;
 
 /**
  * Useful methods for dealing with Minecarts
  *
  */
 public class MinecartSim2020 {
+	// fabric: NeoForge's MinecartAndRailUtil#getSlopeAdjustment has no fabric port; this is vanilla
+	// AbstractMinecart's own historical slope-adjustment constant (2^-7)
+	private static final double SLOPE_ADJUSTMENT = 0.0078125D;
+
 	private static final Map<RailShape, Pair<Vec3i, Vec3i>> MATRIX =
 		Util.make(Maps.newEnumMap(RailShape.class), (map) -> {
 			Vec3i west = Direction.WEST.getNormal();
@@ -54,9 +55,9 @@ public class MinecartSim2020 {
 	}
 
 	public static boolean canAddMotion(AbstractMinecart c) {
-		if (c instanceof MinecartFurnace)
-			return Mth.equal(((MinecartFurnace) c).xPush, 0)
-				&& Mth.equal(((MinecartFurnace) c).zPush, 0);
+		if (c instanceof MinecartFurnace furnace)
+			return Mth.equal(furnace.xPush, 0)
+				&& Mth.equal(furnace.zPush, 0);
 		if (c.create$getController()
 			.isStalled())
 			return false;
@@ -84,22 +85,22 @@ public class MinecartSim2020 {
 		actualY = cartPos.getY() + 1;
 
 		BaseRailBlock abstractrailblock = (BaseRailBlock) trackState.getBlock();
-		RailShape railshape = MinecartAndRailUtil.getDirectionOfRail(trackState, cart.level(), cartPos, abstractrailblock);
+		RailShape railshape = trackState.getValue(abstractrailblock.getShapeProperty());
 		switch (railshape) {
 		case ASCENDING_EAST:
-			forcedMovement = forcedMovement.add(-1 * MinecartAndRailUtil.getSlopeAdjustment(), 0.0D, 0.0D);
+			forcedMovement = forcedMovement.add(-1 * SLOPE_ADJUSTMENT, 0.0D, 0.0D);
 			actualY++;
 			break;
 		case ASCENDING_WEST:
-			forcedMovement = forcedMovement.add(MinecartAndRailUtil.getSlopeAdjustment(), 0.0D, 0.0D);
+			forcedMovement = forcedMovement.add(SLOPE_ADJUSTMENT, 0.0D, 0.0D);
 			actualY++;
 			break;
 		case ASCENDING_NORTH:
-			forcedMovement = forcedMovement.add(0.0D, 0.0D, MinecartAndRailUtil.getSlopeAdjustment());
+			forcedMovement = forcedMovement.add(0.0D, 0.0D, SLOPE_ADJUSTMENT);
 			actualY++;
 			break;
 		case ASCENDING_SOUTH:
-			forcedMovement = forcedMovement.add(0.0D, 0.0D, -1 * MinecartAndRailUtil.getSlopeAdjustment());
+			forcedMovement = forcedMovement.add(0.0D, 0.0D, -1 * SLOPE_ADJUSTMENT);
 			actualY++;
 		default:
 			break;

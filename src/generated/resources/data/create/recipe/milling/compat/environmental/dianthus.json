@@ -8,27 +8,18 @@
   "type": "create:milling",
   "ingredients": [
     {
-      "type": "neoforge:compound",
-      "ingredients": [
-        {
-          "item": "environmental:dianthus"
-        }
-      ]
+      "item": "environmental:dianthus"
     }
   ],
   "processing_time": 50,
   "results": [
     {
       "count": 2,
-      "item": {
-        "id": "minecraft:green_dye"
-      }
+      "id": "minecraft:lime_dye"
     },
     {
       "chance": 0.1,
-      "item": {
-        "id": "minecraft:green_dye"
-      }
+      "id": "minecraft:lime_dye"
     }
   ]
 }

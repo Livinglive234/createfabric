@@ -1,5 +1,6 @@
 package com.simibubi.create.foundation.events;
 
+import com.simibubi.create.AllBlocks;
 import com.simibubi.create.CreateClient;
 import com.simibubi.create.content.contraptions.elevator.ElevatorControlsHandler;
 import com.simibubi.create.content.contraptions.wrench.RadialWrenchHandler;
@@ -14,7 +15,8 @@ import com.simibubi.create.content.trains.TrainHUD;
 import com.simibubi.create.content.trains.entity.TrainRelocator;
 import com.simibubi.create.content.trains.track.CurvedTrackInteraction;
 
-import net.createmod.catnip.platform.CatnipServices;
+import io.github.fabricators_of_create.porting_lib.tags.Tags;
+
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.InteractionHand;
@@ -22,6 +24,8 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.phys.HitResult;
 
 import net.fabricmc.api.EnvType;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 import io.github.fabricators_of_create.porting_lib.event.client.InteractEvents;
 import io.github.fabricators_of_create.porting_lib.event.client.KeyInputCallback;
@@ -89,11 +93,18 @@ public class InputEvents {
 			return InteractionResult.SUCCESS;
 		}
 
-		if (ChainPackageInteractionHandler.onUse()) {
-			return InteractionResult.SUCCESS;
+		if (mc.player != null) {
+			ItemStack itemInHand = mc.player.getItemInHand(hand);
+			if (itemInHand.is(com.simibubi.create.AllTags.AllItemTags.WRENCH.tag))
+				return InteractionResult.PASS;
+			if (itemInHand.is(Items.CHAIN) || AllBlocks.PACKAGE_FROGPORT.isIn(itemInHand))
+				return InteractionResult.PASS;
 		}
 
-		return cancel ? InteractionResult.SUCCESS : InteractionResult.PASS;
+		if (ChainPackageInteractionHandler.onUse())
+			return InteractionResult.SUCCESS;
+
+		return InteractionResult.PASS;
 	}
 
 	public static InteractionResult onAttack(Minecraft mc, HitResult hit) {

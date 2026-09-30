@@ -2,13 +2,12 @@ package com.simibubi.create.foundation.ponder;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.Create;
 
@@ -28,16 +27,14 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemp
 
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 
-import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
 
 /**
  * Processing for structures exported on Forge to allow using the same ones on Forge and Fabric.
  */
 public class FabricStructureProcessing {
-	public static final Codec<Processor> PROCESSOR_CODEC = ResourceLocation.CODEC
+	public static final MapCodec<Processor> PROCESSOR_CODEC = ResourceLocation.CODEC
 			.fieldOf("structureId")
-			.xmap(Processor::new, processor -> processor.structureId)
-			.codec();
+			.xmap(Processor::new, processor -> processor.structureId);
 
 	public static final StructureProcessorType<Processor> PROCESSOR_TYPE = Registry.register(
 			BuiltInRegistries.STRUCTURE_PROCESSOR,
@@ -148,12 +145,11 @@ public class FabricStructureProcessing {
 		if (content.contains("FluidName", Tag.TAG_STRING) && content.getString("FluidName").equals("minecraft:milk")) {
 			content.putString("FluidName", "milk:still_milk");
 		}
-		FluidStack stack = FluidStack.loadFluidStackFromNBT(content);
-		long amount = stack.getAmount();
+		// fabric: old schematics store the amount in the classic Forge milli-bucket unit (1000/bucket);
+		// convert in place to this project's fabric-native bucket unit, keeping the rest of the tag as-is
+		long amount = content.getInt("Amount");
 		double buckets = amount / 1000d;
 		long fixedAmount = Math.round(buckets * FluidConstants.BUCKET);
-		stack.setAmount(fixedAmount);
-		Set.copyOf(content.getAllKeys()).forEach(content::remove);
-		stack.writeToNBT(content);
+		content.putInt("Amount", (int) fixedAmount);
 	}
 }

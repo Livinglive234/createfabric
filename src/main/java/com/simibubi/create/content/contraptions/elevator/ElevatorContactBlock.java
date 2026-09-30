@@ -2,9 +2,9 @@ package com.simibubi.create.content.contraptions.elevator;
 
 import java.util.Optional;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
-import io.github.fabricators_of_create.porting_lib.block.ConnectableRedstoneBlock;
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.ConnectableRedstoneBlock;
 import com.simibubi.create.infrastructure.fabric.block.WeakPowerCheckingBlock;
 
 import net.fabricmc.api.EnvType;
@@ -59,7 +59,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 
-import io.github.fabricators_of_create.porting_lib.block.ConnectableRedstoneBlock;
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.ConnectableRedstoneBlock;
 import com.simibubi.create.infrastructure.fabric.block.WeakPowerCheckingBlock;
 import io.github.fabricators_of_create.porting_lib.util.EnvExecutor;
 
@@ -127,7 +127,7 @@ public class ElevatorContactBlock extends WrenchableDirectionalBlock
 		if (isPowered == pLevel.hasNeighborSignal(pPos))
 			return;
 
-		pLevel.setBlock(pPos, pState.cycle(POWERED), 2);
+		pLevel.setBlock(pPos, pState.cycle(POWERED), Block.UPDATE_CLIENTS);
 
 		if (isPowered)
 			return;
@@ -140,7 +140,7 @@ public class ElevatorContactBlock extends WrenchableDirectionalBlock
 
 	public void callToContactAndUpdate(ElevatorColumn elevatorColumn, BlockState pState, Level pLevel, BlockPos pPos,
 		boolean powered) {
-		pLevel.setBlock(pPos, pState.cycle(CALLING), 2);
+		pLevel.setBlock(pPos, pState.cycle(CALLING), Block.UPDATE_CLIENTS);
 
 		for (BlockPos otherPos : elevatorColumn.getContacts()) {
 			if (otherPos.equals(pPos))
@@ -154,7 +154,7 @@ public class ElevatorContactBlock extends WrenchableDirectionalBlock
 
 		if (powered)
 			pState = pState.setValue(POWERED, true);
-		pLevel.setBlock(pPos, pState.setValue(CALLING, true), 2);
+		pLevel.setBlock(pPos, pState.setValue(CALLING, true), Block.UPDATE_CLIENTS);
 		pLevel.updateNeighborsAt(pPos, this);
 
 		elevatorColumn.target(pPos.getY());

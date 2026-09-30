@@ -15,6 +15,8 @@ import com.simibubi.create.foundation.advancement.AllAdvancements;
 import com.simibubi.create.foundation.damageTypes.CreateDamageSources;
 import com.simibubi.create.foundation.particle.AirParticleData;
 
+import io.github.fabricators_of_create.porting_lib.entity.IEntityWithComplexSpawn;
+
 import net.createmod.catnip.math.VecHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
@@ -75,7 +77,7 @@ public class PotatoProjectileEntity extends AbstractHurtingProjectile implements
 	public void setEnchantmentEffectsFromCannon(ItemStack cannon) {
 		Registry<Enchantment> enchantmentRegistry = registryAccess().registryOrThrow(Registries.ENCHANTMENT);
 
-		int recovery = cannon.getEnchantmentLevel(enchantmentRegistry.getHolderOrThrow(AllEnchantments.POTATO_RECOVERY));
+		int recovery = EnchantmentHelper.getItemEnchantmentLevel(enchantmentRegistry.getHolderOrThrow(AllEnchantments.POTATO_RECOVERY), cannon);
 
 		if (recovery > 0)
 			recoveryChance = .125f + recovery * .125f;
@@ -184,8 +186,8 @@ public class PotatoProjectileEntity extends AbstractHurtingProjectile implements
 
 		if (!target.isAlive())
 			return;
-		if (owner instanceof LivingEntity)
-			((LivingEntity) owner).setLastHurtMob(target);
+		if (owner instanceof LivingEntity livingEntity)
+			livingEntity.setLastHurtMob(target);
 
 		if (target instanceof PotatoProjectileEntity ppe) {
 			if (tickCount < 10 && target.tickCount < 10)
@@ -241,10 +243,9 @@ public class PotatoProjectileEntity extends AbstractHurtingProjectile implements
 		if (onServer && knockback > 0) {
 			Vec3 appliedMotion = this.getDeltaMovement()
 				.multiply(1.0D, 0.0D, 1.0D)
-				.normalize()
-				.scale(knockback * 0.6);
+				.normalize();
 			if (appliedMotion.lengthSqr() > 0.0D)
-				livingentity.push(appliedMotion.x, 0.1D, appliedMotion.z);
+				livingentity.knockback(knockback * 0.6, -appliedMotion.x, -appliedMotion.z);
 		}
 
 		if (onServer && owner instanceof LivingEntity) {

@@ -11,18 +11,13 @@
       "tag": "c:dusts/redstone"
     },
     {
-      "type": "neoforge:compound",
-      "ingredients": [
-        {
-          "item": "ae2:charged_certus_quartz_crystal"
-        }
-      ]
+      "item": "ae2:charged_certus_quartz_crystal"
     },
     {
       "tag": "c:gems/quartz"
     },
     {
-      "type": "fluid_stack",
+      "type": "neoforge:single",
       "amount": 250,
       "fluid": "minecraft:water"
     }
@@ -30,7 +25,7 @@
   "results": [
     {
       "count": 2,
-      "item": "ae2:fluix_crystal"
+      "id": "ae2:fluix_crystal"
     }
   ]
 }

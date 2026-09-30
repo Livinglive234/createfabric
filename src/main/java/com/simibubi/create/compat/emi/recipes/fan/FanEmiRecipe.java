@@ -40,7 +40,7 @@ public abstract class FanEmiRecipe<T extends Recipe<?>> extends CreateEmiRecipe<
 				.setHoverName(CreateLang.translateDirect("recipe." + name + ".fan").withStyle(style -> style.withItalic(false))));
 	}
 
-	public static abstract class MultiOutput<T extends ProcessingRecipe<?>> extends FanEmiRecipe<T> {
+	public static abstract class MultiOutput<T extends ProcessingRecipe<?, ?>> extends FanEmiRecipe<T> {
 
 		public MultiOutput(EmiRecipeCategory type, T recipe) {
 			super(type, recipe);

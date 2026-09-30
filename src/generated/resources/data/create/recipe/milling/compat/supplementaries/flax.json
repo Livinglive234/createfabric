@@ -8,31 +8,22 @@
   "type": "create:milling",
   "ingredients": [
     {
-      "type": "neoforge:compound",
-      "ingredients": [
-        {
-          "item": "supplementaries:flax"
-        }
-      ]
+      "item": "supplementaries:flax"
     }
   ],
   "processing_time": 150,
   "results": [
     {
-      "item": {
-        "id": "minecraft:string"
-      }
+      "id": "minecraft:string"
     },
     {
       "chance": 0.25,
       "count": 2,
-      "item": {
-        "id": "minecraft:string"
-      }
+      "id": "minecraft:string"
     },
     {
       "chance": 0.25,
-      "item": "supplementaries:flax_seeds"
+      "id": "supplementaries:flax_seeds"
     }
   ]
 }

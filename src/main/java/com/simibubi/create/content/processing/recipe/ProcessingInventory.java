@@ -28,7 +28,7 @@ public class ProcessingInventory extends ItemStackHandlerContainer {
 	private boolean limit;
 
 	public ProcessingInventory(Consumer<ItemStack> callback) {
-		super(16);
+		super(32);
 		this.callback = callback;
 	}
 
@@ -75,7 +75,7 @@ public class ProcessingInventory extends ItemStackHandlerContainer {
 		recipeDuration = nbt.getFloat("RecipeTime");
 		appliedRecipe = nbt.getBoolean("AppliedRecipe");
 		super.deserializeNBT(registries, nbt);
-		if(isEmpty())
+		if (isEmpty())
 			appliedRecipe = false;
 	}
 

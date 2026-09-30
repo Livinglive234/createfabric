@@ -8,18 +8,13 @@
   "type": "create:crushing",
   "ingredients": [
     {
-      "type": "neoforge:compound",
-      "ingredients": [
-        {
-          "item": "minecraft:granite"
-        }
-      ]
+      "item": "minecraft:granite"
     }
   ],
   "processing_time": 350,
   "results": [
     {
-      "item": "exnihilosequentia:crushed_granite"
+      "id": "exnihilosequentia:crushed_granite"
     }
   ]
 }

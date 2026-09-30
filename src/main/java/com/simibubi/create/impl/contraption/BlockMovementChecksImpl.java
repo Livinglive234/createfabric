@@ -38,6 +38,7 @@ import com.simibubi.create.content.decoration.steamWhistle.WhistleExtenderBlock;
 import com.simibubi.create.content.fluids.tank.FluidTankBlock;
 import com.simibubi.create.content.kinetics.crank.HandCrankBlock;
 import com.simibubi.create.content.kinetics.fan.NozzleBlock;
+import com.simibubi.create.content.logistics.funnel.BeltFunnelBlock;
 import com.simibubi.create.content.logistics.packagerLink.PackagerLinkBlock;
 import com.simibubi.create.content.logistics.vault.ItemVaultBlock;
 import com.simibubi.create.content.redstone.link.RedstoneLinkBlock;
@@ -50,6 +51,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BasePressurePlateBlock;
 import net.minecraft.world.level.block.BaseRailBlock;
+import net.minecraft.world.level.block.BaseTorchBlock;
 import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.BellBlock;
 import net.minecraft.world.level.block.Block;
@@ -64,7 +66,6 @@ import net.minecraft.world.level.block.RedStoneWireBlock;
 import net.minecraft.world.level.block.RedstoneWallTorchBlock;
 import net.minecraft.world.level.block.SignBlock;
 import net.minecraft.world.level.block.StandingSignBlock;
-import net.minecraft.world.level.block.TorchBlock;
 import net.minecraft.world.level.block.WallSignBlock;
 import net.minecraft.world.level.block.WallTorchBlock;
 import net.minecraft.world.level.block.WoolCarpetBlock;
@@ -77,7 +78,14 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.material.PushReaction;
 
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.level.block.TorchBlock;
+
 public class BlockMovementChecksImpl {
+	private static final TagKey<Block> RELOCATION_NOT_SUPPORTED =
+		TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("neoforge", "relocation_not_supported"));
 	private static final List<MovementNecessaryCheck> MOVEMENT_NECESSARY_CHECKS = new ArrayList<>();
 	private static final List<MovementAllowedCheck> MOVEMENT_ALLOWED_CHECKS = new ArrayList<>();
 	private static final List<BrittleCheck> BRITTLE_CHECKS = new ArrayList<>();
@@ -179,7 +187,7 @@ public class BlockMovementChecksImpl {
 			return true;
 		if (state.getDestroySpeed(world, pos) == -1)
 			return false;
-		if (AllBlockTags.RELOCATION_NOT_SUPPORTED.matches(state))
+		if (state.is(RELOCATION_NOT_SUPPORTED))
 			return false;
 		if (AllBlockTags.NON_MOVABLE.matches(state))
 			return false;
@@ -223,7 +231,7 @@ public class BlockMovementChecksImpl {
 
 		if (block instanceof LadderBlock)
 			return true;
-		if (block instanceof TorchBlock)
+		if (block instanceof BaseTorchBlock)
 			return true;
 		if (block instanceof SignBlock)
 			return true;
@@ -245,6 +253,8 @@ public class BlockMovementChecksImpl {
 		if (block instanceof WhistleBlock)
 			return true;
 		if (block instanceof WhistleExtenderBlock)
+			return true;
+		if (block instanceof BeltFunnelBlock)
 			return true;
 		return AllBlockTags.BRITTLE.matches(state);
 	}
@@ -284,7 +294,7 @@ public class BlockMovementChecksImpl {
 			return direction == Direction.DOWN;
 		if (block instanceof RedstoneWallTorchBlock)
 			return state.getValue(RedstoneWallTorchBlock.FACING) == direction.getOpposite();
-		if (block instanceof TorchBlock)
+		if (block instanceof BaseTorchBlock)
 			return direction == Direction.DOWN;
 		if (block instanceof FaceAttachedHorizontalDirectionalBlock) {
 			AttachFace attachFace = state.getValue(FaceAttachedHorizontalDirectionalBlock.FACE);

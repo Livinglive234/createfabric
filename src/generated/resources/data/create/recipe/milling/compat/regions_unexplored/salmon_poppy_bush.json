@@ -8,27 +8,18 @@
   "type": "create:milling",
   "ingredients": [
     {
-      "type": "neoforge:compound",
-      "ingredients": [
-        {
-          "item": "regions_unexplored:salmon_poppy_bush"
-        }
-      ]
+      "item": "regions_unexplored:salmon_poppy_bush"
     }
   ],
   "processing_time": 50,
   "results": [
     {
       "count": 2,
-      "item": {
-        "id": "minecraft:pink_dye"
-      }
+      "id": "minecraft:pink_dye"
     },
     {
       "chance": 0.1,
-      "item": {
-        "id": "minecraft:green_dye"
-      }
+      "id": "minecraft:green_dye"
     }
   ]
 }

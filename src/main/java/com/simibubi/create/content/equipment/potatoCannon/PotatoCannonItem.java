@@ -6,7 +6,6 @@ import java.util.function.Predicate;
 
 import org.jetbrains.annotations.Nullable;
 
-import com.simibubi.create.AllEnchantments;
 import com.simibubi.create.AllEntityTypes;
 import com.simibubi.create.CreateClient;
 import com.simibubi.create.api.equipment.potatoCannon.PotatoCannonProjectileType;
@@ -55,10 +54,13 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 
 import io.github.fabricators_of_create.porting_lib.enchant.CustomEnchantingBehaviorItem;
-import io.github.fabricators_of_create.porting_lib.item.EntitySwingListenerItem;
-import io.github.fabricators_of_create.porting_lib.item.ReequipAnimationItem;
+import io.github.fabricators_of_create.porting_lib.item.extensions.CustomSupportsEnchantItem;
+import com.simibubi.create.AllEnchantments;
 
-public class PotatoCannonItem extends ProjectileWeaponItem implements CustomArmPoseItem, EntitySwingListenerItem, ReequipAnimationItem, CustomEnchantingBehaviorItem {
+// TODO fabric: NeoForge's IItemExtension#shouldCauseReequipAnimation / #onEntitySwing have no fabric port
+public class PotatoCannonItem extends ProjectileWeaponItem implements CustomArmPoseItem, CustomEnchantingBehaviorItem, CustomSupportsEnchantItem {
+	private static final Predicate<ItemStack> AMMO_PREDICATE = s ->
+		PotatoCannonProjectileType.getTypeForItem(GlobalRegistryAccess.getOrThrow(), s.getItem()).isPresent();
 
 	public PotatoCannonItem(Properties properties) {
 		super(properties);
@@ -71,19 +73,18 @@ public class PotatoCannonItem extends ProjectileWeaponItem implements CustomArmP
 			return null;
 		}
 
-		Optional<Holder.Reference<PotatoCannonProjectileType>> optionalType = PotatoCannonProjectileType.getTypeForItem(player.level().registryAccess(), ammoStack.getItem());
-		if (optionalType.isEmpty()) {
-			return null;
-		}
-
-		return new Ammo(ammoStack, optionalType.get().value());
+		return PotatoCannonProjectileType.getTypeForItem(player.level().registryAccess(), ammoStack.getItem())
+			.map(r -> new Ammo(ammoStack, r.value()))
+			.orElse(null);
 	}
 
 	@Override
-	protected void shootProjectile(LivingEntity shooter, Projectile projectile, int index, float velocity, float inaccuracy, float angle, @Nullable LivingEntity target) {}
+	protected void shootProjectile(LivingEntity shooter, Projectile projectile, int index, float velocity, float inaccuracy, float angle, @Nullable LivingEntity target) {
+	}
 
 	@Override
-	protected void shoot(ServerLevel level, LivingEntity shooter, InteractionHand hand, ItemStack weapon, List<ItemStack> projectileItems, float velocity, float inaccuracy, boolean isCrit, @Nullable LivingEntity target) {}
+	protected void shoot(ServerLevel level, LivingEntity shooter, InteractionHand hand, ItemStack weapon, List<ItemStack> projectileItems, float velocity, float inaccuracy, boolean isCrit, @Nullable LivingEntity target) {
+	}
 
 	@Override
 	public InteractionResult useOn(UseOnContext context) {
@@ -188,8 +189,8 @@ public class PotatoCannonItem extends ProjectileWeaponItem implements CustomArmP
 			return;
 
 		HolderLookup<Enchantment> lookup = registries.lookupOrThrow(Registries.ENCHANTMENT);
-		int power = stack.getEnchantmentLevel(lookup.getOrThrow(Enchantments.POWER));
-		int punch = stack.getEnchantmentLevel(lookup.getOrThrow(Enchantments.PUNCH));
+		int power = EnchantmentHelper.getItemEnchantmentLevel(lookup.getOrThrow(Enchantments.POWER), stack);
+		int punch = EnchantmentHelper.getItemEnchantmentLevel(lookup.getOrThrow(Enchantments.PUNCH), stack);
 		final float additionalDamageMult = 1 + power * .2f;
 		final float additionalKnockback = punch * .5f;
 
@@ -231,14 +232,8 @@ public class PotatoCannonItem extends ProjectileWeaponItem implements CustomArmP
 	}
 
 	@Override
-	public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
-		return slotChanged || newStack.getItem() != oldStack.getItem();
-	}
-
-	@Override
 	public Predicate<ItemStack> getAllSupportedProjectiles() {
-		return stack -> PotatoCannonProjectileType.getTypeForItem(GlobalRegistryAccess.getOrThrow(), stack.getItem())
-			.isPresent();
+		return AMMO_PREDICATE;
 	}
 
 	@Override
@@ -248,17 +243,11 @@ public class PotatoCannonItem extends ProjectileWeaponItem implements CustomArmP
 
 	@Override
 	public boolean supportsEnchantment(ItemStack stack, Holder<Enchantment> enchantment) {
-		if (enchantment.is(Enchantments.POWER))
-			return true;
-		if (enchantment.is(Enchantments.PUNCH))
-			return true;
-		if (enchantment.is(Enchantments.FLAME))
-			return true;
+		if (enchantment.is(Enchantments.INFINITY))
+			return false;
 		if (enchantment.is(Enchantments.LOOTING))
 			return true;
-		if (enchantment.is(AllEnchantments.POTATO_RECOVERY))
-			return true;
-		return super.supportsEnchantment(stack, enchantment);
+		return CustomSupportsEnchantItem.super.supportsEnchantment(stack, enchantment);
 	}
 
 	@Override
@@ -278,11 +267,6 @@ public class PotatoCannonItem extends ProjectileWeaponItem implements CustomArmP
 
 	private static int maxUses() {
 		return AllConfigs.server().equipment.maxPotatoCannonShots.get();
-	}
-
-	@Override
-	public boolean onEntitySwing(ItemStack stack, LivingEntity entity, InteractionHand hand) {
-		return false;
 	}
 
 	@Override

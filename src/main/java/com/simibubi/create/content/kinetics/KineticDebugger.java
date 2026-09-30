@@ -3,7 +3,6 @@ package com.simibubi.create.content.kinetics;
 import com.simibubi.create.content.kinetics.base.IRotate;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
-import com.simibubi.create.infrastructure.config.AllConfigs;
 
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.outliner.Outliner;
@@ -22,8 +21,10 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import com.simibubi.create.infrastructure.config.AllConfigs;
 
 public class KineticDebugger {
+	public static boolean rainbowDebug = false;
 
 	public static void tick() {
 		if (!isActive()) {
@@ -62,7 +63,7 @@ public class KineticDebugger {
 	}
 
 	public static boolean isActive() {
-		return isF3DebugModeActive() && AllConfigs.client().rainbowDebug.get();
+		return isF3DebugModeActive() && KineticDebugger.rainbowDebug;
 	}
 
 	public static boolean isF3DebugModeActive() {

@@ -22,6 +22,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.HoneycombItem;
 import net.minecraft.world.item.Item;
@@ -31,7 +32,7 @@ import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.WeatheringCopper;
+import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
@@ -40,6 +41,7 @@ import net.minecraft.world.phys.Vec3;
 import net.fabricmc.fabric.api.entity.FakePlayer;
 
 import io.github.fabricators_of_create.porting_lib.mixin.accessors.common.accessor.AxeItemAccessor;
+import net.minecraft.world.level.block.WeatheringCopper;
 
 
 @MethodsReturnNonnullByDefault
@@ -67,7 +69,7 @@ public class SandPaperItem extends Item implements CustomUseEffectsItem {
 			ItemStack item = itemInOtherHand.copy();
 			ItemStack toPolish = item.split(1);
 			playerIn.startUsingItem(handIn);
-			itemstack.set(AllDataComponents.SAND_PAPER_POLISHING, toPolish);
+			itemstack.set(AllDataComponents.SAND_PAPER_POLISHING, new SandPaperItemComponent(toPolish));
 			playerIn.setItemInHand(otherHand, item);
 			return new InteractionResultHolder<>(InteractionResult.SUCCESS, itemstack);
 		}
@@ -100,7 +102,7 @@ public class SandPaperItem extends Item implements CustomUseEffectsItem {
 		playerIn.startUsingItem(handIn);
 
 		if (!worldIn.isClientSide) {
-			itemstack.set(AllDataComponents.SAND_PAPER_POLISHING, toPolish);
+			itemstack.set(AllDataComponents.SAND_PAPER_POLISHING, new SandPaperItemComponent(toPolish));
 			if (item.isEmpty())
 				pickUp.discard();
 			else
@@ -111,31 +113,30 @@ public class SandPaperItem extends Item implements CustomUseEffectsItem {
 	}
 
 	@Override
-	public ItemStack finishUsingItem(ItemStack stack, Level worldIn, LivingEntity entityLiving) {
+	public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entityLiving) {
 		if (!(entityLiving instanceof Player player))
 			return stack;
 		if (stack.has(AllDataComponents.SAND_PAPER_POLISHING)) {
-			ItemStack toPolish = stack.get(AllDataComponents.SAND_PAPER_POLISHING);
+			ItemStack toPolish = stack.get(AllDataComponents.SAND_PAPER_POLISHING).item();
 			//noinspection DataFlowIssue - toPolish won't be null as we do call .has before calling .get
 			ItemStack polished =
-				SandPaperPolishingRecipe.applyPolish(worldIn, entityLiving.position(), toPolish, stack);
+				SandPaperPolishingRecipe.applyPolish(level, entityLiving.position(), toPolish, stack);
 
-			if (worldIn.isClientSide) {
+			if (level.isClientSide) {
 				spawnParticles(entityLiving.getEyePosition(1)
-						.add(entityLiving.getLookAngle()
-							.scale(.5f)),
-					toPolish, worldIn);
+					.add(entityLiving.getLookAngle().scale(.5f)), toPolish, level);
 				return stack;
 			}
 
+			Inventory playerInv = player.getInventory();
 			if (!polished.isEmpty()) {
-				if (player instanceof FakePlayer) {
-					player.drop(polished, false, false);
-				} else {
-					player.getInventory()
-						.placeItemBackInInventory(polished);
-				}
+				playerInv.placeItemBackInInventory(polished);
 			}
+
+			if (toPolish.hasCraftingRemainingItem()) {
+				playerInv.placeItemBackInInventory(toPolish.getCraftingRemainingItem());
+			}
+
 			stack.remove(AllDataComponents.SAND_PAPER_POLISHING);
 			stack.hurtAndBreak(1, entityLiving, LivingEntity.getSlotForHand(entityLiving.getUsedItemHand()));
 		}
@@ -156,7 +157,7 @@ public class SandPaperItem extends Item implements CustomUseEffectsItem {
 		if (!(entityLiving instanceof Player player))
 			return;
 		if (stack.has(AllDataComponents.SAND_PAPER_POLISHING)) {
-			ItemStack toPolish = stack.get(AllDataComponents.SAND_PAPER_POLISHING);
+			ItemStack toPolish = stack.get(AllDataComponents.SAND_PAPER_POLISHING).item();
 			//noinspection DataFlowIssue - toPolish won't be null as we do call .has before calling .get
 			player.getInventory()
 				.placeItemBackInInventory(toPolish);
@@ -175,7 +176,7 @@ public class SandPaperItem extends Item implements CustomUseEffectsItem {
 		Optional<BlockState> newState = access.porting_lib$getStripped(state);
 		if (newState.isPresent()) {
 			AllSoundEvents.SANDING_LONG.play(level, player, pos, 1, 1 + (level.random.nextFloat() * 0.5f - 1f) / 5f);
-			level.levelEvent(player, 3005, pos, 0); // Spawn particles
+			level.levelEvent(player, LevelEvent.PARTICLES_SCRAPE, pos, 0); // Spawn particles
 		} else {
 			newState = WeatheringCopper.getPrevious(state);
 			if (newState.isEmpty()) { // fabric: account for waxing
@@ -185,7 +186,7 @@ public class SandPaperItem extends Item implements CustomUseEffectsItem {
 			if (newState.isPresent()) {
 				AllSoundEvents.SANDING_LONG.play(level, player, pos, 1,
 					1 + (level.random.nextFloat() * 0.5f - 1f) / 5f);
-				level.levelEvent(player, 3004, pos, 0); // Spawn particles
+				level.levelEvent(player, LevelEvent.PARTICLES_WAX_OFF, pos, 0); // Spawn particles
 			}
 		}
 
@@ -213,8 +214,9 @@ public class SandPaperItem extends Item implements CustomUseEffectsItem {
 	@Override
 	public boolean triggerUseEffects(ItemStack stack, LivingEntity entity, int count, RandomSource random) {
 		if (stack.has(AllDataComponents.SAND_PAPER_POLISHING)) {
-			ItemStack polishing = stack.get(AllDataComponents.SAND_PAPER_POLISHING);
-			((LivingEntityAccessor) entity).create$callSpawnItemParticles(polishing, 1);
+			ItemStack polishing = stack.get(AllDataComponents.SAND_PAPER_POLISHING).item();
+			if (!polishing.isEmpty())
+				((LivingEntityAccessor) entity).create$callSpawnItemParticles(polishing, 1);
 		}
 
 		// After 6 ticks play the sound every 7th

@@ -4,6 +4,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.Create;
 
+import io.github.fabricators_of_create.porting_lib.client_events.event.client.RenderArmEvent;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelPart;
@@ -30,25 +32,27 @@ public class NetheriteBacktankFirstPersonRenderer {
 			mc.player != null && AllItems.NETHERITE_BACKTANK.isIn(mc.player.getItemBySlot(EquipmentSlot.CHEST));
 	}
 
-	public static boolean onRenderPlayerHand(PoseStack poseStack, MultiBufferSource buffer, int packedLight, AbstractClientPlayer player, HumanoidArm arm) {
+	public static void onRenderPlayerHand(RenderArmEvent event) {
 		if (!rendererActive)
-			return false;
+			return;
 
+		AbstractClientPlayer player = event.getPlayer();
 		Minecraft mc = Minecraft.getInstance();
 		if (!(mc.getEntityRenderDispatcher()
 			.getRenderer(player) instanceof PlayerRenderer pr))
-			return false;
+			return;
 
 		PlayerModel<AbstractClientPlayer> model = pr.getModel();
 		model.attackTime = 0.0F;
 		model.crouching = false;
 		model.swimAmount = 0.0F;
 		model.setupAnim(player, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F);
+		HumanoidArm arm = event.getArm();
 		ModelPart armPart = arm == HumanoidArm.LEFT ? model.leftSleeve : model.rightSleeve;
 		armPart.xRot = 0.0F;
-		armPart.render(poseStack, buffer.getBuffer(RenderType.entitySolid(BACKTANK_ARMOR_LOCATION)),
+		armPart.render(event.getPoseStack(), event.getMultiBufferSource().getBuffer(RenderType.entitySolid(BACKTANK_ARMOR_LOCATION)),
 			LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
-		return true;
+		event.setCanceled(true);
 	}
 
 }

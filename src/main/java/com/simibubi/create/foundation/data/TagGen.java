@@ -1,12 +1,11 @@
 package com.simibubi.create.foundation.data;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import org.jetbrains.annotations.NotNull;
-
-import com.simibubi.create.AllTags;
+import com.simibubi.create.foundation.data.recipe.CommonMetal;
 import com.simibubi.create.foundation.data.recipe.Mods;
 import com.simibubi.create.foundation.mixin.fabric.TagAppenderAccessor;
 import com.tterrag.registrate.builders.BlockBuilder;
@@ -22,9 +21,12 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagBuilder;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider;
+import org.jetbrains.annotations.NotNull;
+import com.simibubi.create.AllTags;
 
 public class TagGen {
 	public static <T extends Block, P> NonNullFunction<BlockBuilder<T, P>, BlockBuilder<T, P>> axeOrPickaxe() {
@@ -41,13 +43,25 @@ public class TagGen {
 	}
 
 	public static <T extends Block, P> NonNullFunction<BlockBuilder<T, P>, ItemBuilder<BlockItem, BlockBuilder<T, P>>> tagBlockAndItem(
-		String... path) {
+		CommonMetal.ItemLikeTag tag) {
+		return tagBlockAndItem(Map.of(tag.blocks(), tag.items()));
+	}
+
+	public static <T extends Block, P> NonNullFunction<BlockBuilder<T, P>, ItemBuilder<BlockItem, BlockBuilder<T, P>>> tagBlockAndItem(
+		TagKey<Block> blockTag, TagKey<Item> itemTag) {
+		return tagBlockAndItem(Map.of(blockTag, itemTag));
+	}
+
+	public static <T extends Block, P> NonNullFunction<BlockBuilder<T, P>, ItemBuilder<BlockItem, BlockBuilder<T, P>>> tagBlockAndItem(
+		Map<TagKey<Block>, TagKey<Item>> tags) {
 		return b -> {
-			for (String p : path)
-				b.tag(AllTags.commonBlockTag(p));
+			for (TagKey<Block> blockTag : tags.keySet()) {
+				b.tag(blockTag);
+			}
 			ItemBuilder<BlockItem, BlockBuilder<T, P>> item = b.item();
-			for (String p : path)
-				item.tag(AllTags.commonItemTag(p));
+			for (TagKey<Item> itemTag : tags.values()) {
+				item.tag(itemTag);
+			}
 			return item;
 		};
 	}

@@ -13,8 +13,7 @@ import java.util.function.Supplier;
 import com.simibubi.create.foundation.item.render.CustomRenderedItemModelRenderer;
 import com.simibubi.create.foundation.item.render.CustomRenderedItems;
 import com.simibubi.create.foundation.mixin.accessor.AbstractRegistrateAccessor;
-import com.simibubi.create.impl.registrate.CreateRegistrateRegistrationCallbackImpl;
-import com.simibubi.create.impl.registrate.CreateRegistrateRegistrationCallbackImpl.CallbackImpl;
+import com.simibubi.create.api.registrate.CreateRegistrateRegistrationCallback;
 
 import com.tterrag.registrate.builders.ItemBuilder;
 import com.tterrag.registrate.fabric.SimpleFlowableFluid;
@@ -24,9 +23,7 @@ import com.tterrag.registrate.util.nullness.NonNullUnaryOperator;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 
-import net.neoforged.neoforge.data.event.GatherDataEvent;
-import net.neoforged.neoforge.fluids.BaseFlowingFluid;
-import net.neoforged.neoforge.registries.DeferredHolder;
+import io.github.fabricators_of_create.porting_lib.util.DeferredHolder;
 
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -75,9 +72,11 @@ import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry;
+import com.simibubi.create.impl.registrate.CreateRegistrateRegistrationCallbackImpl;
+import com.simibubi.create.impl.registrate.CreateRegistrateRegistrationCallbackImpl.CallbackImpl;
 
 public class CreateRegistrate extends AbstractRegistrate<CreateRegistrate> {
-	private static final Map<RegistryEntry<?>, ResourceKey<CreativeModeTab>> TAB_LOOKUP = Collections.synchronizedMap(new IdentityHashMap<>());
+	private static final Map<RegistryEntry<?, ?>, ResourceKey<CreativeModeTab>> TAB_LOOKUP = Collections.synchronizedMap(new IdentityHashMap<>());
 
 	@Nullable
 	protected Function<Item, TooltipModifier> currentTooltipModifierFactory;
@@ -89,10 +88,15 @@ public class CreateRegistrate extends AbstractRegistrate<CreateRegistrate> {
 	}
 
 	public static CreateRegistrate create(String modid) {
-		return new CreateRegistrate(modid);
+		CreateRegistrate registrate = new CreateRegistrate(modid);
+		// The registrate is registered here instead of in the constructor so that if a subclass
+		// overrides the addRegisterCallback to be dependent on some sort of state initialized in the constructor,
+		// it won't explode. The consequence is that subclasses must manually provide their registrate to the callback API
+		CreateRegistrateRegistrationCallback.provideRegistrate(registrate);
+		return registrate;
 	}
 
-	public static boolean isInCreativeTab(RegistryEntry<?> entry, ResourceKey<CreativeModeTab> tab) {
+	public static boolean isInCreativeTab(RegistryEntry<?, ?> entry, ResourceKey<CreativeModeTab> tab) {
 		return TAB_LOOKUP.get(entry) == tab;
 	}
 
@@ -129,15 +133,6 @@ public class CreateRegistrate extends AbstractRegistrate<CreateRegistrate> {
 		}
 		if (currentTab != null)
 			TAB_LOOKUP.put(entry, currentTab);
-
-		for (CallbackImpl<?> callback : CreateRegistrateRegistrationCallbackImpl.CALLBACKS_VIEW) {
-			String modId = callback.id().getNamespace();
-			String entryId = callback.id().getPath();
-			if (callback.registry().equals(type) && getModid().equals(modId) && name.equals(entryId)) {
-				//noinspection unchecked
-				((Consumer<T>) callback.callback()).accept(entry.get());
-			}
-		}
 
 		return entry;
 	}
@@ -231,7 +226,7 @@ public class CreateRegistrate extends AbstractRegistrate<CreateRegistrate> {
 																						  NonNullFunction<SimpleFlowableFluid.Properties, T> sourceFactory,
 																						  NonNullFunction<SimpleFlowableFluid.Properties, T> flowingFactory) {
 		return entry(name,
-			c -> new VirtualFluidBuilder<>(self(), self(), name, c, new ResourceLocation(getModid(), "fluid/" + name + "_still"),
+			c -> new VirtualFluidBuilder<>(self(), self(), name, c, ResourceLocation.fromNamespaceAndPath(getModid(), "fluid/" + name + "_still"),
 				ResourceLocation.fromNamespaceAndPath(getModid(), "fluid/" + name + "_flow"), sourceFactory, flowingFactory));
 	}
 
@@ -243,7 +238,7 @@ public class CreateRegistrate extends AbstractRegistrate<CreateRegistrate> {
 
 	public FluidBuilder<VirtualFluid, CreateRegistrate> virtualFluid(String name) {
 		return entry(name,
-			c -> new VirtualFluidBuilder<>(self(), self(), name, c, new ResourceLocation(getModid(), "fluid/" + name + "_still"),
+			c -> new VirtualFluidBuilder<>(self(), self(), name, c, ResourceLocation.fromNamespaceAndPath(getModid(), "fluid/" + name + "_still"),
 				ResourceLocation.fromNamespaceAndPath(getModid(), "fluid/" + name + "_flow"), /*null, */VirtualFluid::createSource, VirtualFluid::createFlowing));
 	}
 
@@ -340,9 +335,6 @@ public class CreateRegistrate extends AbstractRegistrate<CreateRegistrate> {
 		CreateClient.MODEL_SWAPPER.getCustomBlockModels()
 			.register(RegisteredObjectsHelper.getKeyOrThrow(entry), model -> new CTModel(model, behavior));
 	}
-
-	@Override
-	protected void onData(@NotNull GatherDataEvent event) {} // NO-OP so this doesn't run before create can add its generators
 
 	@ApiStatus.Internal
 	public RegistrateDataProvider setDataProvider(RegistrateDataProvider provider) {

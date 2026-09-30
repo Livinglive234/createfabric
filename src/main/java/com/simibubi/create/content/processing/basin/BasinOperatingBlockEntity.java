@@ -3,13 +3,17 @@ package com.simibubi.create.content.processing.basin;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.Set;
 
+import com.simibubi.create.Create;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.advancement.CreateAdvancement;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.simple.DeferralBehaviour;
 import com.simibubi.create.foundation.recipe.RecipeFinder;
+import com.simibubi.create.foundation.recipe.trie.AbstractVariant;
+import com.simibubi.create.foundation.recipe.trie.RecipeTrie;
+import com.simibubi.create.foundation.recipe.trie.RecipeTrieFinder;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.crafting.Recipe;
@@ -18,6 +22,11 @@ import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import java.util.stream.Collectors;
 
 public abstract class BasinOperatingBlockEntity extends KineticBlockEntity {
 
@@ -82,7 +91,8 @@ public abstract class BasinOperatingBlockEntity extends KineticBlockEntity {
 
 	protected abstract boolean isRunning();
 
-	public void startProcessingBasin() {}
+	public void startProcessingBasin() {
+	}
 
 	public boolean continueWithPreviousRecipe() {
 		return true;
@@ -121,19 +131,40 @@ public abstract class BasinOperatingBlockEntity extends KineticBlockEntity {
 	}
 
 	protected List<Recipe<?>> getMatchingRecipes() {
-		if (getBasin().map(BasinBlockEntity::isEmpty)
-			.orElse(true))
+		Optional<BasinBlockEntity> $basin = getBasin();
+		BasinBlockEntity basin;
+		if ($basin.isEmpty() || (basin = $basin.get()).isEmpty())
 			return new ArrayList<>();
 
-		List<RecipeHolder<? extends Recipe<?>>> list = RecipeFinder.get(getRecipeCacheKey(), level, this::matchStaticFilters);
-		return list.stream()
-			.map(RecipeHolder::value)
-			.filter(this::matchBasinRecipe)
-			.sorted((r1, r2) -> r2.getIngredients()
-				.size()
-				- r1.getIngredients()
-					.size())
-			.collect(Collectors.toList());
+		List<Recipe<?>> list = new ArrayList<>();
+		try {
+
+			Storage<ItemVariant> availableItems = basin.getItemStorage(null);
+			Storage<FluidVariant> availableFluids = basin.getFluidStorage(null);
+
+			// no point even searching, since no recipe will ever match
+			if (availableItems == null && availableFluids == null) {
+				return list;
+			}
+
+			RecipeTrie<?> trie = RecipeTrieFinder.get(getRecipeCacheKey(), level, this::matchStaticFilters);
+			Set<AbstractVariant> availableVariants = RecipeTrie.getVariants(availableItems, availableFluids);
+
+			for (Recipe<?> r : trie.lookup(availableVariants))
+				if (matchBasinRecipe(r))
+					list.add(r);
+		} catch (Exception e) {
+			Create.LOGGER.error("Failed to get recipe trie, falling back to slow logic", e);
+			list.clear();
+
+			for (RecipeHolder<? extends Recipe<?>> r : RecipeFinder.get(getRecipeCacheKey(), level, this::matchStaticFilters))
+				if (matchBasinRecipe(r.value()))
+					list.add(r.value());
+		}
+
+		list.sort((r1, r2) -> r2.getIngredients().size() - r1.getIngredients().size());
+
+		return list;
 	}
 
 	protected abstract void onBasinRemoved();

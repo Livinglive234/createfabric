@@ -8,17 +8,12 @@
   "type": "create:pressing",
   "ingredients": [
     {
-      "type": "neoforge:compound",
-      "ingredients": [
-        {
-          "item": "atmospheric:crustose"
-        }
-      ]
+      "item": "atmospheric:crustose"
     }
   ],
   "results": [
     {
-      "item": "atmospheric:crustose_path"
+      "id": "atmospheric:crustose_path"
     }
   ]
 }

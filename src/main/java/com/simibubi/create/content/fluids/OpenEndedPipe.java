@@ -30,7 +30,9 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.LiquidBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.FlowingFluid;
@@ -40,7 +42,7 @@ import net.minecraft.world.phys.AABB;
 
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 
-import io.github.fabricators_of_create.porting_lib.transfer.callbacks.TransactionCallback;
+import com.simibubi.create.infrastructure.fabric.transfer.TransactionSuccessCallback;
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidTank;
 
 public class OpenEndedPipe extends FlowSource {
@@ -53,7 +55,7 @@ public class OpenEndedPipe extends FlowSource {
 	private BlockPos outputPos;
 	private boolean wasPulling;
 
-	private final ICapabilityProvider<IFluidHandler> fluidHandlerProvider = ICapabilityProvider.of(() -> fluidHandler);
+	private final ICapabilityProvider<OpenEndFluidHandler> fluidHandlerProvider = ICapabilityProvider.of(() -> fluidHandler);
 
 	public OpenEndedPipe(BlockFace face) {
 		super(face);
@@ -82,7 +84,7 @@ public class OpenEndedPipe extends FlowSource {
 	}
 
 	@Override
-	public void manageSource(Level world) {
+	public void manageSource(Level world, BlockEntity networkBE) {
 		this.world = world;
 	}
 
@@ -144,8 +146,8 @@ public class OpenEndedPipe extends FlowSource {
 
 		world.updateSnapshots(ctx);
 		if (waterlog) {
-			world.setBlock(outputPos, state.setValue(WATERLOGGED, false), 3);
-			TransactionSuccessCallback.register(ctx, () -> world.scheduleTick(outputPos, Fluids.WATER, 1));
+			world.setBlock(outputPos, state.setValue(WATERLOGGED, false), Block.UPDATE_ALL);
+			world.scheduleTick(outputPos, Fluids.WATER, 1);
 		} else {
 			var newState = fluidState.createLegacyBlock()
 				.setValue(LiquidBlock.LEVEL, 14);
@@ -162,7 +164,7 @@ public class OpenEndedPipe extends FlowSource {
 				}
 			}
 
-			world.setBlock(outputPos, newState, 3);
+			world.setBlock(outputPos, newState, Block.UPDATE_ALL);
 		}
 
 		return stack;
@@ -201,6 +203,9 @@ public class OpenEndedPipe extends FlowSource {
 		if (waterlog && fluid.getFluid() != Fluids.WATER)
 			return false;
 
+		if (!AllConfigs.server().fluids.pipesPlaceFluidSourceBlocks.get())
+			return true;
+
 		if (world.dimensionType()
 			.ultraWarm() && FluidHelper.isTag(fluid, FluidTags.WATER)) {
 			int i = outputPos.getX();
@@ -213,17 +218,14 @@ public class OpenEndedPipe extends FlowSource {
 
 		world.updateSnapshots(ctx);
 		if (waterlog) {
-			world.setBlock(outputPos, state.setValue(WATERLOGGED, true), 3);
-			TransactionSuccessCallback.register(ctx, () -> world.scheduleTick(outputPos, Fluids.WATER, 1));
+			world.setBlock(outputPos, state.setValue(WATERLOGGED, true), Block.UPDATE_ALL);
+			world.scheduleTick(outputPos, Fluids.WATER, 1);
 			return true;
 		}
 
-		if (!AllConfigs.server().fluids.pipesPlaceFluidSourceBlocks.get())
-			return true;
-
 		world.setBlock(outputPos, fluid.getFluid()
 			.defaultFluidState()
-			.createLegacyBlock(), 3);
+			.createLegacyBlock(), Block.UPDATE_ALL);
 		return true;
 	}
 
@@ -252,7 +254,7 @@ public class OpenEndedPipe extends FlowSource {
 			FluidStack containedFluidStack = getFluid();
 			boolean hasBlockState = FluidHelper.hasBlockState(containedFluidStack.getFluid());
 
-			if (!containedFluidStack.isEmpty() && !FluidStack.isSameFluidSameComponents(containedFluidStack, resource))
+			if (!containedFluidStack.isEmpty() && !containedFluidStack.getVariant().equals(resource))
 				setFluid(FluidStack.EMPTY);
 			if (wasPulling)
 				wasPulling = false;
@@ -299,7 +301,7 @@ public class OpenEndedPipe extends FlowSource {
 			FluidStack drainedFromWorld = removeFluidFromSpace(transaction);
 			if (drainedFromWorld.isEmpty())
 				return 0;
-			if (!FluidStack.isSameFluidSameComponents(drainedFromWorld, filter))
+			if (!drainedFromWorld.getVariant().equals(extractedVariant))
 				return 0;
 
 			long remainder = drainedFromWorld.getAmount() - maxAmount;

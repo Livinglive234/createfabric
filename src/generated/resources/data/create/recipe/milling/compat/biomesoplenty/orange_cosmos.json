@@ -8,27 +8,18 @@
   "type": "create:milling",
   "ingredients": [
     {
-      "type": "neoforge:compound",
-      "ingredients": [
-        {
-          "item": "biomesoplenty:orange_cosmos"
-        }
-      ]
+      "item": "biomesoplenty:orange_cosmos"
     }
   ],
   "processing_time": 50,
   "results": [
     {
       "count": 2,
-      "item": {
-        "id": "minecraft:orange_dye"
-      }
+      "id": "minecraft:orange_dye"
     },
     {
       "chance": 0.1,
-      "item": {
-        "id": "minecraft:lime_dye"
-      }
+      "id": "minecraft:lime_dye"
     }
   ]
 }

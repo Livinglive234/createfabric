@@ -1,5 +1,7 @@
 package com.simibubi.create.compat.emi;
 
+import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -354,14 +356,14 @@ public class CreateEmiPlugin implements EmiPlugin {
 					Ingredient bottle = Ingredient.of(Items.GLASS_BOTTLE);
 					ResourceLocation iid = BuiltInRegistries.ITEM.getKey(i);
 					ResourceLocation pid = BuiltInRegistries.POTION.getKey(PotionUtils.getPotion(is));
-					consumer.accept(new SpoutEmiRecipe(new ProcessingRecipeBuilder<>(FillingRecipe::new,
+					consumer.accept(new SpoutEmiRecipe(new StandardProcessingRecipe.Builder<>(FillingRecipe::new,
 						new ResourceLocation("emi", "create/potion_filling/" + pid.getNamespace() + "/" + pid.getPath()
 							+ "/from/" + iid.getNamespace() + "/" + iid.getPath()))
 								.withItemIngredients(bottle)
 								.withFluidIngredients(FluidIngredient.fromFluidStack(potion))
 								.withSingleItemOutput(is.copy())
 								.build()));
-					consumer.accept(new DrainEmiRecipe(new ProcessingRecipeBuilder<>(EmptyingRecipe::new,
+					consumer.accept(new DrainEmiRecipe(new StandardProcessingRecipe.Builder<>(EmptyingRecipe::new,
 						new ResourceLocation("emi", "create/potion_draining/" + pid.getNamespace() + "/" + pid.getPath()
 							+ "/from/" + iid.getNamespace() + "/" + iid.getPath()))
 								.withItemIngredients(Ingredient.of(is))
@@ -391,7 +393,7 @@ public class CreateEmiPlugin implements EmiPlugin {
 							Ingredient bucket = Ingredient.of(is);
 							ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(is.getItem());
 							ResourceLocation fluidId = BuiltInRegistries.FLUID.getKey(fs.getFluid());
-							consumer.accept(new SpoutEmiRecipe(new ProcessingRecipeBuilder<>(FillingRecipe::new,
+							consumer.accept(new SpoutEmiRecipe(new StandardProcessingRecipe.Builder<>(FillingRecipe::new,
 							new ResourceLocation("emi", "create/filling/" + itemId.getNamespace() + "/" + itemId.getPath()
 									+ "/with/" + fluidId.getNamespace() + "/" + fluidId.getPath()))
 								.withItemIngredients(bucket)
@@ -410,7 +412,7 @@ public class CreateEmiPlugin implements EmiPlugin {
 					if (!extracted.isEmpty() && !result.isEmpty()) {
 						ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(is.getItem());
 						ResourceLocation fluidId = BuiltInRegistries.FLUID.getKey(extracted.getFluid());
-						consumer.accept(new DrainEmiRecipe(new ProcessingRecipeBuilder<>(EmptyingRecipe::new,
+						consumer.accept(new DrainEmiRecipe(new StandardProcessingRecipe.Builder<>(EmptyingRecipe::new,
 							new ResourceLocation("emi", "create/draining/" + itemId.getNamespace() + "/" + itemId.getPath()
 								+ "/from/" + fluidId.getNamespace() + "/" + fluidId.getPath()))
 							.withItemIngredients(Ingredient.of(is))

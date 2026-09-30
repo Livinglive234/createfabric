@@ -1,0 +1,20 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "atmospheric"
+    }
+  ],
+  "type": "create:cutting",
+  "ingredients": [
+    {
+      "item": "atmospheric:watchful_aspen_log"
+    }
+  ],
+  "processing_time": 50,
+  "results": [
+    {
+      "id": "atmospheric:aspen_log"
+    }
+  ]
+}

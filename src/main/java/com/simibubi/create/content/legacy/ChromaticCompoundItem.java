@@ -2,6 +2,8 @@ package com.simibubi.create.content.legacy;
 
 import com.simibubi.create.AllDataComponents;
 
+import net.minecraft.core.component.DataComponentMap;
+
 import org.apache.commons.lang3.mutable.MutableBoolean;
 
 import com.simibubi.create.AllItems;
@@ -35,12 +37,11 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 
-import io.github.fabricators_of_create.porting_lib.block.LightEmissiveBlock;
-import io.github.fabricators_of_create.porting_lib.item.CustomMaxCountItem;
-import io.github.fabricators_of_create.porting_lib.item.EntityTickListenerItem;
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.LightEmissiveBlock;
+import io.github.fabricators_of_create.porting_lib.item.extensions.EntityTickListenerItem;
 import io.github.fabricators_of_create.porting_lib.mixin.accessors.common.accessor.BeaconBlockEntityAccessor;
 
-public class ChromaticCompoundItem extends Item implements CustomMaxCountItem, EntityTickListenerItem {
+public class ChromaticCompoundItem extends Item implements EntityTickListenerItem {
 
 	public ChromaticCompoundItem(Properties properties) {
 		super(properties);
@@ -48,6 +49,10 @@ public class ChromaticCompoundItem extends Item implements CustomMaxCountItem, E
 
 	public int getLight(ItemStack stack) {
 		return stack.getOrDefault(AllDataComponents.CHROMATIC_COMPOUND_COLLECTING_LIGHT, 0);
+	}
+
+	public int getLight(DataComponentMap components) {
+		return components.getOrDefault(AllDataComponents.CHROMATIC_COMPOUND_COLLECTING_LIGHT, 0);
 	}
 
 	@Override
@@ -66,10 +71,9 @@ public class ChromaticCompoundItem extends Item implements CustomMaxCountItem, E
 			getLight(stack) / (float) AllConfigs.server().recipes.lightSourceCountForRefinedRadiance.get());
 	}
 
-	@Override
-	public int getItemStackLimit(ItemStack stack) {
-		return isBarVisible(stack) ? 1 : 16;
-	}
+	// fabric: NeoForge's Item#getItemStackLimit(ItemStack) has no direct fabric port; 1.21.1's
+	// vanilla per-stack max-size mechanism is the MAX_STACK_SIZE data component instead of a Java
+	// hook, which would need to be set wherever CHROMATIC_COMPOUND_COLLECTING_LIGHT is set.
 
 	@Override
 	public boolean onEntityItemUpdate(ItemStack stack, ItemEntity entity) {
@@ -225,8 +229,9 @@ public class ChromaticCompoundItem extends Item implements CustomMaxCountItem, E
 			.getBlockPos()))
 			return false;
 
+		DataComponentMap components = itemStack.getComponents();
 		ItemStack newStack = stack.split(1);
-		newStack.set(AllDataComponents.CHROMATIC_COMPOUND_COLLECTING_LIGHT, getLight(itemStack) + 1);
+		newStack.set(AllDataComponents.CHROMATIC_COMPOUND_COLLECTING_LIGHT, getLight(components) + 1);
 		ItemEntity newEntity = new ItemEntity(world, entity.getX(), entity.getY(), entity.getZ(), newStack);
 		newEntity.setDeltaMovement(entity.getDeltaMovement());
 		newEntity.setDefaultPickUpDelay();

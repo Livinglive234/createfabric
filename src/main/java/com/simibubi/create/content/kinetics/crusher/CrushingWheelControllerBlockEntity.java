@@ -11,7 +11,7 @@ import com.simibubi.create.AllBlockEntityTypes;
 import com.simibubi.create.AllRecipeTypes;
 import com.simibubi.create.content.kinetics.belt.behaviour.DirectBeltInputBehaviour;
 import com.simibubi.create.content.processing.recipe.ProcessingInventory;
-import com.simibubi.create.content.processing.recipe.ProcessingRecipe;
+import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.damageTypes.CreateDamageSources;
@@ -20,15 +20,9 @@ import com.simibubi.create.foundation.sound.SoundScapes;
 import com.simibubi.create.foundation.sound.SoundScapes.AmbienceGroup;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
-import net.createmod.catnip.platform.CatnipServices;
-import net.createmod.catnip.nbt.NBTHelper;
 import net.createmod.catnip.math.VecHelper;
-
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
-
+import net.createmod.catnip.nbt.NBTHelper;
+import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -41,7 +35,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.Container;
+import net.minecraft.world.Clearable;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -58,12 +52,12 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
+import com.simibubi.create.content.processing.recipe.ProcessingRecipe;
+import net.minecraft.world.Container;
+import com.tterrag.registrate.fabric.EnvExecutor;
+import io.github.fabricators_of_create.porting_lib.transfer.item.RecipeWrapper;
 
-import io.github.fabricators_of_create.porting_lib.util.EnvExecutor;
-
-
-public class CrushingWheelControllerBlockEntity extends SmartBlockEntity implements SidedStorageBlockEntity {
-
+public class CrushingWheelControllerBlockEntity extends SmartBlockEntity implements Clearable, SidedStorageBlockEntity {
 	public Entity processingEntity;
 	private UUID entityUUID;
 	protected boolean searchForEntity;
@@ -83,13 +77,6 @@ public class CrushingWheelControllerBlockEntity extends SmartBlockEntity impleme
 		};
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.CRUSHING_WHEEL_CONTROLLER.get(),
-				(be, context) -> be.inventory
-		);
-	}
 
 	@Override
 	public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
@@ -143,8 +130,8 @@ public class CrushingWheelControllerBlockEntity extends SmartBlockEntity impleme
 		if (!hasEntity()) {
 
 			float processingSpeed =
-				Mth.clamp((speed) / (!inventory.appliedRecipe ? Mth.log2(inventory.getStackInSlot(0)
-					.getCount()) : 1), .25f, 20);
+				Mth.clamp((speed) / (!inventory.appliedRecipe ? (float) Math.log(inventory.getStackInSlot(0)
+					.getCount()) / (float) Math.log(2) : 1), .25f, 20);
 			inventory.remainingTime -= processingSpeed;
 			spawnParticles(inventory.getStackInSlot(0));
 
@@ -165,8 +152,9 @@ public class CrushingWheelControllerBlockEntity extends SmartBlockEntity impleme
 
 			// Output Items
 			if (facing != Direction.UP) {
-				BlockPos nextPos = worldPosition.offset(facing.getAxis() == Axis.X ? 1 * offset : 0, -1,
-					facing.getAxis() == Axis.Z ? 1 * offset : 0);
+				BlockPos nextPos = worldPosition.below()
+					.relative(facing, facing.getAxis() == Axis.Y ? 0 : 1);
+
 				DirectBeltInputBehaviour behaviour =
 					BlockEntityBehaviour.get(level, nextPos, DirectBeltInputBehaviour.TYPE);
 				if (behaviour != null) {
@@ -240,12 +228,12 @@ public class CrushingWheelControllerBlockEntity extends SmartBlockEntity impleme
 				facing.getAxis() == Axis.Y ? .5f * offset : 0f, facing.getAxis() == Axis.Z ? .5f * offset : 0f);
 			int crusherDamage = AllConfigs.server().kinetics.crushingDamage.get();
 
-			if (processingEntity instanceof LivingEntity) {
-				if ((((LivingEntity) processingEntity).getHealth() - crusherDamage <= 0) // Takes LivingEntity instances
+			if (processingEntity instanceof LivingEntity livingEntity) {
+				if (livingEntity.getHealth() - crusherDamage <= 0 // Takes LivingEntity instances
 					// as exception, so it can
 					// move them before it would
 					// kill them.
-					&& (((LivingEntity) processingEntity).hurtTime <= 0)) { // This way it can actually output the items
+					&& livingEntity.hurtTime <= 0) { // This way it can actually output the items
 					// to the right spot.
 					processingEntity.setPos(entityOutPos.x, entityOutPos.y, entityOutPos.z);
 				}
@@ -309,19 +297,22 @@ public class CrushingWheelControllerBlockEntity extends SmartBlockEntity impleme
 	}
 
 	private void applyRecipe() {
-		Optional<RecipeHolder<ProcessingRecipe<Container>>> recipe = findRecipe();
+		Optional<RecipeHolder<StandardProcessingRecipe<RecipeWrapper>>> recipe = findRecipe();
 
 		List<ItemStack> list = new ArrayList<>();
 		if (recipe.isPresent()) {
-			int rolls = inventory.getStackInSlot(0)
-				.getCount();
+			ItemStack input = inventory.getStackInSlot(0);
+			int rolls = input.getCount();
 			inventory.clear();
 			for (int roll = 0; roll < rolls; roll++) {
 				List<ItemStack> rolledResults = recipe.get().value()
-					.rollResults();
+					.rollResults(level.random);
 				for (ItemStack stack : rolledResults) {
 					ItemHelper.addToList(stack, list);
 				}
+			}
+			if (input.getItem().hasCraftingRemainingItem()) {
+				ItemHelper.addToList(new ItemStack(input.getItem().getCraftingRemainingItem()), list);
 			}
 			for (int slot = 0; slot < list.size() && slot + 1 < inventory.getSlotCount(); slot++)
 				inventory.setStackInSlot(slot + 1, list.get(slot));
@@ -331,10 +322,11 @@ public class CrushingWheelControllerBlockEntity extends SmartBlockEntity impleme
 
 	}
 
-	public Optional<RecipeHolder<ProcessingRecipe<Container>>> findRecipe() {
-		Optional<RecipeHolder<ProcessingRecipe<Container>>> crushingRecipe = AllRecipeTypes.CRUSHING.find(wrapper, level);
+	public Optional<RecipeHolder<StandardProcessingRecipe<RecipeWrapper>>> findRecipe() {
+		RecipeWrapper wrapper = new RecipeWrapper(inventory);
+		Optional<RecipeHolder<StandardProcessingRecipe<RecipeWrapper>>> crushingRecipe = AllRecipeTypes.CRUSHING.find(wrapper, level);
 		if (!crushingRecipe.isPresent())
-			crushingRecipe = AllRecipeTypes.MILLING.find(inventory, level);
+			crushingRecipe = AllRecipeTypes.MILLING.find(wrapper, level);
 		return crushingRecipe;
 	}
 
@@ -358,13 +350,18 @@ public class CrushingWheelControllerBlockEntity extends SmartBlockEntity impleme
 		inventory.deserializeNBT(registries, compound.getCompound("Inventory"));
 	}
 
+	@Override
+	public void clearContent() {
+		inventory.clear();
+	}
+
 	public void startCrushing(Entity entity) {
 		processingEntity = entity;
 		entityUUID = entity.getUUID();
 	}
 
 	private void itemInserted(ItemStack stack) {
-		Optional<RecipeHolder<ProcessingRecipe<Container>>> recipe = findRecipe();
+		Optional<RecipeHolder<StandardProcessingRecipe<RecipeWrapper>>> recipe = findRecipe();
 		inventory.remainingTime = recipe.isPresent() ? recipe.get().value()
 			.getProcessingDuration() : 100;
 		inventory.appliedRecipe = false;
@@ -388,5 +385,4 @@ public class CrushingWheelControllerBlockEntity extends SmartBlockEntity impleme
 	public boolean hasEntity() {
 		return processingEntity != null;
 	}
-
 }

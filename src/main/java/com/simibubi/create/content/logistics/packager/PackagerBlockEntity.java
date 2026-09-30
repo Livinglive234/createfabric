@@ -15,7 +15,11 @@ import com.simibubi.create.AllBlockEntityTypes;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllSoundEvents;
 import com.simibubi.create.Create;
-import com.simibubi.create.api.unpacking.UnpackingHandler;
+import com.simibubi.create.api.packager.unpacking.UnpackingHandler;
+import com.simibubi.create.compat.Mods;
+import com.simibubi.create.compat.computercraft.AbstractComputerBehaviour;
+import com.simibubi.create.compat.computercraft.ComputerCraftProxy;
+import com.simibubi.create.compat.computercraft.events.PackageEvent;
 import com.simibubi.create.content.contraptions.actors.psi.PortableStorageInterfaceBlockEntity;
 import com.simibubi.create.content.logistics.BigItemStack;
 import com.simibubi.create.content.logistics.box.PackageItem;
@@ -24,13 +28,13 @@ import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelBehaviour;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelBlock;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelBlockEntity;
 import com.simibubi.create.content.logistics.packagePort.frogport.FrogportBlockEntity;
-import com.simibubi.create.content.logistics.packager.fabric.InventoryIdentifier;
+import com.simibubi.create.api.packager.InventoryIdentifier;
 import com.simibubi.create.content.logistics.packagerLink.LogisticallyLinkedBehaviour.RequestType;
 import com.simibubi.create.content.logistics.packagerLink.PackagerLinkBlock;
 import com.simibubi.create.content.logistics.packagerLink.PackagerLinkBlockEntity;
 import com.simibubi.create.content.logistics.packagerLink.RequestPromiseQueue;
 import com.simibubi.create.content.logistics.packagerLink.WiFiEffectPacket;
-import com.simibubi.create.content.logistics.stockTicker.PackageOrder;
+import com.simibubi.create.content.logistics.stockTicker.PackageOrderWithCrafts;
 import com.simibubi.create.foundation.advancement.AdvancementBehaviour;
 import com.simibubi.create.foundation.advancement.AllAdvancements;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
@@ -63,6 +67,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
+import net.minecraft.world.Clearable;
 import net.minecraft.world.Containers;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -73,8 +78,9 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
 import io.github.fabricators_of_create.porting_lib.util.StorageProvider;
+import com.simibubi.create.content.logistics.stockTicker.PackageOrder;
 
-public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorageBlockEntity {
+public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorageBlockEntity, Clearable {
 
 	public boolean redstonePowered;
 	public int buttonCooldown;
@@ -84,13 +90,17 @@ public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorag
 	public ItemStack heldBox;
 	public ItemStack previouslyUnwrapped;
 
-	public List<ItemStack> queuedExitingPackages;
+	public List<BigItemStack> queuedExitingPackages;
 
 	public final PackagerItemHandler inventory;
 
 	public static final int CYCLE = 20;
 	public int animationTicks;
 	public boolean animationInward;
+
+	public AbstractComputerBehaviour computerBehaviour;
+	public Boolean hasCustomComputerAddress;
+	public String customComputerAddress;
 
 	private InventorySummary availableItems;
 	private VersionedInventoryTrackerBehaviour invVersionTracker;
@@ -110,16 +120,11 @@ public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorag
 		animationInward = true;
 		queuedExitingPackages = new LinkedList<>();
 		signBasedAddress = "";
+		customComputerAddress = "";
+		hasCustomComputerAddress = false;
 		buttonCooldown = 0;
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-			Capabilities.ItemHandler.BLOCK,
-			AllBlockEntityTypes.PACKAGER.get(),
-			(be, context) -> be.inventory
-		);
-	}
 
 	@Override
 	public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
@@ -127,6 +132,7 @@ public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorag
 			.withFilter(this::supportsBlockEntity));
 		behaviours.add(invVersionTracker = new VersionedInventoryTrackerBehaviour(this));
 		behaviours.add(advancements = new AdvancementBehaviour(this, AllAdvancements.PACKAGER));
+		behaviours.add(computerBehaviour = ComputerCraftProxy.behaviour(this));
 	}
 
 	private boolean supportsBlockEntity(Storage<ItemVariant> storage, StorageProvider<ItemVariant> provider) {
@@ -140,6 +146,12 @@ public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorag
 	}
 
 	@Override
+	public void invalidate() {
+		super.invalidate();
+		computerBehaviour.removePeripheral();
+	}
+
+	@Override
 	public void tick() {
 		super.tick();
 
@@ -150,7 +162,13 @@ public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorag
 			previouslyUnwrapped = ItemStack.EMPTY;
 
 			if (!level.isClientSide() && !queuedExitingPackages.isEmpty() && heldBox.isEmpty()) {
-				heldBox = queuedExitingPackages.remove(0);
+				BigItemStack entry = queuedExitingPackages.get(0);
+				heldBox = entry.stack.copy();
+
+				entry.count--;
+				if (entry.count <= 0)
+					queuedExitingPackages.remove(0);
+
 				animationInward = false;
 				animationTicks = CYCLE;
 				notifyUpdate();
@@ -186,10 +204,6 @@ public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorag
 	}
 
 	public InventorySummary getAvailableItems() {
-		return getAvailableItems(false);
-	}
-
-	public InventorySummary getAvailableItems(boolean scanInputSlots) {
 		if (availableItems != null && invVersionTracker.stillWaiting(targetInventory.getInventory()))
 			return availableItems;
 
@@ -207,12 +221,8 @@ public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorag
 			return availableItems;
 		}
 
-		try (Transaction t = Transaction.openOuter()) {
-			for (StorageView<ItemVariant> view : targetInv.nonEmptyViews()) {
-				ItemVariant resource = view.getResource();
-				long amount = scanInputSlots ? view.getAmount() : view.extract(resource, view.getAmount(), t);
-				availableItems.add(resource, amount);
-			}
+		for (StorageView<ItemVariant> view : targetInv.nonEmptyViews()) {
+			availableItems.add(view.getResource(), view.getAmount());
 		}
 
 		invVersionTracker.awaitNewVersion(targetInventory.getInventory());
@@ -330,9 +340,9 @@ public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorag
 	public boolean isTooBusyFor(RequestType type) {
 		int queue = queuedExitingPackages.size();
 		return queue >= switch (type) {
-		case PLAYER -> 50;
-		case REDSTONE -> 20;
-		case RESTOCK -> 10;
+			case PLAYER -> 50;
+			case REDSTONE -> 20;
+			case RESTOCK -> 10;
 		};
 	}
 
@@ -348,7 +358,9 @@ public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorag
 		attemptToSend(null);
 
 		// dont send multiple packages when a button signal length is received
-		buttonCooldown = 40;
+		if (buttonCooldown <= 0) { // still on button cooldown, don't prolong it
+			buttonCooldown = 40;
+		}
 	}
 
 	public boolean unwrapBox(ItemStack box, TransactionContext ctx) {
@@ -362,8 +374,7 @@ public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorag
 		if (items.isEmpty())
 			return true;
 
-		PackageOrder orderContext = PackageItem.getOrderContext(box);
-
+		PackageOrderWithCrafts orderContext = PackageItem.getOrderContext(box);
 		Direction facing = getBlockState().getOptionalValue(PackagerBlock.FACING).orElse(Direction.UP);
 		BlockPos target = worldPosition.relative(facing.getOpposite());
 		BlockState targetState = level.getBlockState(target);
@@ -410,7 +421,7 @@ public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorag
 		boolean finalLinkInOrder = false;
 		int packageIndexAtLink = 0;
 		boolean finalPackageAtLink = false;
-		PackageOrder orderContext = null;
+		PackageOrderWithCrafts orderContext = null;
 		boolean requestQueue = queuedRequests != null;
 
 		if (requestQueue && !queuedRequests.isEmpty()) {
@@ -425,7 +436,8 @@ public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorag
 			orderContext = nextRequest.context();
 		}
 
-		Outer: for (int i = 0; i < PackageItem.SLOTS; i++) {
+		Outer:
+		for (int i = 0; i < PackageItem.SLOTS; i++) {
 			boolean continuePacking = true;
 
 			while (continuePacking) {
@@ -505,6 +517,7 @@ public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorag
 
 		ItemStack createdBox =
 			extractedPackageItem.isEmpty() ? PackageItem.containing(extractedItems) : extractedPackageItem.copy();
+		computerBehaviour.prepareComputerEvent(new PackageEvent(createdBox, "package_created"));
 		PackageItem.clearAddress(createdBox);
 
 		if (fixedAddress != null)
@@ -521,7 +534,7 @@ public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorag
 			plbe.behaviour.deductFromAccurateSummary(extractedItems);
 
 		if (!heldBox.isEmpty() || animationTicks != 0) {
-			queuedExitingPackages.add(createdBox);
+			queuedExitingPackages.add(new BigItemStack(createdBox, 1));
 			return;
 		}
 
@@ -534,13 +547,18 @@ public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorag
 		notifyUpdate();
 	}
 
-	protected void updateSignAddress() {
+	public void updateSignAddress() {
 		signBasedAddress = "";
 		for (Direction side : Iterate.directions) {
 			String address = getSign(side);
 			if (address == null || address.isBlank())
 				continue;
 			signBasedAddress = address;
+		}
+		if (computerBehaviour.hasAttachedComputer() && hasCustomComputerAddress) {
+			signBasedAddress = customComputerAddress;
+		} else {
+			hasCustomComputerAddress = false;
 		}
 	}
 
@@ -550,11 +568,14 @@ public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorag
 			return null;
 		for (boolean front : Iterate.trueAndFalse) {
 			SignText text = sign.getText(front);
+			String address = "";
 			for (Component component : text.getMessages(false)) {
-				String address = component.getString();
-				if (!address.isBlank())
-					return address;
+				String string = component.getString();
+				if (!string.isBlank())
+					address += string.trim() + " ";
 			}
+			if (!address.isBlank())
+				return address.trim();
 		}
 		return null;
 	}
@@ -571,14 +592,17 @@ public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorag
 		animationInward = compound.getBoolean("AnimationInward");
 		animationTicks = compound.getInt("AnimationTicks");
 		signBasedAddress = compound.getString("SignAddress");
+		customComputerAddress = compound.getString("ComputerAddress");
+		hasCustomComputerAddress = compound.getBoolean("HasComputerAddress");
 		heldBox = ItemStack.parseOptional(registries, compound.getCompound("HeldBox"));
 		previouslyUnwrapped = ItemStack.parseOptional(registries, compound.getCompound("InsertedBox"));
 		if (clientPacket)
 			return;
-		queuedExitingPackages = NBTHelper.readItemList(compound.getList("QueuedPackages", Tag.TAG_COMPOUND), registries);
+		queuedExitingPackages = NBTHelper.readCompoundList(compound.getList("QueuedExitingPackages", Tag.TAG_COMPOUND),
+			c -> CatnipCodecUtils.decode(BigItemStack.CODEC, registries, c)
+				.orElseThrow());
 		if (compound.contains("LastSummary"))
-			availableItems = CatnipCodecUtils.decode(InventorySummary.CODEC, registries, compound.getCompound("LastSummary"))
-				.orElse(null);
+			availableItems = CatnipCodecUtils.decode(InventorySummary.CODEC, registries, compound.getCompound("LastSummary")).orElse(null);
 	}
 
 	@Override
@@ -588,21 +612,38 @@ public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorag
 		compound.putBoolean("AnimationInward", animationInward);
 		compound.putInt("AnimationTicks", animationTicks);
 		compound.putString("SignAddress", signBasedAddress);
+		compound.putString("ComputerAddress", customComputerAddress);
+		compound.putBoolean("HasComputerAddress", hasCustomComputerAddress);
 		compound.put("HeldBox", heldBox.saveOptional(registries));
 		compound.put("InsertedBox", previouslyUnwrapped.saveOptional(registries));
 		if (clientPacket)
 			return;
-		compound.put("QueuedPackages", NBTHelper.writeItemList(queuedExitingPackages, registries));
+		compound.put("QueuedExitingPackages", NBTHelper.writeCompoundList(queuedExitingPackages, bis -> {
+			if (CatnipCodecUtils.encode(BigItemStack.CODEC, registries, bis)
+				.orElse(new CompoundTag()) instanceof CompoundTag ct)
+				return ct;
+			return new CompoundTag();
+		}));
 		if (availableItems != null)
-			compound.put("LastSummary", CatnipCodecUtils.encode(InventorySummary.CODEC, registries, availableItems).orElseThrow());
+			compound.put("LastSummary", CatnipCodecUtils.encode(InventorySummary.CODEC, registries, availableItems)
+				.orElseThrow());
+	}
+
+	@Override
+	public void clearContent() {
+		heldBox = ItemStack.EMPTY;
+		queuedExitingPackages.clear();
 	}
 
 	@Override
 	public void destroy() {
 		super.destroy();
 		ItemHelper.dropContents(level, worldPosition, inventory);
-		queuedExitingPackages.forEach(stack -> Containers.dropItemStack(level, worldPosition.getX(),
-			worldPosition.getY(), worldPosition.getZ(), stack));
+		queuedExitingPackages.forEach(bigStack -> {
+			for (int i = 0; i < bigStack.count; i++)
+				Containers.dropItemStack(level, worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(),
+					bigStack.stack.copy());
+		});
 		queuedExitingPackages.clear();
 	}
 
@@ -632,5 +673,4 @@ public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorag
 		BlockFace target = this.targetInventory.getTarget();
 		return identifier.contains(target);
 	}
-
 }

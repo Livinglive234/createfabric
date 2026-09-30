@@ -19,6 +19,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.entity.HopperBlockEntity;
@@ -88,7 +89,7 @@ public class DrillBlockEntity extends BlockBreakingKineticBlockEntity {
 					chute.setItem(stack, 0);
 		}
 
-		level.levelEvent(2001, breakingPos, Block.getId(stateToBreak));
+		level.levelEvent(LevelEvent.PARTICLES_DESTROY_BLOCK, breakingPos, Block.getId(stateToBreak));
 		return true;
 	}
 

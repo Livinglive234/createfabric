@@ -2,9 +2,8 @@ package com.simibubi.create.content.schematics;
 
 import java.util.Optional;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
-import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.simibubi.create.AllStructureProcessorTypes;
 
@@ -21,13 +20,15 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlac
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessor;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessorType;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
-
+import com.mojang.serialization.Codec;
 import io.github.fabricators_of_create.porting_lib.extensions.extensions.StructureProcessorExtensions;
 
-public class SchematicProcessor extends StructureProcessor implements StructureProcessorExtensions {
+public class SchematicProcessor extends StructureProcessor {
 	public static final SchematicProcessor INSTANCE = new SchematicProcessor();
 	public static final MapCodec<SchematicProcessor> CODEC = MapCodec.unit(() -> INSTANCE);
 
+	private SchematicProcessor() {
+	}
 
 	@Nullable
 	@Override
@@ -63,5 +64,4 @@ public class SchematicProcessor extends StructureProcessor implements StructureP
 	protected StructureProcessorType<?> getType() {
 		return AllStructureProcessorTypes.SCHEMATIC.get();
 	}
-
 }

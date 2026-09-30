@@ -3,7 +3,6 @@ package com.simibubi.create.content.contraptions.minecart.capability;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import com.simibubi.create.AllAttachmentTypes;
 import com.simibubi.create.AllPackets;
 
 import io.netty.buffer.ByteBuf;
@@ -15,9 +14,11 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.vehicle.AbstractMinecart;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import com.simibubi.create.AllAttachmentTypes;
 
 public record MinecartControllerUpdatePacket(int entityId, @Nullable CompoundTag nbt) implements ClientboundPacketPayload {
 	public static final StreamCodec<ByteBuf, MinecartControllerUpdatePacket> STREAM_CODEC = StreamCodec.composite(
@@ -34,16 +35,10 @@ public record MinecartControllerUpdatePacket(int entityId, @Nullable CompoundTag
 	@Environment(EnvType.CLIENT)
 	public void handle(LocalPlayer player) {
 		Entity entityByID = player.clientLevel.getEntity(entityId);
-		if (entityByID == null)
+		if (!(entityByID instanceof AbstractMinecart cart))
 			return;
-		if (entityByID.hasData(AllAttachmentTypes.MINECART_CONTROLLER)) {
-			if (nbt == null) {
-				entityByID.removeData(AllAttachmentTypes.MINECART_CONTROLLER);
-			} else {
-				MinecartController controller = entityByID.getData(AllAttachmentTypes.MINECART_CONTROLLER);
-				controller.deserializeNBT(player.registryAccess(), nbt);
-			}
-		}
+		MinecartController controller = cart.create$getController();
+		controller.deserializeNBT(player.registryAccess(), nbt == null ? new CompoundTag() : nbt);
 	}
 
 	@Override

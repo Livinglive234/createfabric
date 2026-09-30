@@ -8,27 +8,18 @@
   "type": "create:milling",
   "ingredients": [
     {
-      "type": "neoforge:compound",
-      "ingredients": [
-        {
-          "item": "regions_unexplored:alpha_dandelion"
-        }
-      ]
+      "item": "regions_unexplored:alpha_dandelion"
     }
   ],
   "processing_time": 50,
   "results": [
     {
       "count": 2,
-      "item": {
-        "id": "minecraft:yellow_dye"
-      }
+      "id": "minecraft:yellow_dye"
     },
     {
       "chance": 0.05,
-      "item": {
-        "id": "minecraft:yellow_dye"
-      }
+      "id": "minecraft:yellow_dye"
     }
   ]
 }

@@ -1,7 +1,6 @@
 package com.simibubi.create.content.decoration.slidingDoor;
 
 import java.lang.ref.WeakReference;
-import java.util.Map;
 
 import com.simibubi.create.api.behaviour.movement.MovementBehaviour;
 import com.simibubi.create.content.contraptions.Contraption;
@@ -25,11 +24,12 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.DoorBlock;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
 import net.minecraft.world.phys.Vec3;
+import java.util.Map;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 public class SlidingDoorMovementBehaviour implements MovementBehaviour {
 	@Override
@@ -48,8 +48,7 @@ public class SlidingDoorMovementBehaviour implements MovementBehaviour {
 		if (!context.world.isClientSide())
 			tickOpen(context, open);
 
-		Map<BlockPos, BlockEntity> tes = context.contraption.presentBlockEntities;
-		if (!(tes.get(context.localPos) instanceof SlidingDoorBlockEntity sdbe))
+		if (!(context.contraption.getBlockEntityClientSide(context.localPos) instanceof SlidingDoorBlockEntity sdbe))
 			return;
 		boolean wasSettled = sdbe.animation.settled();
 		sdbe.animation.chase(open ? 1 : 0, .15f, Chaser.LINEAR);

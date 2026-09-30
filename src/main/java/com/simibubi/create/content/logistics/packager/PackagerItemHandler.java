@@ -39,15 +39,16 @@ public class PackagerItemHandler implements SingleSlotStorage<ItemVariant> {
 	@Override
 	public long extract(ItemVariant resource, long maxAmount, TransactionContext transaction) {
 		StoragePreconditions.notBlankNotNegative(resource, maxAmount);
-		if (blockEntity.animationTicks != 0)
+		if (maxAmount == 0 || blockEntity.animationTicks != 0)
 			return 0;
 		ItemStack box = blockEntity.heldBox;
 		if (!resource.matches(box))
 			return 0;
 
+		long extracted = Math.min(box.getCount(), maxAmount);
 		blockEntity.heldBox = ItemStack.EMPTY;
 		TransactionSuccessCallback.register(transaction, blockEntity::notifyUpdate);
-		return box.getCount();
+		return extracted;
 	}
 
 	@Override

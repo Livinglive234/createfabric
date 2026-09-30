@@ -1,7 +1,5 @@
 package com.simibubi.create.content.processing.burner;
 
-import org.jetbrains.annotations.Nullable;
-
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
@@ -36,6 +34,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.block.BlockPickInteractionAware;
+import org.jetbrains.annotations.Nullable;
 
 public class LitBlazeBurnerBlock extends Block implements IWrenchable, BlockPickInteractionAware {
 
@@ -89,7 +88,8 @@ public class LitBlazeBurnerBlock extends Block implements IWrenchable, BlockPick
 		return AllItems.EMPTY_BLAZE_BURNER.asStack();
 	}
 
-	@Environment(EnvType.CLIENT)
+	@Override
+	@OnlyIn(Dist.CLIENT)
 	public void animateTick(BlockState state, Level world, BlockPos pos, RandomSource random) {
 		world.addAlwaysVisibleParticle(ParticleTypes.LARGE_SMOKE, true,
 			(double) pos.getX() + 0.5D + random.nextDouble() / 3.0D * (double) (random.nextBoolean() ? 1 : -1),

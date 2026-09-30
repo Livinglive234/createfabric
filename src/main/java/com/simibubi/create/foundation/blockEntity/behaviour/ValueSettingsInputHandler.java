@@ -3,7 +3,6 @@ package com.simibubi.create.foundation.blockEntity.behaviour;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 
 import com.simibubi.create.AllBlocks;
-import com.simibubi.create.AllTags.AllItemTags;
 import com.simibubi.create.CreateClient;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.filtering.SidedFilteringBehaviour;
@@ -21,6 +20,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.fabric.api.entity.FakePlayer;
 
 import io.github.fabricators_of_create.porting_lib.util.EnvExecutor;
+import com.simibubi.create.AllTags.AllItemTags;
 
 public class ValueSettingsInputHandler {
 
@@ -60,7 +60,7 @@ public class ValueSettingsInputHandler {
 			if (!valueSettingsBehaviour.isActive())
 				continue;
 			if (valueSettingsBehaviour.onlyVisibleWithWrench()
-				&& !AllItemTags.WRENCH.matches(player.getItemInHand(hand)))
+				&& !player.getItemInHand(hand).is(Items.TOOLS_WRENCH))
 				continue;
 			if (valueSettingsBehaviour.getSlotPositioning()instanceof ValueBoxTransform.Sided sidedSlot) {
 				if (!sidedSlot.isSideActive(sbe.getBlockState(), ray.getDirection()))

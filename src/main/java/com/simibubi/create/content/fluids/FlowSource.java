@@ -16,6 +16,7 @@ import com.simibubi.create.foundation.ICapabilityProvider;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 
 import net.createmod.catnip.math.BlockFace;
+import net.createmod.ponder.api.level.PonderLevel;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 
@@ -52,7 +53,8 @@ public abstract class FlowSource {
 
 	public abstract boolean isEndpoint();
 
-	public void manageSource(Level world) {}
+	public void manageSource(Level world, BlockEntity networkBE) {
+	}
 
 	public void whileFlowPresent(Level world, boolean pulling) {}
 
@@ -96,7 +98,7 @@ public abstract class FlowSource {
 		}
 
 		@Override
-		public void manageSource(Level world) {
+		public void manageSource(Level world, BlockEntity networkBE) {
 			if (cached != null && cached.get() != null && !cached.get().blockEntity.isRemoved())
 				return;
 			cached = null;

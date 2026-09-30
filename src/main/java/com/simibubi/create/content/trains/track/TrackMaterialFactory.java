@@ -10,7 +10,7 @@ import net.fabricmc.fabric.api.tag.convention.v2.ConventionalItemTags;
 
 import org.jetbrains.annotations.Nullable;
 
-import com.simibubi.create.AllTags;
+import com.simibubi.create.foundation.data.recipe.CommonMetal;
 import com.tterrag.registrate.util.nullness.NonNullSupplier;
 
 import dev.engine_room.flywheel.lib.model.baked.PartialModel;
@@ -18,6 +18,7 @@ import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.ItemLike;
+import com.simibubi.create.AllTags;
 
 public class TrackMaterialFactory {
 	private final ResourceLocation id;

@@ -2,7 +2,6 @@ package com.simibubi.create.content.equipment.armor;
 
 import java.util.UUID;
 
-import com.simibubi.create.AllItems;
 import com.simibubi.create.foundation.advancement.AllAdvancements;
 
 import net.minecraft.server.level.ServerLevel;
@@ -16,8 +15,11 @@ import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.goal.WrappedGoal;
 import net.minecraft.world.entity.ai.goal.target.TargetGoal;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 
 import io.github.fabricators_of_create.porting_lib.entity.events.EntityEvents;
+import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingEvents.LivingVisibilityEvent;
+import com.simibubi.create.AllItems;
 import io.github.fabricators_of_create.porting_lib.entity.events.LivingEntityEvents;
 
 public class CardboardArmorHandler {
@@ -29,14 +31,20 @@ public class CardboardArmorHandler {
 		if (!testForStealth(entity))
 			return;
 
-		event.setNewSize(EntityDimensions.fixed(0.6F, 0.8F).withEyeHeight(0.6F));
+		float scale;
+		if(entity instanceof LivingEntity le) {
+			scale = le.getScale();
+		} else {
+			scale = 1.0F;
+		}
 
+		event.setNewSize(EntityDimensions.fixed(0.6F * scale, 0.8F * scale).withEyeHeight(0.6F * scale));
 		if (!entity.level()
 			.isClientSide() && entity instanceof Player p)
 			AllAdvancements.CARDBOARD_ARMOR.awardTo(p);
 	}
 
-	public static void playersStealthWhenWearingCardboard(LivingEvent.LivingVisibilityEvent event) {
+	public static void playersStealthWhenWearingCardboard(LivingVisibilityEvent event) {
 		LivingEntity entity = event.getEntity();
 		if (!testForStealth(entity))
 			return;
@@ -77,15 +85,19 @@ public class CardboardArmorHandler {
 			return false;
 		if (entity instanceof Player player && player.getAbilities().flying)
 			return false;
-		if (!AllItems.CARDBOARD_HELMET.isIn(entity.getItemBySlot(EquipmentSlot.HEAD)))
+		if (!isCardboardArmor(entity.getItemBySlot(EquipmentSlot.HEAD)))
 			return false;
-		if (!AllItems.CARDBOARD_CHESTPLATE.isIn(entity.getItemBySlot(EquipmentSlot.CHEST)))
+		if (!isCardboardArmor(entity.getItemBySlot(EquipmentSlot.CHEST)))
 			return false;
-		if (!AllItems.CARDBOARD_LEGGINGS.isIn(entity.getItemBySlot(EquipmentSlot.LEGS)))
+		if (!isCardboardArmor(entity.getItemBySlot(EquipmentSlot.LEGS)))
 			return false;
-		if (!AllItems.CARDBOARD_BOOTS.isIn(entity.getItemBySlot(EquipmentSlot.FEET)))
+		if (!isCardboardArmor(entity.getItemBySlot(EquipmentSlot.FEET)))
 			return false;
 		return true;
+	}
+
+	public static boolean isCardboardArmor(ItemStack stack) {
+		return stack.getItem() instanceof CardboardArmorItem;
 	}
 
 }

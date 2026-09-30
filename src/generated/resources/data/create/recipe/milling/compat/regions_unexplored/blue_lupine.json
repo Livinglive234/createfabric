@@ -8,21 +8,14 @@
   "type": "create:milling",
   "ingredients": [
     {
-      "type": "neoforge:compound",
-      "ingredients": [
-        {
-          "item": "regions_unexplored:blue_lupine"
-        }
-      ]
+      "item": "regions_unexplored:blue_lupine"
     }
   ],
   "processing_time": 50,
   "results": [
     {
       "count": 2,
-      "item": {
-        "id": "minecraft:blue_dye"
-      }
+      "id": "minecraft:blue_dye"
     }
   ]
 }

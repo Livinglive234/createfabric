@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.simibubi.create.AllDataComponents;
-import com.simibubi.create.AllItems;
 import com.simibubi.create.content.fluids.transfer.GenericItemEmptying;
 import com.simibubi.create.content.logistics.box.PackageItem;
 import com.simibubi.create.content.logistics.item.filter.attribute.ItemAttribute;
@@ -20,6 +19,7 @@ import net.minecraft.world.level.Level;
 
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
 import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
+import com.simibubi.create.AllItems;
 
 public class FilterItemStack {
 	private final ItemStack filterItemStack;
@@ -27,19 +27,9 @@ public class FilterItemStack {
 	private FluidStack filterFluidStack;
 
 	public static FilterItemStack of(ItemStack filter) {
-		if (!ItemUtils.isComponentsPatchEmpty(filter)) {
-			if (AllItems.FILTER.isIn(filter)) {
-				trimFilterComponents(filter);
-				return new ListFilterItemStack(filter);
-			}
-			if (AllItems.ATTRIBUTE_FILTER.isIn(filter)) {
-				trimFilterComponents(filter);
-				return new AttributeFilterItemStack(filter);
-			}
-			if (AllItems.PACKAGE_FILTER.isIn(filter)) {
-				trimFilterComponents(filter);
-				return new PackageFilterItemStack(filter);
-			}
+		if (!filter.getComponentsPatch().isEmpty() && filter.getItem() instanceof FilterItem item) {
+			trimFilterComponents(filter);
+			return item.makeStackWrapper(filter);
 		}
 
 		return new FilterItemStack(filter);
@@ -134,13 +124,13 @@ public class FilterItemStack {
 		public boolean shouldRespectNBT;
 		public boolean isBlacklist;
 
-		protected ListFilterItemStack(ItemStack filter) {
+		public ListFilterItemStack(ItemStack filter) {
 			super(filter);
 			boolean hasFilterItems = filter.has(AllDataComponents.FILTER_ITEMS);
 
 			containedItems = new ArrayList<>();
-			ItemStackHandler items = FilterItem.getFilterItems(filter);
-			for (int i = 0; i < items.getSlots().size(); i++) {
+			ItemStackHandler items = ((ListFilterItem) filter.getItem()).getFilterItemHandler(filter);
+			for (int i = 0; i < items.getSlotCount(); i++) {
 				ItemStack stackInSlot = items.getStackInSlot(i);
 				if (!stackInSlot.isEmpty())
 					containedItems.add(FilterItemStack.of(stackInSlot));
@@ -152,8 +142,6 @@ public class FilterItemStack {
 
 		@Override
 		public boolean test(Level world, ItemStack stack, boolean matchNBT) {
-			if (containedItems.isEmpty())
-				return super.test(world, stack, matchNBT);
 			for (FilterItemStack filterItemStack : containedItems)
 				if (filterItemStack.test(world, stack, shouldRespectNBT))
 					return !isBlacklist;
@@ -174,7 +162,7 @@ public class FilterItemStack {
 		public AttributeFilterWhitelistMode whitelistMode;
 		public List<Pair<ItemAttribute, Boolean>> attributeTests;
 
-		protected AttributeFilterItemStack(ItemStack filter) {
+		public AttributeFilterItemStack(ItemStack filter) {
 			super(filter);
 			boolean defaults = !filter.has(AllDataComponents.ATTRIBUTE_FILTER_MATCHED_ATTRIBUTES);
 
@@ -242,7 +230,7 @@ public class FilterItemStack {
 
 		public String filterString;
 
-		protected PackageFilterItemStack(ItemStack filter) {
+		public PackageFilterItemStack(ItemStack filter) {
 			super(filter);
 			filterString = PackageItem.getAddress(filter);
 		}

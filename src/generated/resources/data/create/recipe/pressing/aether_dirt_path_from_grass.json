@@ -8,17 +8,12 @@
   "type": "create:pressing",
   "ingredients": [
     {
-      "type": "neoforge:compound",
-      "ingredients": [
-        {
-          "item": "aether:aether_grass_block"
-        }
-      ]
+      "item": "aether:aether_grass_block"
     }
   ],
   "results": [
     {
-      "item": "aether:aether_dirt_path"
+      "id": "aether:aether_dirt_path"
     }
   ]
 }

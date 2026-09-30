@@ -8,7 +8,7 @@ import com.simibubi.create.content.logistics.BigItemStack;
 import com.simibubi.create.content.logistics.box.PackageItem;
 import com.simibubi.create.content.logistics.redstoneRequester.AutoRequestData;
 import com.simibubi.create.content.logistics.redstoneRequester.AutoRequestData.Mutable;
-import com.simibubi.create.content.logistics.stockTicker.PackageOrder;
+import com.simibubi.create.content.logistics.stockTicker.PackageOrderWithCrafts;
 import com.simibubi.create.content.logistics.tableCloth.TableClothBlock;
 import com.simibubi.create.content.logistics.tableCloth.TableClothBlockEntity;
 import com.simibubi.create.foundation.ponder.CreateSceneBuilder;
@@ -26,6 +26,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import com.simibubi.create.content.logistics.stockTicker.PackageOrder;
 
 public class TableClothScenes {
 
@@ -108,10 +109,10 @@ public class TableClothScenes {
 		scene.world()
 			.modifyBlockEntity(util.grid()
 				.at(3, 2, 3), TableClothBlockEntity.class, be -> {
-				AutoRequestData.Mutable mutable = new Mutable();
-				mutable.encodedRequest = new PackageOrder(List.of(new BigItemStack(grass)));
-				mutable.isValid = true;
-				be.requestData = mutable.toImmutable();
+					AutoRequestData.Mutable mutable = new Mutable();
+					mutable.encodedRequest = PackageOrderWithCrafts.simple(List.of(new BigItemStack(grass)));
+					mutable.isValid = true;
+					be.requestData = mutable.toImmutable();
 					be.priceTag.setFilter(new ItemStack(Items.DIAMOND));
 					be.priceTag.count = 1;
 					be.facing = Direction.NORTH;
@@ -246,10 +247,10 @@ public class TableClothScenes {
 		scene.world()
 			.modifyBlockEntity(util.grid()
 				.at(5, 2, 1), TableClothBlockEntity.class, be -> {
-				AutoRequestData.Mutable mutable = new Mutable();
-				mutable.encodedRequest = new PackageOrder(List.of(new BigItemStack(logItem1)));
-				mutable.isValid = true;
-				be.requestData = mutable.toImmutable();
+					AutoRequestData.Mutable mutable = new Mutable();
+					mutable.encodedRequest = PackageOrderWithCrafts.simple(List.of(new BigItemStack(logItem1)));
+					mutable.isValid = true;
+					be.requestData = mutable.toImmutable();
 					be.facing = Direction.NORTH;
 				});
 

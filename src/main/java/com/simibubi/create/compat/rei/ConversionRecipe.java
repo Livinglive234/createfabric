@@ -1,5 +1,7 @@
 package com.simibubi.create.compat.rei;
 
+import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
+
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import com.simibubi.create.AllRecipeTypes;
@@ -18,13 +20,13 @@ import net.minecraft.world.level.Level;
  * Helper recipe type for displaying an item relationship in JEI
  */
 @ParametersAreNonnullByDefault
-public class ConversionRecipe extends ProcessingRecipe<Container> {
+public class ConversionRecipe extends StandardProcessingRecipe<Container> {
 
 	static int counter = 0;
 
 	public static ConversionRecipe create(ItemStack from, ItemStack to) {
 		ResourceLocation recipeId = Create.asResource("conversion_" + counter++);
-		return new ProcessingRecipeBuilder<>(ConversionRecipe::new, recipeId)
+		return new StandardProcessingRecipe.Builder<>(ConversionRecipe::new, recipeId)
 			.withItemIngredients(Ingredient.of(from))
 			.withSingleItemOutput(to)
 			.build();

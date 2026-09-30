@@ -2,11 +2,7 @@ package com.simibubi.create.content.equipment.zapper;
 
 import java.util.List;
 
-import javax.annotation.Nonnull;
-
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.AllDataComponents;
@@ -30,7 +26,6 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -46,8 +41,11 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
+import javax.annotation.Nonnull;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-public abstract class ZapperItem extends Item implements CustomArmPoseItem, EntitySwingListenerItem, ReequipAnimationItem {
+public abstract class ZapperItem extends Item implements CustomArmPoseItem {
 
 	public ZapperItem(Properties properties) {
 		super(properties.stacksTo(1));
@@ -63,19 +61,13 @@ public abstract class ZapperItem extends Item implements CustomArmPoseItem, Enti
 		}
 	}
 
-	@Override
-	public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
-		boolean differentBlock = false;
-		if (oldStack.has(AllDataComponents.SHAPER_BLOCK_USED) && newStack.has(AllDataComponents.SHAPER_BLOCK_USED))
-			differentBlock = oldStack.get(AllDataComponents.SHAPER_BLOCK_USED) != newStack.get(AllDataComponents.SHAPER_BLOCK_USED);
-		return slotChanged || !isZapper(newStack) || differentBlock;
-	}
+	// TODO fabric: NeoForge's ReequipAnimationItem#shouldCauseReequipAnimation / EntitySwingListenerItem#onEntitySwing have no fabric port
 
 	public boolean isZapper(ItemStack newStack) {
 		return newStack.getItem() instanceof ZapperItem;
 	}
 
-	@Nonnull
+	@NotNull
 	@Override
 	public InteractionResult useOn(UseOnContext context) {
 		// Shift -> open GUI
@@ -186,11 +178,6 @@ public abstract class ZapperItem extends Item implements CustomArmPoseItem, Enti
 
 	protected boolean canActivateWithoutSelectedBlock(ItemStack stack) {
 		return false;
-	}
-
-	@Override
-	public boolean onEntitySwing(ItemStack stack, LivingEntity entity) {
-		return true;
 	}
 
 	@Override

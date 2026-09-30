@@ -8,35 +8,26 @@
   "type": "create:crushing",
   "ingredients": [
     {
-      "type": "neoforge:compound",
-      "ingredients": [
-        {
-          "item": "silentgems:rose_quartz_ore"
-        }
-      ]
+      "item": "silentgems:rose_quartz_ore"
     }
   ],
   "processing_time": 350,
   "results": [
     {
       "count": 2,
-      "item": "silentgems:rose_quartz"
+      "id": "silentgems:rose_quartz"
     },
     {
       "chance": 0.25,
-      "item": "silentgems:rose_quartz"
+      "id": "silentgems:rose_quartz"
     },
     {
       "chance": 0.75,
-      "item": {
-        "id": "create:experience_nugget"
-      }
+      "id": "create:experience_nugget"
     },
     {
       "chance": 0.12,
-      "item": {
-        "id": "minecraft:end_stone"
-      }
+      "id": "minecraft:cobblestone"
     }
   ]
 }

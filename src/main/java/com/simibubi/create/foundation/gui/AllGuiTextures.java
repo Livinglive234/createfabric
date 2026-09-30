@@ -152,8 +152,9 @@ public enum AllGuiTextures implements ScreenElement, TextureSheetSegment {
 	VALUE_SETTINGS_CURSOR("value_settings", 4, 9, 56, 14),
 	VALUE_SETTINGS_CURSOR_RIGHT("value_settings", 61, 9, 3, 14),
 	VALUE_SETTINGS_CURSOR_ICON("value_settings", 0, 44, 22, 20),
-	VALUE_SETTINGS_LABEL_BG("value_settings", 0, 31, 81, 11),
-// HILO
+	VALUE_SETTINGS_LABEL_BG("value_settings", 0, 31, 161, 11),
+
+	// HILO
 	FACTORY_GAUGE_RECIPE("factory_gauge", 32, 0, 192, 96),
 	FACTORY_GAUGE_RESTOCK("factory_gauge", 32, 112, 192, 40),
 	FACTORY_GAUGE_BOTTOM("factory_gauge", 32, 176, 200, 64),
@@ -182,6 +183,11 @@ public enum AllGuiTextures implements ScreenElement, TextureSheetSegment {
 	STOCK_KEEPER_CATEGORY_HIDDEN("stock_keeper", 143, 176, 8, 8),
 	STOCK_KEEPER_CATEGORY_SHOWN("stock_keeper", 151, 176, 8, 8),
 	NUMBERS("stock_keeper", 48, 176, 5, 8),
+
+	STOCK_KEEPER_SEARCH_SYNC_BOTH("stock_keeper", 160, 176, 15, 16),
+	STOCK_KEEPER_SEARCH_SYNC_FROM_STOCK_KEEPER("stock_keeper", 176, 176, 15, 16),
+	STOCK_KEEPER_SEARCH_SYNC_FROM_JEI("stock_keeper", 192, 176, 15, 16),
+	STOCK_KEEPER_SEARCH_SYNC_DISABLED("stock_keeper", 208, 176, 15, 16),
 
 	STOCK_KEEPER_CATEGORY("stock_keeper_categories", 32, 32, 192, 20),
 	STOCK_KEEPER_CATEGORY_SAYS("stock_keeper_categories", 238, 86, 14, 20),

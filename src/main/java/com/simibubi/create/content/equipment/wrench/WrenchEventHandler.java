@@ -1,7 +1,6 @@
 package com.simibubi.create.content.equipment.wrench;
 
 import com.simibubi.create.AllItems;
-import com.simibubi.create.AllTags.AllItemTags;
 
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -12,6 +11,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
+import com.simibubi.create.AllTags.AllItemTags;
 
 public class WrenchEventHandler {
 	public static InteractionResult useOwnWrenchLogicForCreateBlocks(Player player, Level world, InteractionHand hand, BlockHitResult hitVec) {

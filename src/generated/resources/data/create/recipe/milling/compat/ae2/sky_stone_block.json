@@ -8,18 +8,13 @@
   "type": "create:milling",
   "ingredients": [
     {
-      "type": "neoforge:compound",
-      "ingredients": [
-        {
-          "item": "ae2:sky_stone_block"
-        }
-      ]
+      "item": "ae2:sky_stone_block"
     }
   ],
   "processing_time": 300,
   "results": [
     {
-      "item": "ae2:sky_dust"
+      "id": "ae2:sky_dust"
     }
   ]
 }

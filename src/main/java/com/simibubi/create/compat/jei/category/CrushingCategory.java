@@ -8,7 +8,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import com.simibubi.create.compat.jei.category.animations.AnimatedCrushingWheels;
 import com.simibubi.create.content.kinetics.crusher.AbstractCrushingRecipe;
 import com.simibubi.create.content.processing.recipe.ProcessingOutput;
-import com.simibubi.create.content.processing.recipe.ProcessingRecipe;
+import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
 
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
@@ -17,6 +17,7 @@ import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import net.createmod.catnip.layout.LayoutHelper;
 import net.minecraft.client.gui.GuiGraphics;
+import com.simibubi.create.content.processing.recipe.ProcessingRecipe;
 
 @ParametersAreNonnullByDefault
 public class CrushingCategory extends CreateRecipeCategory<AbstractCrushingRecipe> {
@@ -45,7 +46,7 @@ public class CrushingCategory extends CreateRecipeCategory<AbstractCrushingRecip
 		);
 	}
 
-	private List<LayoutEntry> layoutOutput(ProcessingRecipe<?> recipe) {
+	private List<LayoutEntry> layoutOutput(StandardProcessingRecipe<?> recipe) {
 		int size = recipe.getRollableResults().size();
 		List<LayoutEntry> positions = new ArrayList<>(size);
 

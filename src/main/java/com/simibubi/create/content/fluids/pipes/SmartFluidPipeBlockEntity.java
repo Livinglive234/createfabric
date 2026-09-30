@@ -14,11 +14,12 @@ import com.simibubi.create.foundation.blockEntity.behaviour.ValueBoxTransform;
 import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringBehaviour;
 
 import dev.engine_room.flywheel.lib.transform.TransformStack;
-import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.math.AngleHelper;
+import net.createmod.catnip.math.VecHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
+import net.minecraft.world.Clearable;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -44,6 +45,11 @@ public class SmartFluidPipeBlockEntity extends SmartBlockEntity implements PipeA
 		registerAwardables(behaviours, FluidPropagator.getSharedTriggers());
 	}
 
+	@Override
+	public void clearContent() {
+		filter.setFilter(ItemStack.EMPTY);
+	}
+
 	private void onFilterChanged(ItemStack newFilter) {
 		if (!level.isClientSide)
 			FluidPropagator.propagateChangedPipe(level, worldPosition, getBlockState());
@@ -56,7 +62,6 @@ public class SmartFluidPipeBlockEntity extends SmartBlockEntity implements PipeA
 	}
 
 	class SmartPipeBehaviour extends StraightPipeFluidTransportBehaviour {
-
 		public SmartPipeBehaviour(SmartBlockEntity be) {
 			super(be);
 		}
@@ -73,11 +78,9 @@ public class SmartFluidPipeBlockEntity extends SmartBlockEntity implements PipeA
 			return state.getBlock() instanceof SmartFluidPipeBlock
 				&& SmartFluidPipeBlock.getPipeAxis(state) == direction.getAxis();
 		}
-
 	}
 
-	class SmartPipeFilterSlot extends ValueBoxTransform {
-
+	static class SmartPipeFilterSlot extends ValueBoxTransform {
 		@Override
 		public Vec3 getLocalOffset(LevelAccessor level, BlockPos pos, BlockState state) {
 			AttachFace face = state.getValue(SmartFluidPipeBlock.FACE);
@@ -106,7 +109,5 @@ public class SmartFluidPipeBlockEntity extends SmartBlockEntity implements PipeA
 				horizontalAngle += 180;
 			return horizontalAngle;
 		}
-
 	}
-
 }

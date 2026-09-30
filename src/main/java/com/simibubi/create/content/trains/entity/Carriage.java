@@ -15,12 +15,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import javax.annotation.Nullable;
-
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-
 import org.apache.commons.lang3.mutable.MutableDouble;
+import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.content.contraptions.Contraption;
 import com.simibubi.create.content.contraptions.minecart.TrainCargoManager;
@@ -33,12 +29,12 @@ import com.simibubi.create.foundation.advancement.AllAdvancements;
 import com.tterrag.registrate.fabric.EnvExecutor;
 
 import net.createmod.catnip.codecs.stream.CatnipStreamCodecBuilders;
-import net.createmod.catnip.platform.CatnipServices;
 import net.createmod.catnip.data.Couple;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.data.Pair;
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.nbt.NBTHelper;
+import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -827,8 +823,12 @@ public class Carriage {
 
 		@Environment(EnvType.CLIENT)
 		private void invalidate(CarriageContraptionEntity entity) {
-			entity.getContraption().deferInvalidate = true;
+			// Update the portal cutoff first to ensure it's reflected in the updated mesh.
 			entity.updateRenderedPortalCutoff();
+			entity.getContraption()
+				.invalidateClientContraptionStructure();
+			entity.getContraption()
+				.invalidateClientContraptionChildren();
 		}
 
 		private void createEntity(Level level, boolean loadPassengers) {

@@ -10,9 +10,7 @@ import com.simibubi.create.foundation.codec.CreateCodecs;
 import com.simibubi.create.foundation.fluid.SmartFluidTank;
 
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
-
-import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
-import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
+import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidTank;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -22,25 +20,11 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 
-import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
-import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidTank;
 
 public class CreativeFluidTankBlockEntity extends FluidTankBlockEntity {
 
 	public CreativeFluidTankBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);
-	}
-
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.FluidHandler.BLOCK,
-				AllBlockEntityTypes.CREATIVE_FLUID_TANK.get(),
-				(be, context) -> {
-					if (be.fluidCapability == null)
-						be.refreshCapability();
-					return be.fluidCapability;
-				}
-		);
 	}
 
 	@Override
@@ -58,7 +42,8 @@ public class CreativeFluidTankBlockEntity extends FluidTankBlockEntity {
 			FluidStack.OPTIONAL_CODEC.fieldOf("fluid").forGetter(FluidTank::getFluid),
 			CreateCodecs.NON_NEGATIVE_LONG.fieldOf("capacity").forGetter(FluidTank::getCapacity)
 		).apply(i, (fluid, capacity) -> {
-			CreativeSmartFluidTank tank = new CreativeSmartFluidTank(capacity, $ -> {});
+			CreativeSmartFluidTank tank = new CreativeSmartFluidTank(capacity, $ -> {
+			});
 			tank.setFluid(fluid);
 			return tank;
 		}));

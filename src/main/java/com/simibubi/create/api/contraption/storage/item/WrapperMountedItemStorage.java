@@ -13,7 +13,7 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 
-import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
+import com.simibubi.create.foundation.item.ItemHelper;
 import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
 import com.simibubi.create.infrastructure.fabric.transfer.item.SlottedStackStorage;
 
@@ -111,7 +111,7 @@ public abstract class WrapperMountedItemStorage<T extends SlottedStackStorage> e
 			if (slot.isResourceBlank()) {
 				array[i] = ItemStack.EMPTY;
 			} else {
-				int amount = TransferUtil.truncateLong(slot.getAmount());
+				int amount = ItemHelper.truncateLong(slot.getAmount());
 				ItemStack stack = slot.getResource().toStack(amount);
 				array[i] = stack;
 			}

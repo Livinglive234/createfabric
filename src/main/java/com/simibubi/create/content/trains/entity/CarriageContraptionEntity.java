@@ -10,7 +10,6 @@ import java.util.UUID;
 
 import com.google.common.base.Strings;
 import com.simibubi.create.AllEntityTypes;
-import com.simibubi.create.AllPackets;
 import com.simibubi.create.Create;
 import com.simibubi.create.CreateClient;
 import com.simibubi.create.api.behaviour.movement.MovementBehaviour;
@@ -24,13 +23,13 @@ import com.simibubi.create.content.trains.entity.Carriage.DimensionalCarriageEnt
 import com.simibubi.create.content.trains.entity.TravellingPoint.SteerDirection;
 import com.simibubi.create.content.trains.graph.TrackGraph;
 import com.simibubi.create.content.trains.station.GlobalStation;
-import net.createmod.catnip.platform.CatnipServices;
 import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
 import net.createmod.catnip.data.Couple;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.math.VecHelper;
+import net.createmod.catnip.platform.CatnipServices;
 import net.createmod.catnip.theme.Color;
 
 import net.fabricmc.api.EnvType;
@@ -42,7 +41,7 @@ import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -55,6 +54,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
 import net.minecraft.world.phys.Vec3;
 
@@ -149,19 +149,19 @@ public class CarriageContraptionEntity extends OrientedContraptionEntity {
 	}
 
 	public void sendCarriageDataUpdate() {
-		AllPackets.getChannel().sendToClientsTracking(new CarriageDataUpdatePacket(this), this);
+		CatnipServices.NETWORK.sendToClientsTrackingEntity(this, new CarriageDataUpdatePacket(this));
 	}
 
 	// fabric: initial carriageData sync since that's not handled by tracked data anymore
 
 	@Override
-	public void writeSpawnData(FriendlyByteBuf buffer) {
+	public void writeSpawnData(RegistryFriendlyByteBuf buffer) {
 		super.writeSpawnData(buffer);
 		carriageData.write(buffer);
 	}
 
 	@Override
-	public void readSpawnData(FriendlyByteBuf additionalData) {
+	public void readSpawnData(RegistryFriendlyByteBuf additionalData) {
 		super.readSpawnData(additionalData);
 		carriageData.read(additionalData);
 	}
@@ -286,6 +286,8 @@ public class CarriageContraptionEntity extends OrientedContraptionEntity {
 
 			entityData.set(TRACK_GRAPH, Optional.ofNullable(carriage.train.graph)
 				.map(g -> g.id));
+
+			level().gameEvent(this, GameEvent.RESONATE_8, this.position());
 
 			return;
 		}
@@ -578,7 +580,7 @@ public class CarriageContraptionEntity extends OrientedContraptionEntity {
 			return true;
 		if (player.isSpectator())
 			return false;
-		if (!toGlobalVector(VecHelper.getCenterOf(controlsLocalPos), 1).closerThan(player.position(), 8))
+		if (!canInteractWithBlock(player, VecHelper.getCenterOf(controlsLocalPos), 8))
 			return false;
 		if (heldControls.contains(5))
 			return false;
@@ -765,16 +767,6 @@ public class CarriageContraptionEntity extends OrientedContraptionEntity {
 		dimensional.updateRenderedCutoff();
 	}
 
-	// FIXME: entities should not reference their visual in any way
-	@Environment(EnvType.CLIENT)
-	private WeakReference<CarriageContraptionVisual> instanceHolder;
-
-	@Environment(EnvType.CLIENT)
-	public void bindInstance(CarriageContraptionVisual instance) {
-		this.instanceHolder = new WeakReference<>(instance);
-		updateRenderedPortalCutoff();
-	}
-
 	@Environment(EnvType.CLIENT)
 	public void updateRenderedPortalCutoff() {
 		if (carriage == null)
@@ -806,30 +798,6 @@ public class CarriageContraptionEntity extends OrientedContraptionEntity {
 		}
 		if (particleSlice.size() > 0)
 			particleAvgY /= particleSlice.size();
-
-		// update hidden bogeys (if instanced)
-		if (instanceHolder == null)
-			return;
-		CarriageContraptionVisual instance = instanceHolder.get();
-		if (instance == null)
-			return;
-
-		int bogeySpacing = carriage.bogeySpacing;
-
-		// fabric: do not pass instance to lambda, class loading issues
-		Couple<Boolean> bogeyVisibility = carriage.bogeys.map(bogey -> {
-			if (bogey == null)
-				return null;
-
-			BlockPos bogeyPos = bogey.isLeading ? BlockPos.ZERO
-					: BlockPos.ZERO.relative(getInitialOrientation().getCounterClockWise(), bogeySpacing);
-			return !contraption.isHiddenInPortal(bogeyPos);
-		});
-		for (boolean first : Iterate.trueAndFalse) {
-			Boolean visible = bogeyVisibility.get(first);
-			if (visible != null)
-				instance.setBogeyVisibility(first, visible);
-		}
 	}
 
 }

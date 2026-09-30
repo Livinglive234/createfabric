@@ -3,7 +3,6 @@ package com.simibubi.create.compat.ftb;
 import com.simibubi.create.Create;
 import com.simibubi.create.foundation.gui.menu.AbstractSimiContainerScreen;
 
-import dev.ftb.mods.ftblibrary.config.FTBLibraryClientConfig;
 import net.createmod.catnip.gui.AbstractSimiScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.ResourceLocation;
@@ -11,6 +10,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents.Remove;
 import net.fabricmc.fabric.api.event.Event;
+import dev.ftb.mods.ftblibrary.config.FTBLibraryClientConfig;
 
 public class FTBIntegration {
 

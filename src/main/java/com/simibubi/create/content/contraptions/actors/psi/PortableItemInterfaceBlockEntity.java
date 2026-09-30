@@ -22,7 +22,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
-import io.github.fabricators_of_create.porting_lib.transfer.callbacks.TransactionCallback;
+import com.simibubi.create.infrastructure.fabric.transfer.TransactionSuccessCallback;
 
 public class PortableItemInterfaceBlockEntity extends PortableStorageInterfaceBlockEntity implements SidedStorageBlockEntity {
 
@@ -33,13 +33,6 @@ public class PortableItemInterfaceBlockEntity extends PortableStorageInterfaceBl
 		capability = createEmptyHandler();
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.PORTABLE_STORAGE_INTERFACE.get(),
-				(be, context) -> be.capability
-		);
-	}
 
 	@Override
 	public void startTransferringTo(Contraption contraption, float distance) {
@@ -94,11 +87,6 @@ public class PortableItemInterfaceBlockEntity extends PortableStorageInterfaceBl
 				TransactionSuccessCallback.register(transaction, PortableItemInterfaceBlockEntity.this::onContentTransferred);
 			}
 			return inserted;
-		}
-
-		@Override
-		public @Nullable StorageView<ItemVariant> exactView(ItemVariant resource) {
-			return listen(super.exactView(resource));
 		}
 
 		@Override

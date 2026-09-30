@@ -5,8 +5,10 @@ import java.util.List;
 
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllDataComponents;
+import com.simibubi.create.content.equipment.clipboard.ClipboardContent;
 import com.simibubi.create.content.equipment.clipboard.ClipboardEntry;
 import com.simibubi.create.content.equipment.clipboard.ClipboardOverrides.ClipboardType;
+import com.simibubi.create.content.logistics.box.PackageItem;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.animatedContainer.AnimatedContainerBehaviour;
@@ -20,6 +22,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.Clearable;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
@@ -34,11 +37,9 @@ import net.fabricmc.fabric.api.entity.FakePlayer;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
-
 import org.jetbrains.annotations.Nullable;
 
-public abstract class PackagePortBlockEntity extends SmartBlockEntity implements MenuProvider, SidedStorageBlockEntity {
-
+public abstract class PackagePortBlockEntity extends SmartBlockEntity implements MenuProvider, Clearable, SidedStorageBlockEntity {
 	public boolean acceptsPackages;
 	public String addressFilter;
 	public PackagePortTarget target;
@@ -52,8 +53,8 @@ public abstract class PackagePortBlockEntity extends SmartBlockEntity implements
 		super(type, pos, state);
 		addressFilter = "";
 		acceptsPackages = true;
-		inventory = new SmartInventory(18, this);
-		this.exposedInventory = new PackagePortAutomationInventoryWrapper(inventory, this);
+		inventory = new SmartInventory(18, this, (slot, stack) -> PackageItem.isPackage(stack));
+		itemHandler = new PackagePortAutomationInventoryWrapper(inventory, this);
 	}
 
 	public boolean isBackedUp() {
@@ -86,7 +87,7 @@ public abstract class PackagePortBlockEntity extends SmartBlockEntity implements
 	protected void write(CompoundTag tag, HolderLookup.Provider registries, boolean clientPacket) {
 		super.write(tag, registries, clientPacket);
 		if (target != null)
-			tag.put("Target", CatnipCodecUtils.encode(PackagePortTarget.CODEC, target).orElseThrow());
+			tag.put("Target", CatnipCodecUtils.encode(PackagePortTarget.CODEC, registries, target).orElseThrow());
 		tag.putString("AddressFilter", addressFilter);
 		tag.putBoolean("AcceptsPackages", acceptsPackages);
 		tag.put("Inventory", inventory.serializeNBT(registries));
@@ -97,7 +98,7 @@ public abstract class PackagePortBlockEntity extends SmartBlockEntity implements
 		super.read(tag, registries, clientPacket);
 		inventory.deserializeNBT(registries, tag.getCompound("Inventory"));
 		PackagePortTarget prevTarget = target;
-		target = CatnipCodecUtils.decode(PackagePortTarget.CODEC, tag.getCompound("Target")).orElse(null);
+		target = CatnipCodecUtils.decode(PackagePortTarget.CODEC, registries, tag.getCompound("Target")).orElse(null);
 		addressFilter = tag.getString("AddressFilter");
 		acceptsPackages = tag.getBoolean("AcceptsPackages");
 		if (clientPacket && prevTarget != target)
@@ -107,6 +108,11 @@ public abstract class PackagePortBlockEntity extends SmartBlockEntity implements
 	@Override
 	public Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
 		return this.exposedInventory;
+	}
+
+	@Override
+	public void clearContent() {
+		inventory.clear();
 	}
 
 	@Override
@@ -151,17 +157,19 @@ public abstract class PackagePortBlockEntity extends SmartBlockEntity implements
 			return ItemInteractionResult.SUCCESS;
 		}
 
-		player.openMenu(this, worldPosition);
+		player.openMenu(this);
 		return ItemInteractionResult.SUCCESS;
 	}
 
-	protected void onOpenedManually() {};
+	protected void onOpenedManually() {
+	}
 
 	private void addAddressToClipboard(Player player, ItemStack mainHandItem) {
 		if (addressFilter == null || addressFilter.isBlank())
 			return;
 
-		List<List<ClipboardEntry>> list = ClipboardEntry.readAll(mainHandItem);
+		ClipboardContent clipboard = mainHandItem.getOrDefault(AllDataComponents.CLIPBOARD_CONTENT, ClipboardContent.EMPTY);
+		List<List<ClipboardEntry>> list = ClipboardEntry.readAll(clipboard);
 		for (List<ClipboardEntry> page : list) {
 			for (ClipboardEntry entry : page) {
 				String existing = entry.text.getString();
@@ -188,14 +196,15 @@ public abstract class PackagePortBlockEntity extends SmartBlockEntity implements
 		player.displayClientMessage(CreateLang.translate("clipboard.address_added", addressFilter)
 			.component(), true);
 
-		ClipboardEntry.saveAll(list, mainHandItem);
-		mainHandItem.set(AllDataComponents.CLIPBOARD_TYPE, ClipboardType.WRITTEN);
+
+		clipboard = clipboard.setPages(list).setType(ClipboardType.WRITTEN);
+		mainHandItem.set(AllDataComponents.CLIPBOARD_CONTENT, clipboard);
 	}
 
 	@Override
 	public Component getDisplayName() {
-        return Component.empty();
-    }
+		return Component.empty();
+	}
 
 	@Override
 	public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
@@ -205,5 +214,4 @@ public abstract class PackagePortBlockEntity extends SmartBlockEntity implements
 	public int getComparatorOutput() {
 		return ItemHelper.calcRedstoneFromInventory(inventory);
 	}
-
 }

@@ -55,4 +55,12 @@ public class CobbleGenLevel extends WrappedLevel {
 	@Override
 	public void blockEvent(BlockPos pos, Block block, int eventID, int eventParam) {}
 
+	// fabric: porting-lib version-skew diamond conflict between two "extensions" module
+	// snapshotParticipant() default methods, see ContraptionWorld.java for details
+	@Override
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	public net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant snapshotParticipant() {
+		throw new UnsupportedOperationException();
+	}
+
 }

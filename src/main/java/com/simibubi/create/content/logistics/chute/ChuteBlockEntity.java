@@ -32,7 +32,7 @@ import com.simibubi.create.foundation.utility.BlockHelper;
 import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
-import io.github.fabricators_of_create.porting_lib.block.CustomRenderBoundingBoxBlockEntity;
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomRenderBoundingBoxBlockEntity;
 
 import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
 
@@ -42,6 +42,8 @@ import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.math.VecHelper;
 
+import net.fabricmc.fabric.api.lookup.v1.block.BlockApiCache;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
@@ -59,6 +61,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
+import net.minecraft.world.Clearable;
 import net.minecraft.world.Containers;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
@@ -75,7 +78,7 @@ import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 
-import io.github.fabricators_of_create.porting_lib.block.CustomRenderBoundingBoxBlockEntity;
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomRenderBoundingBoxBlockEntity;
 import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
 
 import io.github.fabricators_of_create.porting_lib.util.StorageProvider;
@@ -86,7 +89,7 @@ import io.github.fabricators_of_create.porting_lib.util.StorageProvider;
  * Commented Code: Chutes create air streams and act similarly to encased fans
  * (Unfinished)
  */
-public class ChuteBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, CustomRenderBoundingBoxBlockEntity, SidedStorageBlockEntity { // , IAirCurrentSource {
+public class ChuteBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, CustomRenderBoundingBoxBlockEntity, SidedStorageBlockEntity, Clearable { // , IAirCurrentSource {
 
 	// public AirCurrent airCurrent;
 
@@ -107,7 +110,7 @@ public class ChuteBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 
 	VersionedInventoryTrackerBehaviour invVersionTracker;
 
-	private final EnumMap<Direction, BlockCapabilityCache<IItemHandler, @Nullable Direction>> capCaches = new EnumMap<>(Direction.class);
+	private final EnumMap<Direction, BlockApiCache<Storage<ItemVariant>, Direction>> capCaches = new EnumMap<>(Direction.class);
 
 	public ChuteBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);
@@ -537,7 +540,7 @@ public class ChuteBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 		return true;
 	}
 
-	private @Nullable IItemHandler grabCapability(@NotNull Direction side) {
+	private @Nullable Storage<ItemVariant> grabCapability(@NotNull Direction side) {
 		BlockPos pos = this.worldPosition.relative(side);
 		if (level == null)
 			return null;
@@ -546,21 +549,15 @@ public class ChuteBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 			if (side != Direction.DOWN || !(be instanceof SmartChuteBlockEntity) || getItemMotion() > 0)
 				return null;
 		}
-		if (capCaches.get(side) == null) {
-			if (level instanceof ServerLevel serverLevel) {
-				BlockCapabilityCache<IItemHandler, @Nullable Direction> cache = BlockCapabilityCache.create(
-						Capabilities.ItemHandler.BLOCK,
-						serverLevel,
-						pos,
-						side.getOpposite()
-				);
+		if (level instanceof ServerLevel serverLevel) {
+			BlockApiCache<Storage<ItemVariant>, Direction> cache = capCaches.get(side);
+			if (cache == null) {
+				cache = BlockApiCache.create(ItemStorage.SIDED, serverLevel, pos);
 				capCaches.put(side, cache);
-				return cache.getCapability();
-			} else {
-				return level.getCapability(Capabilities.ItemHandler.BLOCK, pos, side.getOpposite());
 			}
+			return cache.find(side.getOpposite());
 		} else {
-			return capCaches.get(side).getCapability();
+			return ItemStorage.SIDED.find(level, pos, side.getOpposite());
 		}
 	}
 
@@ -624,6 +621,11 @@ public class ChuteBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 
 		float motion = (push + pull) * fanSpeedModifier;
 		return (Mth.clamp(motion, -maxItemSpeed, maxItemSpeed) + (motion <= 0 ? -gravity : 0)) / 20f;
+	}
+
+	@Override
+	public void clearContent() {
+		item = ItemStack.EMPTY;
 	}
 
 	@Override

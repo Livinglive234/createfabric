@@ -66,6 +66,11 @@ public class CreativeCrateMountedStorage extends MountedItemStorage implements S
 	}
 
 	@Override
+	public boolean isItemValid(int slot, ItemStack stack) {
+		return ItemVariant.of(stack).matches(this.suppliedStack);
+	}
+
+	@Override
 	public long insert(ItemVariant resource, long maxAmount, TransactionContext transaction) {
 		return maxAmount;
 	}

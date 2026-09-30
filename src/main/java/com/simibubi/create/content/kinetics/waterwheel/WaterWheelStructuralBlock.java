@@ -160,19 +160,9 @@ public class WaterWheelStructuralBlock extends DirectionalBlock implements IWren
 			pLevel.setBlockAndUpdate(pPos, Blocks.AIR.defaultBlockState());
 	}
 
-	@Override
-	public boolean addLandingEffects(BlockState state1, ServerLevel level, BlockPos pos, BlockState state2,
-									 LivingEntity entity, int numberOfParticles) {
-		return true;
-	}
+	// TODO fabric: NeoForge's IBlockExtension#addLandingEffects/#addDestroyEffects/#addHitEffects
+	// (custom particle-effect hooks) have no fabric port
 
-	// fabric: Don't add destroy effects, it'll create missingno particles
-	@Override
-	public boolean addDestroyEffects(BlockState state, ClientLevel Level, BlockPos pos, ParticleEngine manager) {
-		return false;
-	}
-
-	@Override
 	@Environment(EnvType.CLIENT)
 	public boolean addHitEffects(BlockState state, Level level, HitResult target, ParticleEngine engine) {
 		if (target instanceof BlockHitResult bhr) {

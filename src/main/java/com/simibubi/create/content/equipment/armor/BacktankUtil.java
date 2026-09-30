@@ -27,10 +27,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
-
-import net.fabricmc.api.EnvType;
-
-import io.github.fabricators_of_create.porting_lib.util.EnvExecutor;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 
 public class BacktankUtil {
 
@@ -106,7 +103,7 @@ public class BacktankUtil {
 
 	public static int maxAir(ItemStack backtank) {
 		int enchantLevel = 0;
-		ItemEnchantments enchants = backtank.getTagEnchantments();
+		ItemEnchantments enchants = backtank.getEnchantments();
 		for (Entry<Holder<Enchantment>> entry : enchants.entrySet()) {
 			if (entry.getKey().is(AllEnchantments.CAPACITY)) {
 				enchantLevel = entry.getIntValue();
@@ -143,7 +140,7 @@ public class BacktankUtil {
 	public static boolean isBarVisible(ItemStack stack, int usesPerTank) {
 		if (usesPerTank == 0)
 			return false;
-		Player player = EnvExecutor.callWhenOn(EnvType.CLIENT, () -> () -> Minecraft.getInstance().player);
+		Player player = Minecraft.getInstance().player;
 		if (player == null)
 			return false;
 		List<ItemStack> backtanks = getAllWithAir(player);
@@ -155,7 +152,7 @@ public class BacktankUtil {
 	public static int getBarWidth(ItemStack stack, int usesPerTank) {
 		if (usesPerTank == 0)
 			return 13;
-		Player player = EnvExecutor.callWhenOn(EnvType.CLIENT, () -> () -> Minecraft.getInstance().player);
+		Player player = Minecraft.getInstance().player;
 		if (player == null)
 			return 13;
 
@@ -181,7 +178,7 @@ public class BacktankUtil {
 	public static int getBarColor(ItemStack stack, int usesPerTank) {
 		if (usesPerTank == 0)
 			return 0;
-		Player player = EnvExecutor.callWhenOn(EnvType.CLIENT, () -> () -> Minecraft.getInstance().player);
+		Player player = Minecraft.getInstance().player;
 		if (player == null)
 			return 0;
 		List<ItemStack> backtanks = getAllWithAir(player);

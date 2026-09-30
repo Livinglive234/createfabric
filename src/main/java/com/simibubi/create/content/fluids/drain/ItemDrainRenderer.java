@@ -8,10 +8,10 @@ import com.simibubi.create.content.kinetics.belt.transport.TransportedItemStack;
 import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour.TankSegment;
 import com.simibubi.create.foundation.blockEntity.renderer.SmartBlockEntityRenderer;
-import com.simibubi.create.foundation.fluid.FluidRenderer;
 
 import dev.engine_room.flywheel.lib.transform.TransformStack;
 import net.createmod.catnip.math.VecHelper;
+import net.createmod.catnip.render.BasicFluidRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
@@ -21,11 +21,11 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
+import com.simibubi.create.foundation.fluid.FluidRenderer;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
 
 public class ItemDrainRenderer extends SmartBlockEntityRenderer<ItemDrainBlockEntity> {
@@ -93,20 +93,17 @@ public class ItemDrainRenderer extends SmartBlockEntityRenderer<ItemDrainBlockEn
 			msr.rotateZDegrees(-verticalAngle);
 
 		if (renderUpright) {
-			Entity renderViewEntity = Minecraft.getInstance().cameraEntity;
-			if (renderViewEntity != null) {
-				Vec3 positionVec = renderViewEntity.position();
-				Vec3 vectorForOffset = itemPosition.add(offsetVec);
-				Vec3 diff = vectorForOffset.subtract(positionVec);
+			Vec3 cameraPosition = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+			Vec3 vectorForOffset = itemPosition.add(offsetVec);
+			Vec3 diff = vectorForOffset.subtract(cameraPosition);
 
-				if (insertedFrom.getAxis() != Direction.Axis.X)
-					diff = VecHelper.rotate(diff, verticalAngle, Direction.Axis.X);
-				if (insertedFrom.getAxis() != Direction.Axis.Z)
-					diff = VecHelper.rotate(diff, -verticalAngle, Direction.Axis.Z);
+			if (insertedFrom.getAxis() != Direction.Axis.X)
+				diff = VecHelper.rotate(diff, verticalAngle, Direction.Axis.X);
+			if (insertedFrom.getAxis() != Direction.Axis.Z)
+				diff = VecHelper.rotate(diff, -verticalAngle, Direction.Axis.Z);
 
-				float yRot = (float) Mth.atan2(diff.z, -diff.x);
-				ms.mulPose(Axis.YP.rotation((float) (yRot - Math.PI / 2)));
-			}
+			float yRot = (float) Mth.atan2(diff.z, -diff.x);
+			ms.mulPose(Axis.YP.rotation((float) (yRot - Math.PI / 2)));
 			ms.translate(0, 0, -1 / 16f);
 		}
 
@@ -149,8 +146,8 @@ public class ItemDrainRenderer extends SmartBlockEntityRenderer<ItemDrainBlockEn
 			float yOffset = (7 / 16f) * level;
 			ms.pushPose();
 			ms.translate(0, yOffset, 0);
-			FluidRenderer.renderFluidBox(fluidStack.getFluid(), fluidStack.getAmount(), min, yMin - yOffset, min,
-					max, yMin, max, buffer, ms, light, false, false, fluidStack.getComponentsPatch());
+			BasicFluidRenderer.renderFluidBox(fluidStack.getFluid(), fluidStack.getAmount(), min, yMin - yOffset, min, max, yMin,
+				max, buffer, ms, light, false, false);
 			ms.popPose();
 		}
 
@@ -174,8 +171,8 @@ public class ItemDrainRenderer extends SmartBlockEntityRenderer<ItemDrainBlockEn
 		if (processingTicks != -1) {
 			radius = (float) (Math.pow(((2 * processingProgress) - 1), 2) - 1);
 			AABB bb = new AABB(0.5, 1.0, 0.5, 0.5, 0.25, 0.5).inflate(radius / 32f);
-			FluidRenderer.renderFluidBox(fluidStack2.getFluid(), fluidStack2.getAmount(), (float) bb.minX, (float) bb.minY, (float) bb.minZ,
-				(float) bb.maxX, (float) bb.maxY, (float) bb.maxZ, buffer, ms, light, true, false, fluidStack2.getComponentsPatch());
+			BasicFluidRenderer.renderFluidBox(fluidStack2.getFluid(), fluidStack2.getAmount(), (float) bb.minX, (float) bb.minY, (float) bb.minZ,
+				(float) bb.maxX, (float) bb.maxY, (float) bb.maxZ, buffer, ms, light, true, false);
 		}
 
 	}

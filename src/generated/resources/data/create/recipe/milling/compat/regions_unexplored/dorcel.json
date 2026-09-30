@@ -8,27 +8,18 @@
   "type": "create:milling",
   "ingredients": [
     {
-      "type": "neoforge:compound",
-      "ingredients": [
-        {
-          "item": "regions_unexplored:dorcel"
-        }
-      ]
+      "item": "regions_unexplored:dorcel"
     }
   ],
   "processing_time": 50,
   "results": [
     {
       "count": 2,
-      "item": {
-        "id": "minecraft:black_dye"
-      }
+      "id": "minecraft:black_dye"
     },
     {
       "chance": 0.1,
-      "item": {
-        "id": "minecraft:brown_dye"
-      }
+      "id": "minecraft:brown_dye"
     }
   ]
 }

@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
 
@@ -31,6 +31,7 @@ import com.simibubi.create.content.schematics.SchematicInstances;
 import com.simibubi.create.content.schematics.requirement.ItemRequirement;
 import com.simibubi.create.content.trains.entity.CarriageContraption;
 import com.simibubi.create.content.trains.entity.CarriageContraptionEntity;
+import com.simibubi.create.content.trains.track.ITrackBlock;
 import com.simibubi.create.foundation.advancement.AllAdvancements;
 import com.simibubi.create.foundation.item.ItemHelper;
 import com.simibubi.create.foundation.utility.BlockHelper;
@@ -52,7 +53,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.BaseRailBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
@@ -129,16 +130,16 @@ public class DeployerMovementBehaviour implements MovementBehaviour {
 	}
 
 	protected void activateAsSchematicPrinter(MovementContext context, BlockPos pos, DeployerFakePlayer player,
-		Level world, ItemStack filter) {
+											  Level level, ItemStack filter) {
 		if (!filter.has(AllDataComponents.SCHEMATIC_ANCHOR))
 			return;
-		if (!world.getBlockState(pos)
+		if (!level.getBlockState(pos)
 			.canBeReplaced())
 			return;
 
 		if (!filter.getOrDefault(AllDataComponents.SCHEMATIC_DEPLOYED, false))
 			return;
-		SchematicLevel schematicWorld = SchematicInstances.get(world, filter);
+		SchematicLevel schematicWorld = SchematicInstances.get(level, filter);
 		if (schematicWorld == null)
 			return;
 		if (!schematicWorld.getBounds()
@@ -168,13 +169,12 @@ public class DeployerMovementBehaviour implements MovementBehaviour {
 			}
 		}
 
-		CompoundTag data = BlockHelper.prepareBlockEntityData(blockState, schematicWorld.getBlockEntity(pos));
-//		BlockSnapshot blocksnapshot = BlockSnapshot.create(world.dimension(), world, pos);
-		BlockHelper.placeSchematicBlock(world, blockState, pos, contextStack, data);
+		CompoundTag data = BlockHelper.prepareBlockEntityData(level, blockState, schematicWorld.getBlockEntity(pos));
+		BlockHelper.placeSchematicBlock(level, blockState, pos, contextStack, data);
 
-//		if (ForgeEventFactory.onBlockPlace(player, blocksnapshot, Direction.UP))
-//			blocksnapshot.restore(true, false);
-		if (AllBlocks.TRACK.has(blockState))
+		// fabric: NeoForge's cancellable BlockEvent.Place (via BlockSnapshot/EventHooks.onBlockPlace) has
+		// no fabric port; the block is always placed above, so always mark rail placement as accepted.
+		if (blockState.getBlock() instanceof BaseRailBlock || blockState.getBlock() instanceof ITrackBlock)
 			player.placedTracks = true;
 	}
 
@@ -266,7 +266,7 @@ public class DeployerMovementBehaviour implements MovementBehaviour {
 				if (list == inv.items && i == inv.selected && filter.test(context.world, itemstack))
 					continue;
 
-				dropItem(context, itemstack);
+				collectOrDropItem(context, itemstack);
 				list.set(i, ItemStack.EMPTY);
 			}
 		}

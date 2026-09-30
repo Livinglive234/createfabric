@@ -7,8 +7,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-import net.createmod.catnip.registry.RegisteredObjectsHelper;
-
 import org.apache.commons.lang3.ArrayUtils;
 
 import com.simibubi.create.foundation.data.TagGen;
@@ -25,6 +23,7 @@ import com.tterrag.registrate.util.nullness.NonNullFunction;
 
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.lang.Lang;
+import net.createmod.catnip.registry.RegisteredObjectsHelper;
 import net.minecraft.data.recipes.RecipeCategory;
 import net.minecraft.data.recipes.ShapelessRecipeBuilder;
 import net.minecraft.resources.ResourceLocation;
@@ -100,11 +99,9 @@ public class CopperBlockSet {
 					entries[index] = entry;
 
 					if (waxed) {
-						CopperRegistries.addWaxable(() -> entries[getIndex(state, false)].get(), () -> entry.get());
+						CopperRegistries.addWaxable(entries[getIndex(state, false)], entry);
 					} else if (state != WeatherState.UNAFFECTED) {
-						CopperRegistries.addWeathering(
-							() -> entries[getIndex(WEATHER_STATES[state.ordinal() - 1], false)].get(),
-							() -> entry.get());
+						CopperRegistries.addWeathering(entries[getIndex(WEATHER_STATES[state.ordinal() - 1], false)], entry);
 					}
 				}
 				if (!waxed)
@@ -133,32 +130,34 @@ public class CopperBlockSet {
 			.initialProperties(() -> baseBlock)
 			.loot((lt, block) -> variant.generateLootTable(lt, block, this, state, waxed))
 			.blockstate((ctx, prov) -> variant.generateBlockState(ctx, prov, this, state, waxed))
-			.recipe((c, p) -> variant.generateRecipes(entries.get(BlockVariant.INSTANCE)[state.ordinal()], c, p))
 			.transform(TagGen.pickaxeOnly())
 			.onRegister(block -> onRegister.accept(state, block))
 			.tag(BlockTags.NEEDS_STONE_TOOL)
 			.simpleItem();
 
-		if (variant == BlockVariant.INSTANCE && state == WeatherState.UNAFFECTED)
+		if (variant == BlockVariant.INSTANCE && state == WeatherState.UNAFFECTED && !waxed) {
 			builder.recipe(mainBlockRecipe::accept);
+		} else {
+			builder.recipe((ctx, prov) -> {
+				if (waxed) {
+					Block unwaxed = get(variant, state, false).get();
+					ShapelessRecipeBuilder.shapeless(RecipeCategory.BUILDING_BLOCKS, ctx.get())
+						.requires(unwaxed)
+						.requires(Items.HONEYCOMB)
+						.unlockedBy("has_unwaxed", RegistrateRecipeProvider.has(unwaxed))
+						.save(prov, ResourceLocation.fromNamespaceAndPath(ctx.getId()
+							.getNamespace(), "crafting/" + generalDirectory + ctx.getName() + "_from_honeycomb"));
+				}
+
+				variant.generateRecipes(get(BlockVariant.INSTANCE, state, waxed), ctx, prov);
+			});
+		}
 
 		if (variant == StairVariant.INSTANCE)
 			builder.tag(BlockTags.STAIRS);
 
 		if (variant == SlabVariant.INSTANCE)
 			builder.tag(BlockTags.SLABS);
-
-		if (waxed) {
-			builder.recipe((ctx, prov) -> {
-				Block unwaxed = get(variant, state, false).get();
-				ShapelessRecipeBuilder.shapeless(RecipeCategory.BUILDING_BLOCKS, ctx.get())
-					.requires(unwaxed)
-					.requires(Items.HONEYCOMB)
-					.unlockedBy("has_unwaxed", RegistrateRecipeProvider.has(unwaxed))
-					.save(prov, ResourceLocation.fromNamespaceAndPath(ctx.getId()
-						.getNamespace(), "crafting/" + generalDirectory + ctx.getName() + "_from_honeycomb"));
-			});
-		}
 
 		return builder.register();
 	}

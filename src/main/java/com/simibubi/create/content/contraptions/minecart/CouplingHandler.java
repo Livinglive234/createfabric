@@ -4,9 +4,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
-import com.simibubi.create.AllAttachmentTypes;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.Create;
 import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
@@ -14,6 +13,8 @@ import com.simibubi.create.content.contraptions.minecart.capability.CapabilityMi
 import com.simibubi.create.content.contraptions.minecart.capability.MinecartController;
 import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.infrastructure.config.AllConfigs;
+
+import io.github.fabricators_of_create.porting_lib.entity.events.EntityMountEvent;
 
 import net.createmod.catnip.data.Couple;
 import net.createmod.catnip.data.Iterate;
@@ -23,19 +24,21 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import com.simibubi.create.AllAttachmentTypes;
 
 public class CouplingHandler {
 
-	public static boolean preventEntitiesFromMoutingOccupiedCart(Entity vehicle, Entity passenger) {
+	public static void preventEntitiesFromMoutingOccupiedCart(EntityMountEvent event) {
+		Entity vehicle = event.getEntityBeingMounted();
+		Entity passenger = event.getEntityMounting();
 		if (vehicle instanceof AbstractMinecart cart) {
 			if (passenger instanceof AbstractContraptionEntity)
-				return true;
+				return;
 			MinecartController controller = cart.create$getController();
 			if (controller.isCoupledThroughContraption()) {
-				return false;
+				event.setCanceled(true);
 			}
 		}
-		return true;
 	}
 
 	public static void forEachLoadedCoupling(Level world, Consumer<Couple<MinecartController>> consumer) {

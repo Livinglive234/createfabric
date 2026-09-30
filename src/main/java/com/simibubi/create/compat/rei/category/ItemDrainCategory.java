@@ -1,5 +1,7 @@
 package com.simibubi.create.compat.rei.category;
 
+import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -61,7 +63,7 @@ public class ItemDrainCategory extends CreateRecipeCategory<EmptyingRecipe> {
 			if (item == Items.POTION || item == Items.SPLASH_POTION || item == Items.LINGERING_POTION) {
 				FluidStack fluidFromPotionItem = PotionFluidHandler.getFluidFromPotionItem(stack);
 				Ingredient potion = Ingredient.of(stack);
-				consumer.accept(new ProcessingRecipeBuilder<>(EmptyingRecipe::new, Create.asResource("potions"))
+				consumer.accept(new StandardProcessingRecipe.Builder<>(EmptyingRecipe::new, Create.asResource("potions"))
 					.withItemIngredients(potion)
 					.withFluidOutputs(fluidFromPotionItem)
 					.withSingleItemOutput(new ItemStack(Items.GLASS_BOTTLE))
@@ -89,7 +91,7 @@ public class ItemDrainCategory extends CreateRecipeCategory<EmptyingRecipe> {
 			ResourceLocation fluidName = BuiltInRegistries.FLUID
 					.getKey(extracted.getFluid());
 
-			consumer.accept(new ProcessingRecipeBuilder<>(EmptyingRecipe::new,
+			consumer.accept(new StandardProcessingRecipe.Builder<>(EmptyingRecipe::new,
 				Create.asResource("empty_" + itemName.getNamespace() + "_" + itemName.getPath() + "_of_"
 					+ fluidName.getNamespace() + "_" + fluidName.getPath())).withItemIngredients(ingredient)
 						.withFluidOutputs(extracted)

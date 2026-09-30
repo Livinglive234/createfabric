@@ -3,14 +3,17 @@ package com.simibubi.create.infrastructure.debugInfo;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import com.google.common.collect.ImmutableMap;
 import com.mojang.blaze3d.platform.GlUtil;
 import com.simibubi.create.Create;
+import com.simibubi.create.CreateBuildInfo;
+import com.simibubi.create.compat.pojav.PojavChecker;
 import com.simibubi.create.foundation.mixin.accessor.SystemReportAccessor;
 import com.simibubi.create.infrastructure.debugInfo.element.DebugInfoSection;
 import com.simibubi.create.infrastructure.debugInfo.element.InfoElement;
@@ -24,14 +27,15 @@ import net.minecraft.SharedConstants;
 import net.minecraft.SystemReport;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.language.I18n;
-import oshi.SystemInfo;
+
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 
 import io.github.fabricators_of_create.porting_lib.util.EnvExecutor;
+import net.minecraft.client.resources.language.I18n;
+import oshi.SystemInfo;
 
 /**
  * Allows for providing easily accessible debugging information.
@@ -88,7 +92,8 @@ public class DebugInformation {
 				.put("Flywheel Backend", () -> Backend.REGISTRY.getIdOrThrow(BackendManager.currentBackend()).toString())
 				.put("OpenGL Renderer", GlUtil::getRenderer)
 				.put("OpenGL Version", GlUtil::getOpenGLVersion)
-				.put("Graphics Mode", () -> I18n.get(Minecraft.getInstance().options.graphicsMode().get().getKey()))
+				.put("Graphics Mode", () -> Minecraft.getInstance().options.graphicsMode().get().name().toLowerCase(Locale.ROOT))
+				.put("PojavLauncher Detected", () -> String.valueOf(PojavChecker.IS_PRESENT))
 				.buildTo(DebugInformation::registerClientInfo);
 		});
 
@@ -143,10 +148,11 @@ public class DebugInformation {
 	}
 
 	public static String getTotalRam() {
-		long availableMemory = new SystemInfo().getHardware().getMemory().getAvailable();
-		long totalMemory = new SystemInfo().getHardware().getMemory().getTotal();
+		Runtime runtime = Runtime.getRuntime();
+		long availableMemory = runtime.freeMemory();
+		long totalMemory = runtime.totalMemory();
 		long usedMemory = totalMemory - availableMemory;
-		return String.format("%s bytes (%s MiB) / %s bytes (%s MiB)", usedMemory, usedMemory / 1049000, totalMemory, totalMemory / 1049000);
+		return String.format("%s bytes (%s MiB) / %s bytes (%s MiB)", usedMemory, usedMemory / 1048576L, totalMemory, totalMemory / 1048576L);
 	}
 
 	public static String getCpuInfo() {

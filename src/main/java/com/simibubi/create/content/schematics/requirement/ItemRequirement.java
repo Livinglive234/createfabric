@@ -6,9 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.component.DataComponentType;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -21,6 +19,7 @@ import com.simibubi.create.api.schematic.requirement.SpecialBlockItemRequirement
 import com.simibubi.create.api.schematic.requirement.SpecialEntityItemRequirement;
 import com.simibubi.create.compat.framedblocks.FramedBlocksInSchematics;
 import com.simibubi.create.foundation.data.recipe.Mods;
+import com.simibubi.create.foundation.mixin.accessor.ItemFrameAccessor;
 
 import net.createmod.catnip.components.ComponentProcessors;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -149,10 +148,10 @@ public class ItemRequirement {
 		}
 
 		if (entity instanceof ItemFrame itemFrame) {
-			ItemStack frame = new ItemStack(Items.ITEM_FRAME);
+			ItemStack frame = ((ItemFrameAccessor) itemFrame).create$getFrameItemStack();
 			ItemStack displayedItem = ComponentProcessors.withUnsafeComponentsDiscarded(itemFrame.getItem());
 			if (displayedItem.isEmpty())
-				return new ItemRequirement(ItemUseType.CONSUME, Items.ITEM_FRAME);
+				return new ItemRequirement(ItemUseType.CONSUME, frame);
 			return new ItemRequirement(List.of(new ItemRequirement.StackRequirement(frame, ItemUseType.CONSUME),
 				new ItemRequirement.StrictNbtStackRequirement(displayedItem, ItemUseType.CONSUME)));
 		}
@@ -228,6 +227,28 @@ public class ItemRequirement {
 		@Override
 		public boolean matches(ItemVariant variant) {
 			return variant.matches(stack);
+		}
+	}
+
+	public static class PartialStrictNbtStackRequirement extends StrictNbtStackRequirement {
+		private final List<DataComponentType<?>> ignoredComponents;
+
+		public PartialStrictNbtStackRequirement(ItemStack stack, ItemUseType usage, List<DataComponentType<?>> ignoredComponents) {
+			super(copyWithoutIgnoredComponents(stack, ignoredComponents), usage);
+			this.ignoredComponents = ignoredComponents;
+		}
+
+		@Override
+		public boolean matches(ItemStack other) {
+			return super.matches(copyWithoutIgnoredComponents(other, ignoredComponents));
+		}
+
+		private static ItemStack copyWithoutIgnoredComponents(ItemStack stack, List<DataComponentType<?>> components) {
+			ItemStack ret = stack.copy();
+			for (DataComponentType<?> component : components) {
+				ret.remove(component);
+			}
+			return ret;
 		}
 	}
 }

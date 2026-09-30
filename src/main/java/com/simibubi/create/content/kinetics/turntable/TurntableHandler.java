@@ -2,19 +2,20 @@ package com.simibubi.create.content.kinetics.turntable;
 
 import com.simibubi.create.AllBlocks;
 
-import net.createmod.catnip.animation.AnimationTickHolder;
 import net.createmod.catnip.math.VecHelper;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
+import net.createmod.catnip.animation.AnimationTickHolder;
 
 public class TurntableHandler {
 
-	public static void gameRenderFrame() {
+	public static void gameRenderFrame(DeltaTracker deltaTracker) {
 		Minecraft mc = Minecraft.getInstance();
-		BlockPos pos = mc.player.blockPosition();
+		BlockPos pos = mc.player.getOnPos();
 
 		if (mc.gameMode == null)
 			return;
@@ -29,7 +30,8 @@ public class TurntableHandler {
 		if (!(blockEntity instanceof TurntableBlockEntity turnTable))
 			return;
 
-		float speed = turnTable.getSpeed() * 3 / 10;
+		float tickSpeed = mc.level.tickRateManager().tickrate() / 20;
+		float speed = turnTable.getSpeed() * (2/3f) * tickSpeed * deltaTracker.getRealtimeDeltaTicks();
 
 		if (speed == 0)
 			return;
@@ -38,10 +40,11 @@ public class TurntableHandler {
 		Vec3 offset = mc.player.position().subtract(origin);
 
 		if (offset.length() > 1 / 4f)
-			speed *= Mth.clamp((1 / 2f - offset.length()) * 2, 0, 1);
+			speed *= (float)Mth.clamp((1 / 2f - offset.length()) * 2, 0, 1);
 
-		mc.player.setYRot(mc.player.yRotO - speed * AnimationTickHolder.getPartialTicks());
-		mc.player.yBodyRot = mc.player.getYRot();
+		float yRotOffset = speed * deltaTracker.getGameTimeDeltaPartialTick(false);
+		mc.player.setYRot(mc.player.getYRot() - yRotOffset);
+		mc.player.yBodyRot -= yRotOffset;
 	}
 
 }

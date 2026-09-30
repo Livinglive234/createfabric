@@ -14,7 +14,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
@@ -27,6 +26,7 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.pathfinder.PathComputationType;
+import net.minecraft.world.level.BlockGetter;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
@@ -53,7 +53,7 @@ public class GlassFluidPipeBlock extends AxisPipeBlock implements IBE<StraightPi
 		BlockPos pos = context.getClickedPos();
 		FluidTransportBehaviour.cacheFlows(world, pos);
 		newState = toRegularPipe(world, pos, state).setValue(BlockStateProperties.WATERLOGGED, state.getValue(BlockStateProperties.WATERLOGGED));
-		world.setBlock(pos, newState, 3);
+		world.setBlock(pos, newState, Block.UPDATE_ALL);
 		FluidTransportBehaviour.loadFlows(world, pos);
 		return InteractionResult.SUCCESS;
 	}

@@ -1,7 +1,6 @@
 package com.simibubi.create.content.fluids.potion;
 
 import io.netty.buffer.ByteBuf;
-import net.createmod.catnip.lang.Lang;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -10,16 +9,12 @@ import com.simibubi.create.AllDataComponents;
 import com.simibubi.create.AllFluids;
 import com.simibubi.create.content.fluids.VirtualFluid;
 
-import io.netty.buffer.ByteBuf;
 import net.createmod.catnip.codecs.stream.CatnipStreamCodecBuilders;
 import net.createmod.catnip.lang.Lang;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.StringRepresentable;
-import net.minecraft.world.item.alchemy.Potion;
-import net.minecraft.world.item.alchemy.Potions;
+import net.minecraft.world.item.alchemy.PotionContents;
 
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
 
@@ -51,7 +46,7 @@ public class PotionFluid extends VirtualFluid {
 			return fs;
 		}
 		fs.set(DataComponents.POTION_CONTENTS, potionContents);
-		return new FluidStack(fs.getFluid(), fs.getAmount(), fs.getTag());
+		return fs;
 	}
 
 	public enum BottleType implements StringRepresentable {

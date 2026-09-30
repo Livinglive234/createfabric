@@ -56,6 +56,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.Clearable;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -82,7 +83,6 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 
 import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
@@ -92,8 +92,7 @@ import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class SawBlockEntity extends BlockBreakingKineticBlockEntity implements SidedStorageBlockEntity {
-
+public class SawBlockEntity extends BlockBreakingKineticBlockEntity implements Clearable, SidedStorageBlockEntity {
 	private static final Object cuttingRecipesKey = new Object();
 	public static final Supplier<RecipeType<?>> woodcuttingRecipeType =
 		Suppliers.memoize(() -> BuiltInRegistries.RECIPE_TYPE.get(ResourceLocation.fromNamespaceAndPath("druidcraft", "woodcutting")));
@@ -112,17 +111,6 @@ public class SawBlockEntity extends BlockBreakingKineticBlockEntity implements S
 		playEvent = ItemStack.EMPTY;
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.SAW.get(),
-				(be, context) -> {
-					if (context != Direction.DOWN)
-						return be.inventory;
-					return null;
-				}
-		);
-	}
 
 	@Override
 	public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
@@ -171,7 +159,7 @@ public class SawBlockEntity extends BlockBreakingKineticBlockEntity implements S
 			Item item = playEvent.getItem();
 			if (item instanceof BlockItem) {
 				Block block = ((BlockItem) item).getBlock();
-				isWood = block.getSoundType(block.defaultBlockState()) == SoundType.WOOD;
+				isWood = block.defaultBlockState().getSoundType() == SoundType.WOOD;
 			}
 			spawnEventParticles(playEvent);
 			playEvent = ItemStack.EMPTY;
@@ -291,6 +279,12 @@ public class SawBlockEntity extends BlockBreakingKineticBlockEntity implements S
 	}
 
 	@Override
+	public void clearContent() {
+		inventory.clear();
+		filtering.setFilter(ItemStack.EMPTY);
+	}
+
+	@Override
 	public void destroy() {
 		super.destroy();
 		ItemHelper.dropContents(level, worldPosition, inventory);
@@ -384,7 +378,7 @@ public class SawBlockEntity extends BlockBreakingKineticBlockEntity implements S
 		for (int roll = 0; roll < rolls; roll++) {
 			List<ItemStack> results = new LinkedList<>();
 			if (recipe instanceof CuttingRecipe)
-				results = ((CuttingRecipe) recipe).rollResults();
+				results = ((CuttingRecipe) recipe).rollResults(level.random);
 			else if (recipe instanceof StonecutterRecipe || recipe.getType() == woodcuttingRecipeType.get())
 				results.add(recipe.getResultItem(level.registryAccess())
 					.copy());
@@ -392,6 +386,8 @@ public class SawBlockEntity extends BlockBreakingKineticBlockEntity implements S
 			for (ItemStack stack : results) {
 				ItemHelper.addToList(stack, list);
 			}
+			if (input.getItem().hasCraftingRemainingItem())
+				ItemHelper.addToList(new ItemStack(input.getItem().getCraftingRemainingItem()), list);
 		}
 
 		for (int slot = 0; slot < list.size() && slot + 1 < inventory.getSlotCount(); slot++)
@@ -435,7 +431,7 @@ public class SawBlockEntity extends BlockBreakingKineticBlockEntity implements S
 			if (contained.getCount() == inserted)
 				entity.discard();
 			else
-				entity.setItem(ItemHandlerHelper.copyStackWithSize(contained, (int) (contained.getCount() - inserted)));
+				entity.setItem(contained.copyWithCount((int) (contained.getCount() - inserted)));
 			t.commit();
 		}
 	}
@@ -550,5 +546,4 @@ public class SawBlockEntity extends BlockBreakingKineticBlockEntity implements S
 			return true;
 		return false;
 	}
-
 }

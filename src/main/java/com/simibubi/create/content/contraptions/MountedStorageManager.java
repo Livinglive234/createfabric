@@ -22,6 +22,8 @@ import org.jetbrains.annotations.Nullable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
+import com.mojang.datafixers.util.Pair;
+import com.simibubi.create.AllTags.AllMountedItemStorageTypeTags;
 import com.simibubi.create.Create;
 import com.simibubi.create.api.contraption.storage.SyncedMountedStorage;
 import com.simibubi.create.api.contraption.storage.fluid.MountedFluidStorage;
@@ -43,8 +45,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
+import net.minecraft.resources.RegistryOps;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -254,20 +258,27 @@ public class MountedStorageManager {
 
 	// contraption is provided on the client for initial afterSync storage callbacks
 	public void read(CompoundTag nbt, HolderLookup.Provider registries, boolean clientPacket, @Nullable Contraption contraption) {
+		final RegistryOps<Tag> registryOps = registries.createSerializationContext(NbtOps.INSTANCE);
 		this.reset();
 
 		try {
 			NBTHelper.iterateCompoundList(nbt.getList("items", Tag.TAG_COMPOUND), tag -> {
 				BlockPos pos = NBTHelper.readBlockPos(tag, "pos");
 				CompoundTag data = tag.getCompound("storage");
-				CatnipCodecUtils.decode(MountedItemStorage.CODEC, registries, data)
+				// TODO - Use CatnipCodecUtils
+				MountedItemStorage.CODEC.decode(registryOps, data)
+					.resultOrPartial(err -> Create.LOGGER.error("Failed to deserialize mounted item storage: {}", err))
+					.map(Pair::getFirst)
 					.ifPresent(storage -> this.addStorage(storage, pos));
 			});
 
 			NBTHelper.iterateCompoundList(nbt.getList("fluids", Tag.TAG_COMPOUND), tag -> {
 				BlockPos pos = NBTHelper.readBlockPos(tag, "pos");
 				CompoundTag data = tag.getCompound("storage");
-				CatnipCodecUtils.decode(MountedFluidStorage.CODEC, registries, data)
+				// TODO - Use CatnipCodecUtils
+				MountedFluidStorage.CODEC.decode(registryOps, data)
+					.resultOrPartial(err -> Create.LOGGER.error("Failed to deserialize mounted fluid storage: {}", err))
+					.map(Pair::getFirst)
 					.ifPresent(storage -> this.addStorage(storage, pos));
 			});
 
@@ -304,15 +315,19 @@ public class MountedStorageManager {
 	}
 
 	public void write(CompoundTag nbt, HolderLookup.Provider registries, boolean clientPacket) {
+		final RegistryOps<Tag> registryOps = registries.createSerializationContext(NbtOps.INSTANCE);
 		ListTag items = new ListTag();
 		this.getAllItemStorages().forEach((pos, storage) -> {
 				if (!clientPacket || storage instanceof SyncedMountedStorage) {
-					CatnipCodecUtils.encode(MountedItemStorage.CODEC, registries, storage).ifPresent(encoded -> {
-						CompoundTag tag = new CompoundTag();
-						tag.put("pos", NbtUtils.writeBlockPos(pos));
-						tag.put("storage", encoded);
-						items.add(tag);
-					});
+					// TODO - Use CatnipCodecUtils
+					MountedItemStorage.CODEC.encodeStart(registryOps, storage)
+						.resultOrPartial(err -> Create.LOGGER.error("Failed to serialize mounted item storage: {}", err))
+						.ifPresent(encoded -> {
+							CompoundTag tag = new CompoundTag();
+							tag.put("pos", NbtUtils.writeBlockPos(pos));
+							tag.put("storage", encoded);
+							items.add(tag);
+						});
 				}
 			}
 		);
@@ -323,12 +338,15 @@ public class MountedStorageManager {
 		ListTag fluids = new ListTag();
 		this.getFluids().storages.forEach((pos, storage) -> {
 				if (!clientPacket || storage instanceof SyncedMountedStorage) {
-					CatnipCodecUtils.encode(MountedFluidStorage.CODEC, registries, storage).ifPresent(encoded -> {
-						CompoundTag tag = new CompoundTag();
-						tag.put("pos", NbtUtils.writeBlockPos(pos));
-						tag.put("storage", encoded);
-						fluids.add(tag);
-					});
+					// TODO - Use CatnipCodecUtils
+					MountedFluidStorage.CODEC.encodeStart(registryOps, storage)
+						.resultOrPartial(err -> Create.LOGGER.error("Failed to serialize mounted fluid storage: {}", err))
+						.ifPresent(encoded -> {
+							CompoundTag tag = new CompoundTag();
+							tag.put("pos", NbtUtils.writeBlockPos(pos));
+							tag.put("storage", encoded);
+							fluids.add(tag);
+						});
 				}
 			}
 		);

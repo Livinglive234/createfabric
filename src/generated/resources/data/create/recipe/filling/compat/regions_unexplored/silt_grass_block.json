@@ -8,22 +8,17 @@
   "type": "create:filling",
   "ingredients": [
     {
-      "type": "neoforge:compound",
-      "ingredients": [
-        {
-          "item": "regions_unexplored:silt_dirt"
-        }
-      ]
+      "item": "regions_unexplored:silt_dirt"
     },
     {
-      "type": "fluid_stack",
+      "type": "neoforge:single",
       "amount": 500,
       "fluid": "minecraft:water"
     }
   ],
   "results": [
     {
-      "item": "regions_unexplored:silt_grass_block"
+      "id": "regions_unexplored:silt_grass_block"
     }
   ]
 }

@@ -2,6 +2,7 @@ package com.simibubi.create.infrastructure.fabric.transfer.fluid;
 
 import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 
@@ -21,6 +22,7 @@ import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.world.item.ItemStack;
@@ -39,11 +41,23 @@ public final class FluidStack implements DataComponentHolder {
 
 	public static final FluidStack EMPTY = new FluidStack(FluidVariant.blank(), 0);
 
-	public static final Codec<FluidStack> CODEC = null;
-	public static final Codec<FluidStack> OPTIONAL_CODEC = null;
-	public static final StreamCodec<RegistryFriendlyByteBuf, FluidStack> STREAM_CODEC = null;
+	public static final Codec<FluidStack> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+		FluidVariant.CODEC.fieldOf("id").forGetter(FluidStack::getVariant),
+		Codec.LONG.fieldOf("amount").forGetter(FluidStack::getAmount)
+	).apply(instance, FluidStack::new));
 
-	private final FluidVariant variant;
+	public static final Codec<FluidStack> OPTIONAL_CODEC = Codec.withAlternative(CODEC,
+		Codec.unit(EMPTY));
+
+	public static final StreamCodec<RegistryFriendlyByteBuf, FluidStack> STREAM_CODEC = StreamCodec.composite(
+		FluidVariant.PACKET_CODEC, FluidStack::getVariant,
+		ByteBufCodecs.VAR_LONG, FluidStack::getAmount,
+		FluidStack::new
+	);
+
+	public static final StreamCodec<RegistryFriendlyByteBuf, FluidStack> OPTIONAL_STREAM_CODEC = STREAM_CODEC;
+
+	private FluidVariant variant;
 	private long amount;
 
 	public FluidStack(FluidVariant variant, long amount) {
@@ -82,6 +96,14 @@ public final class FluidStack implements DataComponentHolder {
 
 	public DataComponentPatch getComponentsPatch() {
 		return !this.isEmpty() ? this.variant.getComponents() : DataComponentPatch.EMPTY;
+	}
+
+	public <T> void set(net.minecraft.core.component.DataComponentType<T> type, T value) {
+		this.variant = this.variant.withComponentChanges(DataComponentPatch.builder().set(type, value).build());
+	}
+
+	public <T> void remove(net.minecraft.core.component.DataComponentType<T> type) {
+		this.variant = this.variant.withComponentChanges(DataComponentPatch.builder().remove(type).build());
 	}
 
 	public long getAmount() {

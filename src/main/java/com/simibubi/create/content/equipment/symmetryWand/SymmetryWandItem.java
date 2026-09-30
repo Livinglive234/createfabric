@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllDataComponents;
@@ -40,6 +40,7 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
@@ -49,7 +50,7 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
-
+import javax.annotation.Nonnull;
 import io.github.fabricators_of_create.porting_lib.util.EnvExecutor;
 
 public class SymmetryWandItem extends Item {
@@ -58,7 +59,7 @@ public class SymmetryWandItem extends Item {
 		super(properties);
 	}
 
-	@Nonnull
+	@NotNull
 	@Override
 	public InteractionResult useOn(UseOnContext context) {
 		Player player = context.getPlayer();
@@ -233,20 +234,10 @@ public class SymmetryWandItem extends Item {
 						continue;
 				}
 
-//				BlockSnapshot blocksnapshot = BlockSnapshot.create(world.dimension(), world, position);
-				BlockState cachedState = world.getBlockState(position);
 				FluidState ifluidstate = world.getFluidState(position);
 				world.setBlock(position, ifluidstate.createLegacyBlock(), Block.UPDATE_KNOWN_SHAPE);
 				world.setBlockAndUpdate(position, blockState);
 
-				wand.set(AllDataComponents.SYMMETRY_WAND_SIMULATE, true);
-				boolean placeInterrupted = EventHooks.onBlockPlace(player, blocksnapshot, Direction.UP);
-				wand.set(AllDataComponents.SYMMETRY_WAND_SIMULATE, false);
-
-				if (placeInterrupted) {
-					world.setBlockAndUpdate(position, cachedState);
-					continue;
-				}
 				targets.add(position);
 			}
 		}
@@ -261,7 +252,6 @@ public class SymmetryWandItem extends Item {
 
 	public static void remove(Level world, ItemStack wand, Player player, BlockPos pos, BlockState ogBlock) {
 		BlockState air = Blocks.AIR.defaultBlockState();
-		BlockState ogBlock = world.getBlockState(pos);
 		checkComponents(wand);
 		if (!isEnabled(wand))
 			return;
@@ -293,8 +283,8 @@ public class SymmetryWandItem extends Item {
 				if (handlePreEvent(world, player, position, blockstate, be))
 					continue;
 				targets.add(position);
-				world.levelEvent(2001, position, Block.getId(blockstate));
-				world.setBlock(position, air, 3);
+				world.levelEvent(LevelEvent.PARTICLES_DESTROY_BLOCK, position, Block.getId(blockstate));
+				world.setBlock(position, air, Block.UPDATE_ALL);
 
 				if (!player.isCreative()) {
 					if (!player.getMainHandItem()

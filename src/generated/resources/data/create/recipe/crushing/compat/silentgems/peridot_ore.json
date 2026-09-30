@@ -8,35 +8,26 @@
   "type": "create:crushing",
   "ingredients": [
     {
-      "type": "neoforge:compound",
-      "ingredients": [
-        {
-          "item": "silentgems:peridot_ore"
-        }
-      ]
+      "item": "silentgems:peridot_ore"
     }
   ],
   "processing_time": 350,
   "results": [
     {
       "count": 2,
-      "item": "silentgems:peridot"
+      "id": "silentgems:peridot"
     },
     {
       "chance": 0.25,
-      "item": "silentgems:peridot"
+      "id": "silentgems:peridot"
     },
     {
       "chance": 0.75,
-      "item": {
-        "id": "create:experience_nugget"
-      }
+      "id": "create:experience_nugget"
     },
     {
       "chance": 0.12,
-      "item": {
-        "id": "minecraft:cobblestone"
-      }
+      "id": "minecraft:cobblestone"
     }
   ]
 }

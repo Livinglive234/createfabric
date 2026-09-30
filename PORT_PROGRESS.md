@@ -2315,3 +2315,12 @@ Trajectory: 237 → 221 (confirmed).
 `StockKeeperTransferHandler.java`/`ConversionRecipe.java` — priority mod), `Create.java`, `AllRecipeTypes.java`.
 Skip (deprioritized): `SpoutCasting.java` (T-Construct), `ComputerCraftProxy.java`/`PackagerPeripheral.java`/
 `ComputerBehaviour.java` (CC:Tweaked).
+
+## Done this session (batch 63)
+Trajectory: 221 → 220 (confirmed).
+- [x] `content/kinetics/gearbox/GearboxBlock.java` (clean) — `getPickedStack`'s override calls
+  `super.getCloneItemStack(view, pos, state)` where `view` is typed `BlockGetter`, but the vanilla-1.21.1
+  `getCloneItemStack` signature takes `LevelReader` (same NeoForge-patch signature-mismatch bug as
+  `StandardBogeyBlock.java`/`LecternControllerBlock.java`, batch 61) → cast to `(LevelReader) view`.
+
+**Current verified baseline: 220 errors.**

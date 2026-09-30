@@ -29,7 +29,7 @@ import net.minecraft.world.phys.Vec3;
 
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
 
-public class SmartFluidPipeBlockEntity extends SmartBlockEntity implements PipeAttachmentBlockEntity {
+public class SmartFluidPipeBlockEntity extends SmartBlockEntity implements PipeAttachmentBlockEntity, Clearable {
 
 	private FilteringBehaviour filter;
 

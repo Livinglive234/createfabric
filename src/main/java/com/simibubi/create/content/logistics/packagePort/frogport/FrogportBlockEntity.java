@@ -250,7 +250,7 @@ public class FrogportBlockEntity extends PackagePortBlockEntity implements IHave
 		failedLastExport = false;
 		Storage<ItemVariant> inventory = this.exposedInventory;
 
-		if (itemHandler == null)
+		if (inventory == null)
 			return;
 
 		if (!inventory.nonEmptyViews().iterator().hasNext())

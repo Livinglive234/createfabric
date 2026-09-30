@@ -45,7 +45,6 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.fabricmc.api.EnvType;
-import io.github.fabricators_of_create.porting_lib.util.EnvExecutor;
 
 public class FunnelBlockEntity extends SmartBlockEntity implements IHaveHoveringInformation, Clearable {
 	private FilteringBehaviour filtering;

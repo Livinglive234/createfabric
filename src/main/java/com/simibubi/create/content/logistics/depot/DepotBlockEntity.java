@@ -21,7 +21,7 @@ import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 
-public class DepotBlockEntity extends SmartBlockEntity implements SidedStorageBlockEntity {
+public class DepotBlockEntity extends SmartBlockEntity implements SidedStorageBlockEntity, Clearable {
 
 	DepotBehaviour depotBehaviour;
 

@@ -26,7 +26,7 @@ import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 
-public class CreativeCrateBlockEntity extends CrateBlockEntity implements SidedStorageBlockEntity {
+public class CreativeCrateBlockEntity extends CrateBlockEntity implements SidedStorageBlockEntity, Clearable {
 	FilteringBehaviour filtering;
 	BottomlessItemHandler inv;
 

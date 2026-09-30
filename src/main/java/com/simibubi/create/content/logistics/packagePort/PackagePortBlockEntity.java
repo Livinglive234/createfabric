@@ -54,7 +54,7 @@ public abstract class PackagePortBlockEntity extends SmartBlockEntity implements
 		addressFilter = "";
 		acceptsPackages = true;
 		inventory = new SmartInventory(18, this, (slot, stack) -> PackageItem.isPackage(stack));
-		itemHandler = new PackagePortAutomationInventoryWrapper(inventory, this);
+		exposedInventory = new PackagePortAutomationInventoryWrapper(inventory, this);
 	}
 
 	public boolean isBackedUp() {

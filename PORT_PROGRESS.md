@@ -12,7 +12,7 @@ Baseline compile counts (full clean `./gradlew compileJava`, not incremental):
 - After bulk import-restoration script (see below), 267 files / 552 imports: 2,964 errors
 - After fixing ProcessingRecipeSerializer.java (stale pre-refactor dead code): 2,942 errors
 - After ChuteBlockEntity/ItemDrainBlock/AllItemAttributeTypes (Capabilities.* → Fabric Storage/BlockApiCache) + ClientEvents (AllFluids import, ClientWorldEvents wrong package, duplicate CommonEvents registration) + CreateEmptyingRecipeGen (NeoForgeMod.MILK → Milk.STILL_MILK): pending re-verify (cr_verify10.log)
-- **Current (batch 51, fresh-container verified): 441 errors** — see "Session resumed" / batch 50 / batch 51 notes near the end of this file for the full trajectory from the last documented checkpoint (503) through this session's confirmed 478 → 455 → 441.
+- **Current (batch 54, fresh-container verified): 389 errors** — see "Session resumed" / batch 50-54 notes near the end of this file for the full trajectory from the last documented checkpoint (503) through this session's confirmed 478 → 455 → 441 → 407 → 395 → 389.
 
 ## Bulk import-restoration technique (big win — use again if a similar wave of import loss shows up)
 The "merge picked wrong side and dropped imports" bug (see session summary) turned out to affect
@@ -1725,6 +1725,126 @@ file) for the current frontier — it has shifted a lot; re-sort by count rather
   `content/contraptions/render/ContraptionRenderInfo.java`, `content/contraptions/minecart/capability/MinecartController.java`,
   `foundation/blockEntity/behaviour/inventory/VersionedInventoryWrapper.java`,
   `content/redstone/displayLink/source/EnchantPowerDisplaySource.java`.
+
+## Done this session (batch 52)
+Trajectory: 407 → 389 (confirmed after batches 52-54 together; individual batch numbers below).
+441 → 407 for batch 52 alone.
+- [x] `foundation/mixin/fabric/AbstractMinecartMixin.java` (clean) — `MinecartController#serializeNBT`/
+  `#deserializeNBT` became provider-aware (`implements INBTSerializable<CompoundTag>` with the newer
+  `HolderLookup.Provider`-taking signatures) at some earlier point, but this mixin's two `@Inject`
+  hooks (`loadController`/`saveController`) never got updated to pass one — fixed by threading
+  `((AbstractMinecart) (Object) this).registryAccess()` through (RegistryAccess implements
+  HolderLookup.Provider, confirmed via `javap`).
+- [x] `foundation/map/StationMapDecorationRenderer.java` (clean) — NeoForge's `IMapDecorationRenderer`
+  custom-map-decoration-rendering hook has no fabric port; this class is already unregistered dead
+  code (see the commented-out registration in `CommonEvents.java`) — dropped the `implements`, kept as
+  a plain utility class (TODO fabric).
+- [x] `compat/jei/category/SpoutCategory.java`, `compat/jei/category/ItemDrainCategory.java` (both
+  clean, JEI is priority) — both missing a plain `net.minecraft.world.item.crafting.RecipeHolder`
+  import (checked every other JEI category file for the same gap via a small script — none found);
+  `SpoutCategory` additionally had `FluidIngredient#getFluids()` (doesn't exist) →
+  `#getMatchingFluidStacks()` (already returns the exact `List<FluidStack>` type `AnimatedSpout#withFluids` needs).
+- [x] `foundation/recipe/RecipeApplier.java` (clean) — `ItemStack#hasCraftingRemainingItem`/
+  `#getCraftingRemainingItem` don't exist in 1.21.1 (those live on `Item`, same recurring bug as
+  `MillstoneBlockEntity.java`/`PotionFluidHandler.java` earlier sessions) → `stackIn.getItem().hasCraftingRemainingItem()`
+  / `new ItemStack(stackIn.getItem().getCraftingRemainingItem())`.
+- [x] `foundation/networking/BlockEntityDataPacket.java` (clean) — missing `net.fabricmc.api.EnvType`/
+  `Environment` imports entirely (not a leftover-annotation bug like batch 51's — these were never
+  added at all).
+- [x] `foundation/mixin/SmithingMenuMixin.java` (clean) — `ItemStack#getTagEnchantments()` → `#getEnchantments()`
+  (established fix); `ItemStack#supportsEnchantment(Holder<Enchantment>)` doesn't exist → real check is
+  on the enchantment itself, `Enchantment#isSupportedItem(ItemStack)` (confirmed via `javap`).
+- [x] `foundation/mixin/Ingredient$ValueMixin.java` (clean) — NeoForge's `DatagenModLoader.isRunningDataGen()`
+  has no fabric equivalent (only an internal, non-public `fabric-data-generation-api-v1` impl class
+  tracks this) — always apply the datagen-only codec shortcut unconditionally; harmless outside datagen
+  since it's a strict superset of what the plain codec accepts (TODO fabric).
+- [x] `foundation/item/TooltipHelper.java` (clean) — porting-lib's `MinecraftClientUtil.getLocale()`
+  doesn't exist; the real hook is a mixin-injected default method, `LanguageManagerInjection#port_lib$getJavaLocale()`,
+  on `LanguageManager` itself (confirmed via `javap` — `LanguageManager implements ... LanguageManagerInjection`).
+- [x] `foundation/item/ItemHelper.java` (clean) — two more instances of the recurring `Item#getMaxStackSize()`
+  doesn't exist bug (real method is `getDefaultMaxStackSize()`, same as `ChuteItemHandler.java` earlier session).
+- [x] `foundation/blockEntity/renderer/SafeBlockEntityRenderer.java` (clean) — NeoForge's
+  `BlockEntityRenderer#getRenderBoundingBox` extension has no fabric port at all (vanilla's interface
+  only has `render`/`shouldRenderOffScreen`/`getViewDistance`/`shouldRender`, confirmed via `javap`) —
+  dropped the invalid `@Override`, kept as a plain helper (TODO fabric); also fixed the fallback branch,
+  which called a NeoForge-only `BlockEntity#getRenderBoundingBox()` that doesn't exist either → `new AABB(blockEntity.getBlockPos())`.
+- [x] `foundation/blockEntity/behaviour/ValueSettingsInputHandler.java` (clean) — dead `EnvExecutor`
+  import; `Items.TOOLS_WRENCH` (wrong `Items` class, recurring bug) → `AllItemTags.WRENCH.tag`.
+- [x] **`foundation/blockEntity/SyncedBlockEntity.java` + `content/contraptions/render/ClientContraption.java`
+  (both clean) — a genuine, non-trivial API removal**: vanilla 1.21.1 merged the old dual-path block-entity
+  sync system (`handleUpdateTag`/`onDataPacket`, separate override points from `loadAdditional`) into a
+  single path — `getUpdatePacket()`'s tag and any disk-loaded tag are now both applied through the same
+  `final BlockEntity#loadWithComponents(tag, provider)`, which itself just calls the ordinary
+  `loadAdditional` (confirmed by disassembling `ClientPacketListener.handleBlockEntityData`'s bytecode —
+  it calls `BlockEntity.loadWithComponents` directly, no separate client-only entry point exists
+  anymore). Consequence: `SmartBlockEntity`'s `read(tag, registries, clientPacket)` split (a `boolean`
+  flag behaviours use to send/receive an abbreviated network payload vs. the full disk-save payload)
+  **can no longer be driven by which path invoked it** — `loadAdditional` is hardcoded to `clientPacket=false`
+  always now, including when actually applying a received network packet. Documented this as a TODO
+  fabric gap (a correctness/fidelity loss, not just a compile fix — flagged for whoever picks this up
+  next, since fixing it properly would mean threading `level.isClientSide()` through `SmartBlockEntity.loadAdditional`
+  instead of the hardcoded `false`, touching the sync behavior of every `SmartBlockEntity` subclass, which
+  felt too large/risky for a sweep-style batch fix). Removed the two dead `@Override`s from `SyncedBlockEntity`;
+  `ClientContraption.java`'s manual virtual-block-entity-populate-from-schematic-NBT call site
+  (`be.handleUpdateTag(nbt, ...)`) now calls the real replacement, `be.loadWithComponents(nbt, ...)`, directly.
+- [x] `foundation/block/BigOutlines.java` (clean) — dead `com.simibubi.create.foundation.utility.fabric.ReachUtil`
+  import (class doesn't exist anywhere — also found a pre-existing duplicate `Attributes` import while
+  here, deleted the duplicate) → real vanilla API is `Player#getAttributeValue(Attributes.BLOCK_INTERACTION_RANGE)`
+  (confirmed via `javap` on `Attributes.class` — 1.21.1 replaced the old hardcoded reach distance with an
+  attribute).
+- [x] `foundation/CreateNBTProcessors.java` (clean) — 2 more instances of the established
+  `CatnipCodecUtils.decodeOrNull` doesn't exist bug (batch 30 precedent) → `.decode(...).orElse(null)`.
+
+## Done this session (batch 53)
+Trajectory: 407 → 395 (confirmed).
+- [x] `compat/pojav/PojavChecker.java` (clean) — NeoForge's `ScreenEvent.Init.Post`/`NeoForge.EVENT_BUS`
+  → fabric-api's `net.fabricmc.fabric.api.client.screen.v1.ScreenEvents.AFTER_INIT` (a global per-screen
+  event, callback shape `(Minecraft, Screen, int width, int height)` instead of an Event object with a
+  `getScreen()` getter — confirmed via `javap` on `fabric-screen-api-v1`).
+- [x] `foundation/data/recipe/CreateMixingRecipeGen.java` (clean) — NeoForge's `BlockTagIngredient`
+  (matches an item if its corresponding block is in a given block tag) has no fabric port; the one use
+  here (`BlockTags.CONVERTABLE_TO_MUD`, for the vanilla dirt+water→mud mixing recipe) is vanilla-dirt-only
+  by default, so hardcoded `.require(Blocks.DIRT)` directly (TODO fabric — faithful to vanilla, but won't
+  pick up datapack/mod additions to that block tag for this one recipe).
+- [x] `content/trains/station/GlobalStation.java` (clean) — `ServerLifecycleHooks` wrong porting-lib
+  subpackage (`.util` → `.core.util`, same recurring fix as `GlobalRegistryAccess.java`/
+  `DispenserBehaviorConverter.java` earlier session).
+- [x] `content/trains/schedule/condition/ItemThresholdCondition.java` (clean) — undefined `stackInSlot`
+  variable, a leftover from a pre-port `ItemStack`-slot-based loop that was never fully converted to the
+  surrounding `Storage<ItemVariant>`/`StorageView` loop (`variant`/`view` are the real in-scope locals) →
+  `view.getAmount() == variant.getItem().getDefaultMaxStackSize()`.
+- [x] `content/trains/observer/TrackObserverBlock.java` (clean) — missing `ConnectableRedstoneBlock`
+  import (the correct `io.github.fabricators_of_create.porting_lib.blocks.extensions.ConnectableRedstoneBlock`
+  path, confirmed against ~10 sibling redstone blocks in the same package tree that already import it
+  correctly — this file was just missing the import line entirely, not using a wrong path).
+
+## Done this session (batch 54)
+Trajectory: 395 → 389 (confirmed).
+- [x] `content/redstone/diodes/ToggleLatchBlock.java`, `content/redstone/diodes/BrassDiodeBlock.java`
+  (both clean) — same `ConnectableRedstoneBlock` bug as `TrackObserverBlock.java` above, but the wrong-path
+  variant this time: `io.github.fabricators_of_create.porting_lib.block.ConnectableRedstoneBlock` (no such
+  package, missing the `s`/`.extensions`) → `.blocks.extensions.ConnectableRedstoneBlock`.
+- [x] `content/equipment/toolbox/ToolboxBlock.java` (clean) — dead `NetworkHooks` import; called a
+  2-arg `Player#openMenu(MenuProvider, Consumer<RegistryFriendlyByteBuf>)` overload that doesn't exist in
+  1.21.1 (only the plain 1-arg `openMenu(MenuProvider)` does) with a `toolbox::sendToMenu` method
+  reference that was never defined anywhere either — `ToolboxBlockEntity` already `implements MenuProvider`
+  directly, so simplified to the real 1-arg `player.openMenu(toolbox)`.
+- [x] `content/logistics/depot/EjectorBlockEntity.java` (clean) — missing `CollisionContext` import
+  (`net.minecraft.world.phys.shapes.CollisionContext` — a plain missing-import, the `ClipContext`/`Fluid`
+  usage right next to it was already correct); `AABB.INFINITE` doesn't exist on vanilla `AABB` at all (no
+  static constants on the class, confirmed via `javap`) → built the same infinite bounds manually with
+  `new AABB(NEGATIVE_INFINITY..., POSITIVE_INFINITY...)`.
+
+**Current verified baseline: 389 errors** (down from 503 at the start of this session, ~4,130 at the very
+start of the port — see `/tmp/cr_verify7.log`/`/tmp/error_files.txt`, container-local scratch files).
+Non-deprioritized frontier is now thin: `BlueprintEntity.java` (20, deferred multi-part feature),
+`MinecartController.java` (18, deferred fabric-attachment-API redesign), and a long tail of ~150 files
+with 2-4 errors each scattered across nearly every content package — no single shared root cause found
+in a sample of ~10 of them (each is its own small distinct bug: missing imports, NeoForge-patched-method
+signature mismatches, a couple of undefined-variable leftovers). The deprioritized compat mods
+(JourneyMap/EMI/FTB/REI/sandwichable/CC:Tweaked) still account for the single biggest chunks
+(`JourneyTrainMap.java` 48, `CreateEmiPlugin.java` 46, `FTBChunksTrainMap.java` 32, `CreateREI.java` 30,
+plus several more REI/EMI/FTB files in the 6-10 range).
 
 ## Session resumed (new container) — environment note
 Picked this back up in a fresh cloud container; the previous session's `/tmp` artifacts (scripts,

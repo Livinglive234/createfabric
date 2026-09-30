@@ -39,8 +39,8 @@ public class RemainingAirOverlay implements LayeredDraw.Layer {
 		if (!player.getCustomData()
 			.contains("VisualBacktankAir"))
 			return;
-		boolean isAir = player.getEyeInFluidType().isAir() || player.level().getBlockState(BlockPos.containing(player.getX(), player.getEyeY(), player.getZ())).is(Blocks.BUBBLE_COLUMN);
-		boolean canBreathe = !player.canDrownInFluidType(player.getEyeInFluidType()) || MobEffectUtil.hasWaterBreathing(player) || player.getAbilities().invulnerable;
+		boolean isAir = !player.isEyeInFluid(FluidTags.WATER) || player.level().getBlockState(BlockPos.containing(player.getX(), player.getEyeY(), player.getZ())).is(Blocks.BUBBLE_COLUMN);
+		boolean canBreathe = !player.isEyeInFluid(FluidTags.WATER) || MobEffectUtil.hasWaterBreathing(player) || player.getAbilities().invulnerable;
 		if ((isAir || canBreathe) && !player.isInLava())
 			return;
 

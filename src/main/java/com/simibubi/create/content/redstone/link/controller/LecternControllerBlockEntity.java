@@ -8,7 +8,6 @@ import com.simibubi.create.AllItems;
 import com.simibubi.create.AllSoundEvents;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
-import com.simibubi.create.foundation.utility.fabric.ReachUtil;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;

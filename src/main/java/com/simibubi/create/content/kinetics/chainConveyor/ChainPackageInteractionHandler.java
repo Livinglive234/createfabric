@@ -5,7 +5,6 @@ import java.util.List;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 
 import com.simibubi.create.foundation.utility.RaycastHelper;
-import com.simibubi.create.foundation.utility.fabric.ReachUtil;
 
 import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.client.Minecraft;

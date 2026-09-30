@@ -115,7 +115,7 @@ public class FunnelMovementBehaviour implements MovementBehaviour {
 			if (!filter.test(context.world, toInsert))
 				continue;
 			ItemStack remainder =
-				ItemHandlerHelper.insertItemStacked(context.contraption.getStorage().getAllItems(), toInsert, false);
+				TransferUtil.insertItemStacked(context.contraption.getStorage().getAllItems(), toInsert, false);
 			if (remainder.getCount() == toInsert.getCount())
 				continue;
 			if (remainder.isEmpty()) {

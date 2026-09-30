@@ -6,7 +6,6 @@ import java.util.Set;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.api.contraption.BlockMovementChecks;
 import com.simibubi.create.foundation.utility.AdventureUtil;
-import com.simibubi.create.foundation.utility.fabric.ReachUtil;
 
 import io.github.fabricators_of_create.porting_lib.level.events.BlockEvent;
 
@@ -68,7 +67,7 @@ public class SuperGlueHandler {
 		if (placedAgainst == IPlacementHelper.ID)
 			return;
 
-		double distance = ReachUtil.reach(placer);
+		double distance = placer.getAttributeValue(Attributes.BLOCK_INTERACTION_RANGE);
 		Vec3 start = placer.getEyePosition(1);
 		Vec3 look = placer.getViewVector(1);
 		Vec3 end = start.add(look.x * distance, look.y * distance, look.z * distance);

@@ -185,8 +185,8 @@ public class ToolboxHandlerClient {
 		if (mc.options.hideGui || mc.gameMode.getPlayerMode() == GameType.SPECTATOR)
 			return;
 
-		int x = window.getGuiScaledWidth() / 2 - 90;
-		int y = window.getGuiScaledHeight() - 23;
+		int x = mc.getWindow().getGuiScaledWidth() / 2 - 90;
+		int y = mc.getWindow().getGuiScaledHeight() - 23;
 		RenderSystem.enableDepthTest();
 
 		Player player = mc.player;

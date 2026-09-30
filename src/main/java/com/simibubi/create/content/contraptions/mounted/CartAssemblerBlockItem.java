@@ -22,7 +22,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.RailShape;
 
-import io.github.fabricators_of_create.porting_lib.util.MinecartAndRailUtil;
 import javax.annotation.Nonnull;
 
 public class CartAssemblerBlockItem extends BlockItem {
@@ -57,7 +56,7 @@ public class CartAssemblerBlockItem extends BlockItem {
 			return false;
 		}
 
-		RailShape shape = MinecartAndRailUtil.getDirectionOfRail(state, world, pos, null);
+		RailShape shape = state.getValue(((BaseRailBlock) block).getShapeProperty());
 		if (shape != RailShape.EAST_WEST && shape != RailShape.NORTH_SOUTH)
 			return false;
 

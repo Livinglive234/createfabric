@@ -73,7 +73,7 @@ public class LogisticsManager {
 	public static int getStockOf(UUID freqId, ItemStack stack, @Nullable IdentifiedInventory ignoredHandler) {
 		int sum = 0;
 		for (LogisticallyLinkedBehaviour link : LogisticallyLinkedBehaviour.getAllPresent(freqId, false))
-			sum += link.getSummary(identifier)
+			sum += link.getSummary(ignoredHandler)
 				.getCountOf(stack);
 		return sum;
 	}

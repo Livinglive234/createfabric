@@ -6,6 +6,8 @@ import com.simibubi.create.content.equipment.blueprint.BlueprintEntity.Blueprint
 import com.simibubi.create.foundation.gui.menu.GhostItemMenu;
 
 import net.minecraft.client.Minecraft;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.server.level.ServerPlayer;

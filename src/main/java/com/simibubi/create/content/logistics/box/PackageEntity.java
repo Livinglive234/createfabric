@@ -119,10 +119,8 @@ public class PackageEntity extends LivingEntity implements IEntityWithComplexSpa
 			.add(Attributes.MOVEMENT_SPEED, 1f);
 	}
 
-	public static EntityType.Builder<?> build(EntityType.Builder<?> builder) {
-		@SuppressWarnings("unchecked")
-		EntityType.Builder<PackageEntity> boxBuilder = (EntityType.Builder<PackageEntity>) builder;
-		return boxBuilder.sized(1, 1);
+	public static net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder<?> build(net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder<?> builder) {
+		return builder.dimensions(EntityDimensions.fixed(1, 1));
 		/*.setCustomClientFactory(PackageEntity::spawn)*/
 	}
 

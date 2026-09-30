@@ -10,7 +10,6 @@ import com.simibubi.create.AllSpecialTextures;
 import com.simibubi.create.content.contraptions.chassis.AbstractChassisBlock;
 import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.foundation.utility.RaycastHelper;
-import com.simibubi.create.foundation.utility.fabric.ReachUtil;
 
 import net.createmod.catnip.outliner.Outliner;
 import net.createmod.catnip.platform.CatnipServices;

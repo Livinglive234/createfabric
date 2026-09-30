@@ -19,6 +19,7 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.ItemLike;
 
 import io.github.fabricators_of_create.porting_lib.tags.Tags;
+import net.fabricmc.fabric.api.tag.convention.v2.ConventionalItemTags;
 
 /**
  * The base class for Item Application recipe generation.
@@ -38,10 +39,10 @@ public abstract class ItemApplicationRecipeGen extends ProcessingRecipeGen<ItemA
 
 	protected GeneratedRecipe woodCasingIngredient(String type, Supplier<Ingredient> ingredient,
 																			  Supplier<ItemLike> output) {
-		create(type + "_casing_from_log", b -> b.require(Tags.Items.STRIPPED_LOGS)
+		create(type + "_casing_from_log", b -> b.require(ConventionalItemTags.STRIPPED_LOGS)
 			.require(ingredient.get())
 			.output(output.get()));
-		return create(type + "_casing_from_wood", b -> b.require(Tags.Items.STRIPPED_WOODS)
+		return create(type + "_casing_from_wood", b -> b.require(ConventionalItemTags.STRIPPED_WOODS)
 			.require(ingredient.get())
 			.output(output.get()));
 	}

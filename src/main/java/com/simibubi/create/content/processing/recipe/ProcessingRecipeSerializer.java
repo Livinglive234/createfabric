@@ -46,8 +46,8 @@ public class ProcessingRecipeSerializer {
 				throw new RuntimeException("Not a standard processing recipe serializer " + serializer);
 
 			@SuppressWarnings({"unchecked", "rawtypes"})
-			StandardProcessingRecipe.Builder<T> builder =
-				new StandardProcessingRecipe.Builder<T>((StandardProcessingRecipe.Factory) standardSerializer.factory(), recipeTypes.getId());
+			StandardProcessingRecipe.Builder builder =
+				new StandardProcessingRecipe.Builder((StandardProcessingRecipe.Factory) standardSerializer.factory(), recipeTypes.getId());
 
 			NonNullList<Ingredient> ingredientList = NonNullList.create();
 			NonNullList<FluidIngredient> fluidIngredientList = NonNullList.create();
@@ -72,7 +72,7 @@ public class ProcessingRecipeSerializer {
 					.duration(processingTime)
 					.requiresHeat(heatRequirement);
 
-			return builder.build();
+			return (T) builder.build();
 		}));
 	}
 }

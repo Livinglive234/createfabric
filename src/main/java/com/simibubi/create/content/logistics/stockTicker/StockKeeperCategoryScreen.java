@@ -41,7 +41,6 @@ import net.minecraft.world.item.ItemStack;
 
 import com.simibubi.create.infrastructure.fabric.transfer.item.SlotItemHandler;
 import io.github.fabricators_of_create.porting_lib.util.KeyBindingHelper;
-import com.simibubi.create.foundation.gui.ScreenWithStencils;
 import net.createmod.catnip.gui.UIRenderHelper;
 
 public class StockKeeperCategoryScreen extends AbstractSimiContainerScreen<StockKeeperCategoryMenu> {
@@ -473,8 +472,8 @@ public class StockKeeperCategoryScreen extends AbstractSimiContainerScreen<Stock
 			.getVisualOrderText();
 
 		int center = leftPos + (AllGuiTextures.STOCK_KEEPER_CATEGORY.getWidth()) / 2;
-		graphics.drawString(font, formattedcharsequence, (float) (center - font.width(formattedcharsequence) / 2),
-			(float) topPos + 4, 0x3D3C48, false);
+		graphics.drawString(font, formattedcharsequence, center - font.width(formattedcharsequence) / 2,
+			topPos + 4, 0x3D3C48, false);
 
 		if (editingItem == null) {
 			renderCategories(graphics, pMouseX, pMouseY, pPartialTick);

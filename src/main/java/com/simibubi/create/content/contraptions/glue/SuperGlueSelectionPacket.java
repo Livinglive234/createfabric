@@ -6,7 +6,6 @@ import net.createmod.catnip.net.base.ServerboundPacketPayload;
 
 import io.netty.buffer.ByteBuf;
 import com.simibubi.create.foundation.utility.AdventureUtil;
-import com.simibubi.create.foundation.utility.fabric.ReachUtil;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;

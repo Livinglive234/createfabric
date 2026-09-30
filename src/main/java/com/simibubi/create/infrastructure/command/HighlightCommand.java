@@ -6,7 +6,6 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.simibubi.create.content.contraptions.AssemblyException;
 import com.simibubi.create.content.contraptions.IDisplayAssemblyExceptions;
-import com.simibubi.create.foundation.utility.fabric.ReachUtil;
 
 import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.commands.CommandSourceStack;

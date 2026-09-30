@@ -18,6 +18,8 @@ val portingLibModules = listOf(
     "accessors", "base", "blocks", "brewing", "client_events", "common", "core", "data",
     "entity", "fluids", "items", "level_events", "mixin_extensions", "models", "resources", "tags", "transfer"
 )
+// "conditions" isn't published at the same version as the rest of porting-lib; pin it separately.
+val portingLibConditionsVersion = "3.1.0-beta.47+1.21.1"
 
 // external dependencies
 val reachEntityAttributesVersion = "2.5.0"
@@ -136,6 +138,7 @@ dependencies {
         modApi(include("io.github.fabricators_of_create.Porting-Lib:$module:$portingLibVersion")!!)
     }
     modApi(include("io.github.fabricators_of_create.Porting-Lib:extensions:$portingLibExtensionsVersion")!!)
+    modApi(include("io.github.fabricators_of_create.Porting-Lib:conditions:$portingLibConditionsVersion")!!)
 
     if (ponder.exists()) {
         implementation("net.createmod.ponder:Ponder-Fabric-$minecraftVersion:$ponderVersion") { isTransitive = false }

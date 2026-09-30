@@ -754,7 +754,7 @@ public class BrassTunnelBlockEntity extends BeltTunnelBlockEntity implements IHa
 
 	@Override
 	public void clearContent() {
-		((BrassTunnelItemHandler) tunnelCapability).clearContent();
+		setStackToDistribute(ItemStack.EMPTY, null, null);
 	}
 
 	@Override

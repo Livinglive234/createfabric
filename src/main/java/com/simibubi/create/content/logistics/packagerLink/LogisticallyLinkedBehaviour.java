@@ -189,7 +189,7 @@ public class LogisticallyLinkedBehaviour extends BlockEntityBehaviour {
 
 	public InventorySummary getSummary(@Nullable IdentifiedInventory ignoredHandler) {
 		if (blockEntity instanceof PackagerLinkBlockEntity plbe)
-			return plbe.fetchSummaryFromPackager(identifier);
+			return plbe.fetchSummaryFromPackager(ignoredHandler);
 		return InventorySummary.EMPTY;
 	}
 

@@ -26,7 +26,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.InteractionResult;
 import io.github.fabricators_of_create.porting_lib.blocks.extensions.ConnectableRedstoneBlock;
 
-public class ToggleLatchBlock extends AbstractDiodeBlock {
+public class ToggleLatchBlock extends AbstractDiodeBlock implements ConnectableRedstoneBlock {
 
 	public static BooleanProperty POWERING = BooleanProperty.create("powering");
 

@@ -1,5 +1,6 @@
 package com.simibubi.create.content.processing.basin;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -28,6 +29,7 @@ import net.minecraft.world.phys.Vec3;
 
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
@@ -62,7 +64,9 @@ public class BasinRenderer extends SmartBlockEntityRenderer<BasinBlockEntity> {
 		Storage<ItemVariant> inv = basin.itemCapability;
 		if (inv != null) {
 			int itemCount = 0;
-			List<ItemStack> stacks = TransferUtil.getAllItems(inv);
+			List<ItemStack> stacks = new ArrayList<>();
+			for (StorageView<ItemVariant> view : inv.nonEmptyViews())
+				stacks.add(view.getResource().toStack((int) view.getAmount()));
 			itemCount = stacks.size();
 
 			if (itemCount == 1)

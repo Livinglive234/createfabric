@@ -98,7 +98,7 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
-import com.simibubi.create.content.trains.station.GlobalStation.GlobalPackagePort;
+import com.simibubi.create.content.trains.station.GlobalPackagePort;
 
 public class StationBlockEntity extends SmartBlockEntity implements TransformableBlockEntity, SidedStorageBlockEntity {
 

@@ -9,7 +9,6 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
@@ -34,16 +33,12 @@ public abstract class SyncedBlockEntity extends BlockEntity {
 		return ClientboundBlockEntityDataPacket.create(this);
 	}
 
-	@Override
-	public void handleUpdateTag(CompoundTag tag, HolderLookup.Provider registries) {
-		readClient(tag, registries);
-	}
-
-	@Override
-	public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt, HolderLookup.Provider registries) {
-		CompoundTag tag = pkt.getTag();
-		readClient(tag == null ? new CompoundTag() : tag, registries);
-	}
+	// TODO fabric: vanilla removed the separate handleUpdateTag/onDataPacket override points this class
+	// used to hook for network-received data — both getUpdatePacket's tag and any disk-loaded tag are
+	// now applied through the same final BlockEntity#loadWithComponents -> #loadAdditional path, so the
+	// "clientPacket" distinction SmartBlockEntity's read()/write() split relies on can no longer be
+	// driven from here. readClient/writeClient stay available as plain methods for callers that invoke
+	// them directly (menus, ClientContraption's virtual block entities).
 
 	// Special handling for client update packets
 	public void readClient(CompoundTag tag, HolderLookup.Provider registries) {

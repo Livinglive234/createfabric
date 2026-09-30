@@ -121,7 +121,7 @@ public class ItemHelper {
 				}
 				totalSlots++;
 				if (!view.isResourceBlank()) {
-					f += (float) view.getAmount() / (float) Math.min(slotLimit, view.getResource().getItem().getMaxStackSize());
+					f += (float) view.getAmount() / (float) Math.min(slotLimit, view.getResource().getItem().getDefaultMaxStackSize());
 					++i;
 				}
 			}
@@ -207,7 +207,7 @@ public class ItemHelper {
 			try (Transaction t = Transaction.openOuter()) {
 				for (StorageView<ItemVariant> view : inv.nonEmptyViews()) {
 					ItemVariant contained = view.getResource();
-					int maxStackSize = contained.getItem().getMaxStackSize();
+					int maxStackSize = contained.getItem().getDefaultMaxStackSize();
 					// amount stored, amount needed, or max size, whichever is lowest.
 					int amountToExtractFromThisSlot = Math.min(truncateLong(view.getAmount()), Math.min(amount - extracted, maxStackSize));
 					if (!test.test(contained.toStack(amountToExtractFromThisSlot)))

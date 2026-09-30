@@ -1,7 +1,6 @@
 package com.simibubi.create.foundation.block;
 
 import com.simibubi.create.foundation.utility.RaycastHelper;
-import com.simibubi.create.foundation.utility.fabric.ReachUtil;
 
 import net.createmod.catnip.animation.AnimationTickHolder;
 import net.createmod.catnip.math.VecHelper;
@@ -92,7 +91,7 @@ public class BigOutlines {
 		double y = player.getY() - (pos.getY() + .5) + 1.5;
 		double z = player.getZ() - (pos.getZ() + .5);
 		double distSqr = x * x + y * y + z * z;
-		double maxDist = ReachUtil.reach(player) + 1;
+		double maxDist = player.getAttributeValue(Attributes.BLOCK_INTERACTION_RANGE) + 1;
 		maxDist *= maxDist;
 		return distSqr <= maxDist;
 	}

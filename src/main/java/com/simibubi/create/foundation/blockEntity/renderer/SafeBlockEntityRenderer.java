@@ -55,11 +55,14 @@ public abstract class SafeBlockEntityRenderer<T extends BlockEntity> implements 
 		return !frustum.isVisible(itemBB);
 	}
 
-	@Override
+	// TODO fabric: NeoForge's BlockEntityRenderer#getRenderBoundingBox extension (used to expand the
+	// frustum-culling AABB for block entities that render outside their own block) has no fabric
+	// equivalent — vanilla's BlockEntityRenderer only exposes shouldRender(T, Vec3). Kept as a plain
+	// helper for anything that wants the custom bounding box directly.
 	public @NotNull AABB getRenderBoundingBox(@NotNull T blockEntity) {
 		if (blockEntity instanceof CachedRenderBBBlockEntity cbe)
 			return cbe.getRenderBoundingBox();
 
-		return blockEntity.getRenderBoundingBox();
+		return new AABB(blockEntity.getBlockPos());
 	}
 }

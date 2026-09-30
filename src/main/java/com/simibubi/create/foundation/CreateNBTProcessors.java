@@ -34,7 +34,7 @@ public class CreateNBTProcessors {
 			if (writableBookResource != BuiltInRegistries.ITEM.getDefaultKey() && book.getString("id").equals(writableBookResource.toString()))
 				return data;
 
-			WrittenBookContent bookContent = CatnipCodecUtils.decodeOrNull(WrittenBookContent.CODEC, book);
+			WrittenBookContent bookContent = CatnipCodecUtils.decode(WrittenBookContent.CODEC, book).orElse(null);
 			if (bookContent == null)
 				return data;
 
@@ -52,7 +52,7 @@ public class CreateNBTProcessors {
 	}
 
 	public static CompoundTag clipboardProcessor(CompoundTag data) {
-		DataComponentMap components = CatnipCodecUtils.decodeOrNull(DataComponentMap.CODEC, data.getCompound("components"));
+		DataComponentMap components = CatnipCodecUtils.decode(DataComponentMap.CODEC, data.getCompound("components")).orElse(null);
 		if (components == null)
 			return data;
 

@@ -30,6 +30,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.RecipeHolder;
 
 import com.simibubi.create.foundation.fluid.FluidIngredient;
 
@@ -134,8 +135,8 @@ public class SpoutCategory extends CreateRecipeCategory<FillingRecipe> {
 	public void draw(FillingRecipe recipe, IRecipeSlotsView iRecipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
 		AllGuiTextures.JEI_SHADOW.render(graphics, 62, 57);
 		AllGuiTextures.JEI_DOWN_ARROW.render(graphics, 126, 29);
-		spout.withFluids(Arrays.asList(recipe.getRequiredFluid()
-				.getFluids()))
+		spout.withFluids(recipe.getRequiredFluid()
+				.getMatchingFluidStacks())
 			.draw(graphics, getBackground().getWidth() / 2 - 13, 22);
 	}
 

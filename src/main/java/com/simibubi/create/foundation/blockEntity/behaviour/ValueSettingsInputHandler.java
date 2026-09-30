@@ -19,7 +19,6 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.fabric.api.entity.FakePlayer;
 
-import io.github.fabricators_of_create.porting_lib.util.EnvExecutor;
 import com.simibubi.create.AllTags.AllItemTags;
 
 public class ValueSettingsInputHandler {
@@ -60,7 +59,7 @@ public class ValueSettingsInputHandler {
 			if (!valueSettingsBehaviour.isActive())
 				continue;
 			if (valueSettingsBehaviour.onlyVisibleWithWrench()
-				&& !player.getItemInHand(hand).is(Items.TOOLS_WRENCH))
+				&& !player.getItemInHand(hand).is(AllItemTags.WRENCH.tag))
 				continue;
 			if (valueSettingsBehaviour.getSlotPositioning()instanceof ValueBoxTransform.Sided sidedSlot) {
 				if (!sidedSlot.isSideActive(sbe.getBlockState(), ray.getDirection()))

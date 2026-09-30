@@ -12,7 +12,7 @@ Baseline compile counts (full clean `./gradlew compileJava`, not incremental):
 - After bulk import-restoration script (see below), 267 files / 552 imports: 2,964 errors
 - After fixing ProcessingRecipeSerializer.java (stale pre-refactor dead code): 2,942 errors
 - After ChuteBlockEntity/ItemDrainBlock/AllItemAttributeTypes (Capabilities.* → Fabric Storage/BlockApiCache) + ClientEvents (AllFluids import, ClientWorldEvents wrong package, duplicate CommonEvents registration) + CreateEmptyingRecipeGen (NeoForgeMod.MILK → Milk.STILL_MILK): pending re-verify (cr_verify10.log)
-- **Current (batch 57, fresh-container verified): 330 errors** — see "Session resumed" / batch 50-57 notes near the end of this file for the full trajectory from the last documented checkpoint (503) through this session's confirmed 478 → 455 → 441 → 407 → 395 → 389 → 367 → 345 → 330. Development also moved from a throwaway session branch onto `main` directly partway through (see "Branch consolidation" note below) — all commits from batch 56 onward are on `main`.
+- **Current (batch 59, fresh-container verified): 271 errors** — see "Session resumed" / batch 50-59 notes near the end of this file for the full trajectory from the last documented checkpoint (503) through this session's confirmed 478 → 455 → 441 → 407 → 395 → 389 → 367 → 345 → 330 → 311 → 271. Development also moved from a throwaway session branch onto `main` directly partway through (see "Branch consolidation" note below) — all commits from batch 56 onward are on `main`.
 
 ## Bulk import-restoration technique (big win — use again if a similar wave of import loss shows up)
 The "merge picked wrong side and dropped imports" bug (see session summary) turned out to affect
@@ -1938,12 +1938,120 @@ Trajectory: 345 → 330 (confirmed).
   site in the whole codebase has this exact shape (`BlueprintEntity.java`, already flagged as deferred-
   complex), so this is a contained, well-scoped follow-up, not a sweep-blocking issue.
 
-**Current verified baseline: 330 errors** (down from 503 at the start of this session, ~4,130 at the very
-start of the port — see `/tmp/cr_verify10.log`/`/tmp/error_files.txt`, container-local scratch files).
+## Done this session (batch 58)
+Trajectory: 330 → 311 (confirmed).
+- [x] `content/processing/sequenced/SequencedAssemblyRecipe.java` (clean, second pass) — adding the
+  missing `RecipeWrapper` import (batch 57) surfaced a real generics bug underneath it: `implements
+  Recipe<RecipeWrapper>` but `assemble(RecipeInput, HolderLookup.Provider)` was typed against the
+  broader `RecipeInput` interface instead of the class's own `RecipeWrapper` type parameter — retyped
+  to match, clearing a 3-error name-clash/not-abstract cascade.
+- [x] `content/redstone/nixieTube/NixieTubeRenderer.java` (clean) — porting-lib's `FontRenderUtil.getFontStorage`
+  doesn't exist in the resolved version (same old-jar-only-class shape as `ParticleHelper`) — the
+  project's own `FontAccessor` mixin already exposes `Font`'s package-private `fonts` function for
+  exactly this purpose (`((FontAccessor) font).create$getFonts().apply(resourceLocation)`).
+- [x] `content/redstone/link/controller/LinkedControllerClientHandler.java` (clean) — undefined `window`
+  variable → `mc.getWindow()`.
+- [x] `content/redstone/displayLink/DisplayLinkBlockEntity.java` (clean) — dead CC:Tweaked
+  `PeripheralCapability` import; missing `implements TransformableBlockEntity` despite already having
+  the matching `transform()` method (recurring bug, same shape as `MechanicalCrafterBlockEntity`/
+  `BasinBlockEntity`/`ItemVaultBlockEntity` from earlier sessions).
+- [x] `content/logistics/packagerLink/PackagerLinkBlockEntity.java`, `LogisticsManager.java` (both
+  clean) — `isTargetingSameInventory(identifier)`/`getSummary(identifier)` referenced an undefined
+  `identifier` variable; the real in-scope param is `ignoredHandler` (an `IdentifiedInventory` record) —
+  `isTargetingSameInventory` wants the record's `.identifier()` accessor (an `InventoryIdentifier`),
+  while `getSummary` wants the whole `IdentifiedInventory` record directly — different target types, so
+  checked each call site's real parameter type rather than assuming the same fix applied to both.
+- [x] `content/logistics/packagePort/PackagePortTargetSelectionHandler.java`,
+  `content/kinetics/chainConveyor/ChainConveyorInteractionHandler.java` (both clean) — `Items.TOOLS_WRENCH`/
+  `Tags.Items.TOOLS_WRENCH` (both wrong classes, recurring bug) → `AllItemTags.WRENCH.tag`; dead NeoForge
+  `Tags` and dead `ReachUtil` imports.
+- [x] `impl/unpacking/CrafterUnpackingHandler.java` (clean) — `order.stacks()` referenced an undefined
+  `order` variable; the method's real parameter is `orderContext` (a `PackageOrderWithCrafts`, which has
+  its own `.stacks()` accessor) — another instance of the "leftover variable name from before a
+  rename/refactor" bug shape seen repeatedly this session.
+- [x] `infrastructure/ponder/AllCreatePonderScenes.java` (clean) — `com.tterrag.registrate.fabric.RegistryObject`
+  doesn't exist at all (confirmed via jar listing — registrate's `BlockEntry` constructor now wants
+  porting-lib's `DeferredHolder` instead, confirmed via `javap`) → `DeferredHolder.create(ResourceKey.create(Registries.BLOCK, ...))`.
+
+## Done this session (batch 59)
+Trajectory: 311 → 271 (confirmed) — biggest single-batch drop this session, ~25 files.
+- [x] `content/processing/recipe/ProcessingRecipeSerializer.java` (clean, second pass) — the batch-57
+  lambda fix wasn't the real issue: `StandardProcessingRecipe.Builder<T>` requires `T extends
+  StandardProcessingRecipe<?>`, but the method's own `T` is only bound to the broader `ProcessingRecipe<?,?>`
+  interface, so no `T` can ever satisfy both bounds simultaneously without an unchecked escape hatch —
+  switched the local `builder` variable to a raw `StandardProcessingRecipe.Builder` (matching the
+  `@SuppressWarnings({"unchecked","rawtypes"})` already sitting on that declaration) with a final
+  unchecked `(T) builder.build()` cast at the return.
+- [x] `content/processing/burner/BlazeBurnerHandler.java`, `content/logistics/funnel/FunnelMovementBehaviour.java`,
+  `content/logistics/packagerLink/LogisticsManager.java` (all clean) — three more instances of the
+  "leftover `event`/undefined-variable from an incomplete NeoForge-event-to-plain-param rename" bug
+  shape (established pattern all session) — real in-scope replacements were `hitResult`,
+  `TransferUtil.insertItemStacked` (porting-lib's `ItemHandlerHelper.insertItemStacked` doesn't exist),
+  and `ignoredHandler` respectively.
+- [x] `content/logistics/packager/PackagerBlock.java` (clean) — `be.unwrapBox(stack, true/false)` passed
+  raw booleans where the method now takes a real fabric `TransactionContext` (simulate vs. commit is no
+  longer a boolean flag, it's whether the transaction gets `.commit()`ed) — wrapped in explicit
+  simulate-then-real `Transaction.openOuter()` blocks.
+- [x] `content/logistics/stockTicker/StockKeeperCategoryScreen.java` (clean) — dead `ScreenWithStencils`
+  import (class doesn't exist anywhere, confirmed unused in the file body — not even a renamed class,
+  genuinely never existed on the fabric side); `GuiGraphics#drawString` wants `int` x/y, not `float`
+  (confirmed via `javap` — every overload takes `int, int`).
+- [x] `content/contraptions/elevator/ElevatorContactBlock.java`, `content/kinetics/steamEngine/PoweredShaftBlock.java`
+  (both clean) — two more instances of the `getCloneItemStack` NeoForge-patched-signature-vs-vanilla-`Block`
+  bug from `BlazeBurnerBlock.java` (batch 50) — swept and confirmed no more instances remain codebase-wide.
+- [x] `content/contraptions/actors/seat/SeatBlock.java`, `content/trains/track/FakeTrackBlock.java` (both
+  clean) — the last 2 remaining `BlockPathTypes` → `PathType` rename instances (same fix as `BeltBlock.java`,
+  earlier session) — swept and confirmed none left.
+- [x] `content/contraptions/mounted/CartAssemblerBlockItem.java` (clean) — the last non-deferred
+  `MinecartAndRailUtil` dead-class holdout (only `MinecartController.java`, deferred-complex, still has
+  one) → `state.getValue(((BaseRailBlock) block).getShapeProperty())` (established replacement).
+- [x] **Dead `ReachUtil` import sweep — 6 more files** (`SuperGlueHandler.java`, `SuperGlueSelectionHandler.java`,
+  `SuperGlueSelectionPacket.java`, `HighlightCommand.java`, `LecternControllerBlockEntity.java`,
+  `ChainPackageInteractionHandler.java`) — grepped the whole codebase for the class name; only
+  `SuperGlueHandler.java` had a real call site (→ `Attributes.BLOCK_INTERACTION_RANGE`, same as
+  `BigOutlines.java`/`ChainConveyorInteractionHandler.java` earlier), the other 5 were dead imports only.
+- [x] `AllEntityTypes.java` (clean) — `EntityTypes.TELEPORTING_NOT_SUPPORTED` referenced a class that was
+  never imported (and doesn't exist under that name anyway) — real symbol is fabric-api's own
+  `net.fabricmc.fabric.api.tag.convention.v2.ConventionalEntityTypeTags.TELEPORTING_NOT_SUPPORTED`
+  (confirmed via `javap`, a `TagKey<EntityType<?>>`).
+- [x] `content/logistics/box/PackageEntity.java` (clean) — `build()` was typed against
+  `EntityType.Builder<?>` (vanilla) while every sibling entity's `build()` (e.g. `SeatEntity.java`) uses
+  `FabricEntityTypeBuilder<?>` — retyped and swapped the vanilla-only `.sized(w, h)` for the fabric
+  builder's real `.dimensions(EntityDimensions.fixed(w, h))`.
+- [x] `AllSoundEvents.java` (clean) — two `getMainEventHolder()` overrides returned a plain `SoundEvent`
+  where the interface wants `Holder<SoundEvent>` → `BuiltInRegistries.SOUND_EVENT.wrapAsHolder(...)`
+  (confirmed via `javap` on vanilla `Registry` — the real registry-bound holder wrapper, not a
+  standalone `Holder.direct`).
+- [x] `compat/Mods.java`, `AllBlockSpoutingBehaviours.java` (both clean) — `Mods.BOTANIA` was referenced
+  but genuinely never added as an enum constant (Botania is on the deprioritized-mods list, but the
+  compile error itself was a one-line fix — added the enum entry rather than deleting the whole guarded
+  branch, consistent with how every other mod's optional-compat branch in this file is written).
+- [x] `api/data/recipe/ItemApplicationRecipeGen.java` (clean) — `Tags.Items.STRIPPED_LOGS`/`STRIPPED_WOODS`
+  don't exist on porting-lib's own `Tags` class → fabric-api's `ConventionalItemTags` (both fields
+  confirmed present via `javap` on the resolved 2.11.1 jar, same tag-class swap pattern as `AllItems.java`
+  and `CreateMechanicalCraftingRecipeGen.java` from earlier sessions).
+- [x] `api/behaviour/display/DisplayTarget.java` (clean) — `BlockEntity#getCustomData()` doesn't exist on
+  vanilla `BlockEntity` at all (confirmed via `javap`) — real replacement is porting-lib's
+  `BlockEntityInjection#getPortingLibPersistentData()` mixin default method (the fabric-side equivalent
+  of Forge's classic "attach arbitrary persistent NBT to any block entity" concept). **Note: many other
+  files call `.getCustomData()` too, but on `ItemStack`/`Entity` receivers where a real method by that
+  name exists — this fix applies only to `BlockEntity` receivers; don't blanket-replace every occurrence.**
+- [x] `content/equipment/toolbox/ToolboxHandlerClient.java` (clean) — same undefined-`window` bug as
+  `LinkedControllerClientHandler.java` above → `mc.getWindow()`.
+- [x] `content/equipment/armor/RemainingAirOverlay.java` (clean) — NeoForge's `FluidType`-based
+  `Entity#getEyeInFluidType()`/`#canDrownInFluidType(FluidType)` extensions have no fabric port at all —
+  `DivingHelmetItem.java` already established the real replacement pattern for this exact concern
+  (`Entity#isEyeInFluid(TagKey<Fluid>)`, vanilla) — applied the same here with `FluidTags.WATER`. Swept
+  the codebase afterward; no more `getEyeInFluidType`/`canDrownInFluidType` call sites remain.
+- [x] `content/equipment/blueprint/BlueprintMenu.java` (clean) — missing `EnvType`/`Environment` imports
+  entirely (not a leftover-annotation bug, just never added).
+
+**Current verified baseline: 271 errors** (down from 503 at the start of this session, ~4,130 at the very
+start of the port — see `/tmp/cr_verify12.log`/`/tmp/error_files.txt`, container-local scratch files).
 Non-deprioritized frontier is now thin: `BlueprintEntity.java` (20, deferred multi-part feature),
 `MinecartController.java` (18, deferred fabric-attachment-API redesign), `StockTickerInteractionHandler.java`
 (1 remaining error, deferred — needs the `ExtendedScreenHandlerFactory` redesign above), and a long tail of
-~100 files with 1-4 errors each scattered across nearly every content package — no single shared root
+~75 files with 1-4 errors each scattered across nearly every content package — no single shared root
 cause found across dozens sampled this session (each is its own small distinct bug: missing imports,
 NeoForge-patched-method signature mismatches, a couple of undefined-variable leftovers, the occasional
 genuinely-removed vanilla API needing a `javap`-verified replacement). The deprioritized compat mods

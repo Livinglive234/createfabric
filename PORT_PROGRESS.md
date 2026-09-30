@@ -12,7 +12,7 @@ Baseline compile counts (full clean `./gradlew compileJava`, not incremental):
 - After bulk import-restoration script (see below), 267 files / 552 imports: 2,964 errors
 - After fixing ProcessingRecipeSerializer.java (stale pre-refactor dead code): 2,942 errors
 - After ChuteBlockEntity/ItemDrainBlock/AllItemAttributeTypes (Capabilities.* → Fabric Storage/BlockApiCache) + ClientEvents (AllFluids import, ClientWorldEvents wrong package, duplicate CommonEvents registration) + CreateEmptyingRecipeGen (NeoForgeMod.MILK → Milk.STILL_MILK): pending re-verify (cr_verify10.log)
-- **Current (batch 54, fresh-container verified): 389 errors** — see "Session resumed" / batch 50-54 notes near the end of this file for the full trajectory from the last documented checkpoint (503) through this session's confirmed 478 → 455 → 441 → 407 → 395 → 389.
+- **Current (batch 57, fresh-container verified): 330 errors** — see "Session resumed" / batch 50-57 notes near the end of this file for the full trajectory from the last documented checkpoint (503) through this session's confirmed 478 → 455 → 441 → 407 → 395 → 389 → 367 → 345 → 330. Development also moved from a throwaway session branch onto `main` directly partway through (see "Branch consolidation" note below) — all commits from batch 56 onward are on `main`.
 
 ## Bulk import-restoration technique (big win — use again if a similar wave of import loss shows up)
 The "merge picked wrong side and dropped imports" bug (see session summary) turned out to affect
@@ -1835,13 +1835,118 @@ Trajectory: 395 → 389 (confirmed).
   static constants on the class, confirmed via `javap`) → built the same infinite bounds manually with
   `new AABB(NEGATIVE_INFINITY..., POSITIVE_INFINITY...)`.
 
-**Current verified baseline: 389 errors** (down from 503 at the start of this session, ~4,130 at the very
-start of the port — see `/tmp/cr_verify7.log`/`/tmp/error_files.txt`, container-local scratch files).
+## Branch consolidation
+Repo owner asked to stop working on the throwaway session branch and roll everything into `main`
+directly. `main` was a strict ancestor of `claude/focused-euler-auneot` (fast-forward, zero commits lost,
+no force-push needed) — pushed `origin/claude/focused-euler-auneot` onto `origin/main`, switched the
+local checkout to track `main`, and all commits from here on go straight to `main`. The old branch was
+deleted locally; deleting it on GitHub itself needs someone with real delete-ref rights (this session's
+push credentials got a 403 trying, and no GitHub API tool available in-session exposes branch deletion) —
+harmless either way since everything is already on `main`.
+
+## Done this session (batch 56)
+Trajectory: 367 → 345 (confirmed).
+- [x] **DeployerHandler.java / CobbleGenLevel.java / NonVisualizationLevel.java (all clean)** — same
+  porting-lib "extensions"-module version-skew diamond conflict as the `snapshotParticipant()` fix from
+  an earlier session, this time on `isAreaLoaded(BlockPos, int)` between `LevelReaderInjection` and
+  `LevelReaderExtensions` (both mixin-inject default implementations into `WrappedLevel` subclasses,
+  neither overrides the other) — same fix shape: an explicit override delegating to the wrapped `level`
+  field. **If this diamond-conflict pattern turns up on a third method beyond `snapshotParticipant`/
+  `isAreaLoaded`, grep the compile log for "inherits unrelated defaults for" to find every affected
+  `WrappedLevel` subclass at once.**
+- [x] `DeployerHandler.java` (clean) — `ItemStack#doesSneakBypassUse(Level, BlockPos, Player)` is a
+  NeoForge item hook with no fabric port at all (confirmed via `javap` — not on `Item` either); NeoForge's
+  own default implementation returns `false` for virtually every item, so hardcoded `false` (TODO fabric).
+- [x] `DeployerItemHandler.java`, `ItemHandlerBeltSegment.java`, `content/logistics/tunnel/BrassTunnelItemHandler.java`,
+  `content/logistics/depot/DepotItemHandler.java`, `content/fluids/drain/ItemDrainItemHandler.java` (all
+  clean) — swept the recurring `Item#getMaxStackSize()` doesn't exist bug across every remaining
+  `resource.getItem().getMaxStackSize()`/`variant.getItem().getMaxStackSize()` call site codebase-wide
+  (`grep -rn` confirmed these were the last 5) → `getDefaultMaxStackSize()`.
+- [x] `DeployerItemHandler.java` (clean) — porting-lib's `ItemHandlerHelper.copyStackWithSize` doesn't
+  exist (established replacement from earlier sessions) → `ItemStack#copyWithCount`.
+- [x] `content/fluids/FlowSource.java` (clean) — missing `BlockEntity` import (plain miss, not a
+  renamed/moved class).
+- [x] `content/logistics/chute/ChuteBlockEntity.java` (clean) — `setLevel()` assigned to `capAbove`/
+  `capBelow`, two fields **never declared anywhere in the class** — confirmed via grep that the class's
+  real per-direction capability lookup goes entirely through the already-working `capCaches`/
+  `grabCapability(Direction)` system elsewhere in the file; this was dead leftover code from an abandoned
+  earlier design, not a real regression — dropped the two broken assignments.
+- [x] `content/logistics/box/PackageItem.java` (clean) — `ItemVariant#hasNbt()`/`#getNbt()` don't exist
+  (pre-data-component-system NBT API) → read the same `AllDataComponents.PACKAGE_ADDRESS` component the
+  sibling `ItemStack`-based overload already uses, via `variant.toStack().getOrDefault(...)`.
+- [x] `content/equipment/sandPaper/SandPaperItem.java` (clean) — same `Item#hasCraftingRemainingItem`/
+  `#getCraftingRemainingItem`-live-on-`Item`-not-`ItemStack` bug as `RecipeApplier.java` (batch 52).
+- [x] `content/equipment/extendoGrip/ExtendoGripItem.java` (clean) — same `doesSneakBypassUse` gap as
+  `DeployerHandler.java` above, but here it's the item's actual *intended* behavior (letting the Extendo
+  Grip use blocks while sneaking is the whole point of the item), not a dead check — documented as a real
+  TODO fabric gap needing a Mixin into the relevant `Player`/`ServerPlayerGameMode` use-item-on logic to
+  restore properly, rather than silently hardcoding a value like the `DeployerHandler.java` case. Also
+  dropped the already-dead, already-commented-out-at-its-only-use-site `SimpleCustomRenderer` import.
+- [x] `content/fluids/FluidPropagator.java` (clean) — dead NeoForge `Capabilities`/`IFluidHandler`
+  imports, neither referenced anywhere in the file body.
+
+## Done this session (batch 57)
+Trajectory: 345 → 330 (confirmed).
+- [x] `content/equipment/bell/SoulParticle.java`, `SoulBaseParticle.java` (both clean) — same
+  `ParticleHelper.setStoppedByCollision` doesn't exist bug fixed in `CubeParticle.java` (batch 56) →
+  `Particle#stoppedByCollision` public field directly. **Swept the whole codebase for remaining
+  `ParticleHelper` references afterward — none left.**
+- [x] `content/processing/sequenced/SequencedAssemblyRecipe.java` (clean) — missing `RecipeWrapper` import.
+- [x] `content/processing/recipe/ProcessingRecipeSerializer.java` (clean) — `T::getProcessingDuration`/
+  `T::getRequiredHeat` method references failed generic type inference against
+  `RecordCodecBuilder`/`RecipeBuilder`'s bounds (T only has a wildcard-bounded `ProcessingRecipe<?, ?>`
+  upper bound, which method-reference inference handles less permissively than an explicit lambda) →
+  swapped both for plain lambdas (`i -> i.getProcessingDuration()`), which infer fine.
+- [x] `content/processing/basin/BasinRecipe.java` (clean) — two bugs: `rollResults()` needs a
+  `RandomSource` arg now (no-arg overload doesn't exist) → `basin.getLevel().random`;
+  `new DummyCraftingContainer(availableItems, extractedItemsFromSlot)` passed 2 args including a
+  never-declared `extractedItemsFromSlot` variable, but the real constructor only takes 1 arg
+  (`NonNullList<ItemStack>`) → the already-in-scope `consumedItems` list (exactly that type, already
+  populated by the ingredient-matching loop just above) is the correct single argument.
+- [x] `content/logistics/redstoneRequester/RedstoneRequesterMenu.java` (clean) — missing `ItemStack`
+  import; nested `SorterProofSlot` was typed to take `SlottedStorage<ItemVariant>` but the real
+  `SlotItemHandler` base class needs this project's own `SlottedStackStorage` interface (which
+  `ItemStackHandler`, the type of the `ghostInventory` field actually passed in, already implements).
+- [x] `content/logistics/item/filter/attribute/ItemAttribute.java` (clean) — the last remaining
+  `CatnipCodecUtils.decodeOrNull` holdout codebase-wide (swept and confirmed none left) → `.decode(...).orElse(null)`.
+- [x] `content/logistics/item/filter/attribute/attributes/ShulkerFillLevelAttribute.java` (clean) —
+  `ItemContainerContents#getSlotCount()` doesn't exist on the vanilla class at all (confirmed via
+  `javap` — it only implements a porting-lib mixin interface, `ItemContainerContentsInjection`, whose
+  default method `port_lib$getSlots()` is the real replacement, directly callable with no cast since
+  the interface is implemented directly).
+- [x] `content/logistics/item/filter/attribute/AllItemAttributeTypes.java` (clean) — `ComposterBlock.getValue(ItemStack)`
+  doesn't exist (confirmed via `javap` — no such static method); the real API is the class's own public
+  `Object2FloatMap<ItemLike> COMPOSTABLES` field → `ComposterBlock.COMPOSTABLES.getFloat(s.getItem()) > 0`.
+  Also another `getTagEnchantments()` → `getEnchantments()` instance.
+- [x] `content/fluids/tank/storage/FluidTankMountedStorage.java` (clean) — dead `CreateCodecs` import
+  (wrong package on top of being entirely unused — real class lives under `foundation.codec`, not
+  `foundation.utility`); `getCapacity()` returns `long` but the codec field wants `Integer` → cast.
+- [x] `content/fluids/tank/FluidTankItem.java` (clean) — `BlockItem.getBlockEntityData(ItemStack)`
+  doesn't exist (confirmed via `javap` — no such static method); real 1.21.1 API is checking the
+  `DataComponents.BLOCK_ENTITY_DATA` component directly via `item.has(...)`.
+- [x] `content/logistics/stockTicker/StockTickerInteractionHandler.java` (partial — 1 of 2 errors fixed,
+  the other genuinely deferred) — dead `NetworkHooks` import removed, but the actual
+  `sp.openMenu(provider, buf -> {...})` 2-arg call (needed here because `showLockOption`/
+  `isCurrentlyLocked`/the target `BlockPos` are real per-open server-computed data, not something the
+  client can re-derive) is **left broken on purpose**: vanilla's replacement mechanism for this
+  (`ExtendedScreenHandlerFactory`/`ExtendedScreenHandlerType` from `fabric-screen-handler-api-v1`,
+  confirmed present in the resolved dependencies) pairs with a *different* `MenuType` registration
+  shape than what `AllMenuTypes.java`'s `Create.registrate().menu(...)` (a `MenuBuilder.ForgeMenuFactory`-
+  based builder, name says it all) currently produces — fixing this one menu properly means either
+  extending the registrate menu-builder to support the extended type, or hand-registering just this one
+  `MenuType` outside registrate. Investigated but didn't attempt a shaky partial fix; only one other call
+  site in the whole codebase has this exact shape (`BlueprintEntity.java`, already flagged as deferred-
+  complex), so this is a contained, well-scoped follow-up, not a sweep-blocking issue.
+
+**Current verified baseline: 330 errors** (down from 503 at the start of this session, ~4,130 at the very
+start of the port — see `/tmp/cr_verify10.log`/`/tmp/error_files.txt`, container-local scratch files).
 Non-deprioritized frontier is now thin: `BlueprintEntity.java` (20, deferred multi-part feature),
-`MinecartController.java` (18, deferred fabric-attachment-API redesign), and a long tail of ~150 files
-with 2-4 errors each scattered across nearly every content package — no single shared root cause found
-in a sample of ~10 of them (each is its own small distinct bug: missing imports, NeoForge-patched-method
-signature mismatches, a couple of undefined-variable leftovers). The deprioritized compat mods
+`MinecartController.java` (18, deferred fabric-attachment-API redesign), `StockTickerInteractionHandler.java`
+(1 remaining error, deferred — needs the `ExtendedScreenHandlerFactory` redesign above), and a long tail of
+~100 files with 1-4 errors each scattered across nearly every content package — no single shared root
+cause found across dozens sampled this session (each is its own small distinct bug: missing imports,
+NeoForge-patched-method signature mismatches, a couple of undefined-variable leftovers, the occasional
+genuinely-removed vanilla API needing a `javap`-verified replacement). The deprioritized compat mods
 (JourneyMap/EMI/FTB/REI/sandwichable/CC:Tweaked) still account for the single biggest chunks
 (`JourneyTrainMap.java` 48, `CreateEmiPlugin.java` 46, `FTBChunksTrainMap.java` 32, `CreateREI.java` 30,
 plus several more REI/EMI/FTB files in the 6-10 range).

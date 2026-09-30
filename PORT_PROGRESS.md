@@ -14,6 +14,17 @@ Baseline compile counts (full clean `./gradlew compileJava`, not incremental):
 - After ChuteBlockEntity/ItemDrainBlock/AllItemAttributeTypes (Capabilities.* → Fabric Storage/BlockApiCache) + ClientEvents (AllFluids import, ClientWorldEvents wrong package, duplicate CommonEvents registration) + CreateEmptyingRecipeGen (NeoForgeMod.MILK → Milk.STILL_MILK): pending re-verify (cr_verify10.log)
 - **Current (batch 60, fresh-container verified): 252 errors** — see "Session resumed" / batch 50-60 notes near the end of this file for the full trajectory from the last documented checkpoint (503) through this session's confirmed 478 → 455 → 441 → 407 → 395 → 389 → 367 → 345 → 330 → 311 → 271 → 252. Development also moved from a throwaway session branch onto `main` directly partway through (see "Branch consolidation" note below) — all commits from batch 56 onward are on `main`.
 
+## Workflow note: batch fixes before recompiling (user preference, established batch 64)
+Fix several small files per round (a handful to a dozen, depending on how independent/low-risk they are) and run
+**one** verification compile for the whole batch, rather than editing a single file and recompiling immediately
+after each one. Full clean-ish compiles take ~30s-1.5min each, so one-file-at-a-time wastes a compile cycle per
+fix for no extra safety — the frontier list from the previous compile already tells you which files are broken and
+why, so most small fixes (dead imports, wrong param types, missing `implements`, undefined leftover vars) don't
+need a solo compile to sanity-check before batching. Still compile between batches (don't go more than roughly
+10-20 files without re-verifying), and still do a solo/small-batch compile for anything non-trivial or uncertain
+(new classes, API-shape guesses not already confirmed via `javap`, anything touching shared/base classes many
+files depend on).
+
 ## Bulk import-restoration technique (big win — use again if a similar wave of import loss shows up)
 The "merge picked wrong side and dropped imports" bug (see session summary) turned out to affect
 **267 files**, not just the handful found by manual `git show HEAD:<path>` diffing. Wrote

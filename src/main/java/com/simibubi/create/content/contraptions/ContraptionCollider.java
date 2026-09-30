@@ -66,11 +66,9 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 
-import io.github.fabricators_of_create.porting_lib.util.EnvExecutor;
 import java.util.ArrayList;
 import org.apache.commons.lang3.mutable.MutableFloat;
 import org.apache.commons.lang3.mutable.MutableObject;
-import com.simibubi.create.foundation.collision.ContinuousOBBCollider.ContinuousSeparationManifold;
 import net.createmod.catnip.data.Iterate;
 
 public class ContraptionCollider {
@@ -228,7 +226,7 @@ public class ContraptionCollider {
 						movingInteractionBehaviour.handleEntityCollision(entity, pos, contraptionEntity);
 
 					bounce = BlockHelper.getBounceMultiplier(blockState.getBlock());
-					slide = Math.max(0, blockState.getFriction(contraption.collisionLevel, pos, entity) - .6f);
+					slide = Math.max(0, blockState.getBlock().getFriction() - .6f);
 				}
 			}
 

@@ -101,7 +101,7 @@ public class BlazeBurnerBlock extends HorizontalDirectionalBlock implements IBE<
 	}
 
 	@Override
-	public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, Player player) {
+	public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
 		return getLitOrUnlitStack(state);
 	}
 
@@ -259,7 +259,7 @@ public class BlazeBurnerBlock extends HorizontalDirectionalBlock implements IBE<
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void animateTick(BlockState state, Level world, BlockPos pos, RandomSource random) {
 		if (random.nextInt(10) != 0)
 			return;

@@ -19,6 +19,7 @@ import net.createmod.catnip.render.ShadedBlockSbbBuilder;
 import net.createmod.catnip.render.SuperByteBuffer;
 import net.createmod.catnip.render.SuperByteBufferCache;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
@@ -35,8 +36,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
-
-import net.neoforged.neoforge.client.model.data.ModelData;
 
 public class ContraptionEntityRenderer<C extends AbstractContraptionEntity> extends EntityRenderer<C> {
 	public static final SuperByteBufferCache.Compartment<Pair<Contraption, RenderType>> CONTRAPTION = new SuperByteBufferCache.Compartment<>();
@@ -68,14 +67,12 @@ public class ContraptionEntityRenderer<C extends AbstractContraptionEntity> exte
 			BlockState state = blocks.lookup().apply(pos);
 			if (state.getRenderShape() == RenderShape.MODEL) {
 				BakedModel model = dispatcher.getBlockModel(state);
-				ModelData modelData = renderWorld.getModelData(pos);
-				modelData = model.getModelData(renderWorld, pos, state, modelData);
 				long randomSeed = state.getSeed(pos);
 				random.setSeed(randomSeed);
-				if (model.getRenderTypes(state, random, modelData).contains(layer)) {
+				if (ItemBlockRenderTypes.getChunkRenderType(state) == layer) {
 					poseStack.pushPose();
 					poseStack.translate(pos.getX(), pos.getY(), pos.getZ());
-					renderer.tesselateBlock(renderWorld, model, state, pos, poseStack, sbbBuilder, true, random, randomSeed, OverlayTexture.NO_OVERLAY, modelData, layer);
+					renderer.tesselateBlock(renderWorld, model, state, pos, poseStack, sbbBuilder, true, random, randomSeed, OverlayTexture.NO_OVERLAY);
 					poseStack.popPose();
 				}
 			}

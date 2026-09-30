@@ -4,23 +4,16 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.simibubi.create.content.processing.recipe.ProcessingRecipe;
 
-import io.netty.handler.codec.DecoderException;
+import net.fabricmc.fabric.api.recipe.v1.ingredient.DefaultCustomIngredients;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.Recipe;
-import com.google.gson.JsonParseException;
 import com.simibubi.create.AllRecipeTypes;
-import com.simibubi.create.content.processing.recipe.ProcessingRecipeSerializer;
-import net.createmod.catnip.registry.RegisteredObjectsHelper;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 
 public class SequencedRecipe<T extends ProcessingRecipe<?, ?>> {
 	public static final Codec<SequencedRecipe<?>> CODEC = AllRecipeTypes.CODEC
-		.<ProcessingRecipe<?, ?>>dispatch(ProcessingRecipe::getRecipeType, AllRecipeTypes::processingCodec)
+		.<ProcessingRecipe<?, ?>>dispatch(r -> (AllRecipeTypes) r.getTypeInfo(), AllRecipeTypes::processingCodec)
 		.validate(r -> r instanceof IAssemblyRecipe ? DataResult.success(r) :
 			DataResult.error(() -> r.getType() + " is not a supported recipe type"))
 		.xmap(SequencedRecipe::new, SequencedRecipe::getRecipe);
@@ -43,11 +36,26 @@ public class SequencedRecipe<T extends ProcessingRecipe<?, ?>> {
 		return wrapped;
 	}
 
+	@SuppressWarnings("unchecked")
+	void writeToBuffer(RegistryFriendlyByteBuf buffer) {
+		AllRecipeTypes type = (AllRecipeTypes) wrapped.getTypeInfo();
+		buffer.writeEnum(type);
+		RecipeSerializer<T> serializer = type.getSerializer();
+		serializer.streamCodec().encode(buffer, wrapped);
+	}
+
+	@SuppressWarnings("unchecked")
+	static SequencedRecipe<?> readFromBuffer(RegistryFriendlyByteBuf buffer) {
+		AllRecipeTypes type = buffer.readEnum(AllRecipeTypes.class);
+		RecipeSerializer<ProcessingRecipe<?, ?>> serializer = type.getSerializer();
+		return new SequencedRecipe<>(serializer.streamCodec().decode(buffer));
+	}
+
 	void initFromSequencedAssembly(SequencedAssemblyRecipe parent, boolean isFirst) {
 		if (getAsAssemblyRecipe().supportsAssembly()) {
 			Ingredient transit = Ingredient.of(parent.getTransitionalItem());
 			wrapped.getIngredients()
-					.set(0, isFirst ? CompoundIngredient.of(transit, parent.getIngredient()) : transit);
+					.set(0, isFirst ? DefaultCustomIngredients.any(transit, parent.getIngredient()) : transit);
 		}
 	}
 }

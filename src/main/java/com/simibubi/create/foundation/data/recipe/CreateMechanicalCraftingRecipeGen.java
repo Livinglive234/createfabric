@@ -14,7 +14,7 @@ import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.crafting.Ingredient;
 
 import io.github.fabricators_of_create.porting_lib.tags.Tags;
-import net.neoforged.neoforge.common.Tags.Items;
+import net.fabricmc.fabric.api.tag.convention.v2.ConventionalItemTags;
 
 /**
  * Create's own Data Generation for Mechanical Crafting recipes
@@ -38,9 +38,9 @@ public final class CreateMechanicalCraftingRecipeGen extends MechanicalCraftingR
 
 	WAND_OF_SYMMETRY =
 		create(AllItems.WAND_OF_SYMMETRY::get).recipe(b -> b.key('E', Ingredient.of(Tags.Items.ENDER_PEARLS))
-			.key('G', Ingredient.of(Items.GLASS_BLOCKS))
+			.key('G', Ingredient.of(ConventionalItemTags.GLASS_BLOCKS))
 			.key('P', I.precisionMechanism())
-			.key('O', Ingredient.of(Items.OBSIDIANS))
+			.key('O', Ingredient.of(ConventionalItemTags.OBSIDIANS))
 			.key('B', Ingredient.of(I.brass()))
 			.patternLine(" G ")
 			.patternLine("GEG")

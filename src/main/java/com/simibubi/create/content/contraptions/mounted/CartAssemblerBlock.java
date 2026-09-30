@@ -237,12 +237,6 @@ public class CartAssemblerBlock extends BaseRailBlock
 	}
 
 	@Override
-	@NotNull
-	public PushReaction getPistonPushReaction(@NotNull BlockState state) {
-		return PushReaction.BLOCK;
-	}
-
-	@Override
 	public Class<CartAssemblerBlockEntity> getBlockEntityClass() {
 		return CartAssemblerBlockEntity.class;
 	}

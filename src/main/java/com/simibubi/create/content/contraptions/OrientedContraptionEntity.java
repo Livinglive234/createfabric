@@ -21,8 +21,6 @@ import com.simibubi.create.foundation.mixin.accessor.MinecartFurnaceAccessor;
 
 import dev.engine_room.flywheel.lib.transform.TransformStack;
 
-import io.github.fabricators_of_create.porting_lib.util.MinecartAndRailUtil;
-
 import net.createmod.catnip.data.Couple;
 import net.createmod.catnip.math.AngleHelper;
 import net.createmod.catnip.math.VecHelper;
@@ -389,8 +387,7 @@ public class OrientedContraptionEntity extends AbstractContraptionEntity {
 				BlockPos railPosition = minecartEntity.getCurrentRailPos();
 				BlockState blockState = level().getBlockState(railPosition);
 				if (blockState.getBlock() instanceof BaseRailBlock abstractRailBlock) {
-					RailShape railDirection =
-						MinecartAndRailUtil.getDirectionOfRail(blockState, level(), railPosition, abstractRailBlock);
+					RailShape railDirection = blockState.getValue(abstractRailBlock.getShapeProperty());
 					motion = VecHelper.project(motion, MinecartSim2020.getRailVec(railDirection));
 				}
 			}

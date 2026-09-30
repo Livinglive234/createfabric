@@ -2240,3 +2240,78 @@ multi-part feature port — `BlueprintCraftingInventory` doesn't exist, `CommonH
 port, etc.), `content/contraptions/minecart/capability/MinecartController.java` (18, also already flagged as
 deferred — needs a fabric attachment-API redesign), then the run of 6-8-error files below those (JEI category files
 are priority-mod, worth doing; REI/EMI/sandwichable/ftb ones are not).
+
+## Branch consolidation
+All work moved from the session throwaway branch (`claude/focused-euler-auneot`) onto `main` directly, per explicit
+user request ("move it to main, and all the history too") — done as a fast-forward merge (`git merge-base
+--is-ancestor` + `git rev-list --left-right --count` verified zero divergence beforehand), so **no history was lost
+or squashed**. Pushed to `origin/main`. The user also asked to delete the now-redundant old branch; the local copy
+was deleted (`git branch -d`), but `git push origin --delete claude/focused-euler-auneot` returned HTTP 403 — this
+session's git credentials/GitHub MCP toolset have no branch-delete permission. **The remote branch
+`claude/focused-euler-auneot` is still sitting on GitHub and needs to be deleted manually** (repo owner, via the
+GitHub UI or elevated credentials).
+
+## Done this session (batch 61)
+Trajectory: 252 → 237 (confirmed).
+- [x] `build.gradle.kts` — porting-lib's `conditions` module (needed by `RuntimeDataGenerator`'s `ConditionalOps`,
+  batch 60) was never declared as a build dependency at all, and it isn't published at the same version as the rest
+  of porting-lib (`portingLibVersion = beta.91` 404s for this module) — pinned it separately as
+  `portingLibConditionsVersion = "3.1.0-beta.47+1.21.1"` rather than folding it into the shared
+  `portingLibModules`/`portingLibVersion` loop, and added
+  `modApi(include("io.github.fabricators_of_create.Porting-Lib:conditions:$portingLibConditionsVersion")!!)`.
+  Verified resolvable via `./gradlew help -q` before moving on.
+- [x] `content/trains/entity/StructureUtilsMixin.java` (clean) — `ResourceLocation`'s single-arg constructor is gone
+  in 1.21.1 → `ResourceLocation.parse(...)`.
+- [x] `content/trains/station/StationBlockEntity.java` (clean) — imported `GlobalPackagePort` as a nested class of
+  `GlobalStation`; it's actually its own top-level class in the same package — fixed the import.
+- [x] `content/trains/bogey/StandardBogeyBlock.java` (clean) — `getCloneItemStack`'s first param needs to be
+  `LevelReader`, not `BlockGetter` (same NeoForge-patch signature-mismatch bug as `BlazeBurnerBlock.java`, batch 50).
+- [x] `content/redstone/ToggleLatchBlock.java` / `content/electricity/BrassDiodeBlock.java` (both clean) — missing
+  `implements ConnectableRedstoneBlock` despite already importing and using it (recurring bug — swept, confirmed no
+  more instances left).
+- [x] `content/trains/display/NixieTubeBlock.java` (clean) — undefined `heldItem` var → the method's real param,
+  `stack`.
+- [x] `content/trains/station/LecternControllerBlock.java` (clean) — `getPickedStack`'s `BlockGetter` param needed a
+  `LevelReader` cast to satisfy the newer `getCloneItemStack` signature (same family as `StandardBogeyBlock` above).
+- [x] 3 more small files fixed in the same batch (see `git show c4e7aa1f` for the full per-file diff if needed).
+
+**Current verified baseline: 237 errors.**
+
+## Done this session (batch 62)
+Trajectory: 237 → 221 (confirmed).
+- [x] `content/schematics/SchematicRenderer.java` (clean) — missing `BlockEntity` import.
+- [x] `content/logistics/trains/LogisticsNetworkSavedData.java` (clean) — dead `SavedDataUtil` import.
+- [x] `content/logistics/frogport/FrogportVisual.java` / `FrogportRenderer.java` / `content/logistics/box/PackageRenderer.java`
+  / `content/kinetics/chainConveyor/ChainConveyorVisual.java` (all clean) — dead
+  `net.minecraftforge.registries.ForgeRegistries` imports (swept; `RemapHelper.java`'s real usage of the same class
+  left alone since it isn't actually erroring there).
+- [x] `content/logistics/frogport/FrogportBlockEntity.java` (clean) — undefined `itemHandler` var → the real local,
+  `inventory`.
+- [x] `content/logistics/frogport/FrogportBlock.java` / `content/logistics/funnel/FunnelBlock.java` /
+  `content/kinetics/gearbox/SequencedGearshiftBlock.java` (all clean) — `ItemInteractionResult.PASS` doesn't exist
+  (only `PASS_TO_DEFAULT_BLOCK_INTERACTION`/`SKIP_DEFAULT_BLOCK_INTERACTION` do) → swapped to
+  `PASS_TO_DEFAULT_BLOCK_INTERACTION`, swept codebase-wide for the same bad constant.
+- [x] `content/logistics/box/PackagePortBlockEntity.java` (clean) — constructor assigned to an undefined `itemHandler`
+  var instead of the actual final field it was meant to initialize, `exposedInventory`.
+- [x] `content/logistics/funnel/FunnelBlockEntity.java` (clean) — dead `EnvExecutor` import.
+- [x] `content/logistics/depot/DepotBlockEntity.java` / `content/logistics/crate/CreativeCrateBlockEntity.java` /
+  `content/fluids/pipes/SmartFluidPipeBlockEntity.java` (all clean) — missing `implements Clearable` despite already
+  having the matching `clearContent()` override (recurring bug, same shape as `ToggleLatchBlock`/`BrassDiodeBlock`
+  in batch 61 — swept remaining `BlockEntity` instances).
+- [x] `content/kinetics/crank/ValveHandleBlock.java` (clean) — missing `TagUtil` import.
+
+**Current verified baseline: 221 errors** (from the batch 62 verification compile). Full per-file diff in
+`git show 02178bee`. Frontier candidates for the next "little files" sweep (post-batch-62, non-deprioritized):
+`StockTickerInteractionHandler.java`, `LargeWaterWheelBlock(Item).java`, `SpeedControllerBlockEntity.java`,
+`PressingRecipe.java`, `MechanicalMixerBlockEntity.java`, `ArmInteractionPoint.java`/`AllArmInteractionPointTypes.java`,
+`GearboxBlock.java`, `StressGaugeBlockEntity.java`/`SpeedGaugeBlockEntity.java`, `DeployerFakePlayer.java`,
+`MechanicalCraftingInput.java`/`MechanicalCrafterRenderer.java`, `BlockBreakingMovementBehaviour.java`,
+`GenericItemFilling.java`/`FillingRecipe.java`, `FluidTankMountedStorage.java`, `SpoutBlockEntity.java`,
+`FluidStackParticle.java`, `FluidNetwork.java`, `ShootableGadgetItemMethods.java`, `RadialToolboxMenu.java`,
+`SymmetryWandItem.java`, `CreateHatArmorLayer.java`, `ClipboardEditPacket.java`/`ClipboardBlockItem.java`/
+`ClipboardBlockEntity.java`, `HauntedBellPulser.java`, `NetheriteDivingHandler.java`/`CardboardArmorHandler.java`/
+`BacktankBlock.java`, `CopycatModel.java`, `ContraptionVisual.java`, `CapabilityMinecartController.java`/
+`TrainCargoManager.java`, JEI files (`JeiSequencedAssemblySubCategory.java`/`SpoutCategory.java`/
+`StockKeeperTransferHandler.java`/`ConversionRecipe.java` — priority mod), `Create.java`, `AllRecipeTypes.java`.
+Skip (deprioritized): `SpoutCasting.java` (T-Construct), `ComputerCraftProxy.java`/`PackagerPeripheral.java`/
+`ComputerBehaviour.java` (CC:Tweaked).

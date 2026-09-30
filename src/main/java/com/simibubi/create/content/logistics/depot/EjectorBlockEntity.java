@@ -71,6 +71,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult.Type;
 import net.minecraft.world.phys.Vec3;
@@ -626,7 +627,8 @@ public class EjectorBlockEntity extends KineticBlockEntity implements SidedStora
 	@Override
 	@Environment(EnvType.CLIENT)
 	public AABB getRenderBoundingBox() {
-		return AABB.INFINITE;
+		return new AABB(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY,
+			Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
 	}
 
 	private static abstract class EntityHack extends Entity {

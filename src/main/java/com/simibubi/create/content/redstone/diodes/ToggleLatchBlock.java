@@ -24,7 +24,7 @@ import net.minecraft.world.level.block.state.StateDefinition.Builder;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.InteractionResult;
-import io.github.fabricators_of_create.porting_lib.block.ConnectableRedstoneBlock;
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.ConnectableRedstoneBlock;
 
 public class ToggleLatchBlock extends AbstractDiodeBlock {
 

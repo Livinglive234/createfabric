@@ -45,7 +45,6 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 import net.fabricmc.fabric.api.entity.FakePlayer;
 
-import io.github.fabricators_of_create.porting_lib.util.NetworkHooks;
 import io.github.fabricators_of_create.porting_lib.util.TagUtil;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.item.component.ItemContainerContents;
@@ -162,7 +161,7 @@ public class ToolboxBlock extends HorizontalDirectionalBlock implements SimpleWa
 			return ItemInteractionResult.SUCCESS;
 
 		withBlockEntityDo(level, pos,
-			toolbox -> player.openMenu(toolbox, toolbox::sendToMenu));
+			toolbox -> player.openMenu(toolbox));
 		return ItemInteractionResult.SUCCESS;
 	}
 

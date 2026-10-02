@@ -91,6 +91,7 @@
     "fabric.ClientTextTooltipAccessor",
     "fabric.GuiAccessor",
     "fabric.LivingEntityRendererAccessor",
+    "fabric.RenderTargetMixin",
     "fabric.infra.GuiGraphicsMixin",
     "fabric.infra.GuiMixin",
     "fabric.infra.MultiPlayerGameModeMixin",

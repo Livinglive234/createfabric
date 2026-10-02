@@ -37,8 +37,8 @@ public abstract class StructureBlockEntityMixin implements StructureBlockEntityE
 		}
 	}
 
-	@Inject(method = "load", at = @At("TAIL"))
-	private void loadIsGameTest(CompoundTag tag, CallbackInfo ci) {
+	@Inject(method = "loadAdditional", at = @At("TAIL"))
+	private void loadIsGameTest(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries, CallbackInfo ci) {
 		this.isGameTest = tag.contains("create:is_game_test");
 	}
 

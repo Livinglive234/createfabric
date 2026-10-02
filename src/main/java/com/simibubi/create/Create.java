@@ -20,6 +20,8 @@ import com.simibubi.create.content.fluids.tank.BoilerHeaters;
 import com.simibubi.create.content.kinetics.TorquePropagator;
 import com.simibubi.create.content.kinetics.fan.processing.AllFanProcessingTypes;
 import com.simibubi.create.content.kinetics.mechanicalArm.AllArmInteractionPointTypes;
+import com.simibubi.create.content.kinetics.mechanicalArm.ArmInteractionPointType;
+import com.simibubi.create.content.kinetics.fan.processing.FanProcessingTypeRegistry;
 import com.simibubi.create.content.logistics.item.filter.attribute.AllItemAttributeTypes;
 import com.simibubi.create.content.logistics.packagePort.AllPackagePortTargetTypes;
 import com.simibubi.create.content.logistics.packager.AllInventoryIdentifiers;
@@ -189,7 +191,12 @@ public class Create implements ModInitializer {
 
 	public static void onRegister() {
 		AllArmInteractionPointTypes.init();
+		// fabric: NeoForge bakes this registry's sorted-type cache automatically once registration completes
+		// (RegistryBuilder#onBake); fabric has no equivalent hook, so it's triggered explicitly right after the
+		// entries are actually registered. See CreateBuiltInRegistries for the rest of this explanation.
+		ArmInteractionPointType.init();
 		AllFanProcessingTypes.init();
+		FanProcessingTypeRegistry.init();
 		AllItemAttributeTypes.init();
 		AllContraptionTypes.init();
 		AllPotatoProjectileRenderModes.init();

@@ -20,7 +20,6 @@ import com.simibubi.create.api.equipment.potatoCannon.PotatoProjectileBlockHitAc
 import com.simibubi.create.api.equipment.potatoCannon.PotatoProjectileEntityHitAction;
 import com.simibubi.create.api.equipment.potatoCannon.PotatoProjectileRenderMode;
 import com.simibubi.create.content.kinetics.fan.processing.FanProcessingType;
-import com.simibubi.create.content.kinetics.fan.processing.FanProcessingTypeRegistry;
 import com.simibubi.create.content.kinetics.mechanicalArm.ArmInteractionPointType;
 import com.simibubi.create.content.logistics.item.filter.attribute.ItemAttributeType;
 import com.simibubi.create.content.logistics.packagePort.PackagePortTargetType;
@@ -35,8 +34,14 @@ import net.minecraft.resources.ResourceKey;
  * @see CreateRegistries
  */
 public class CreateBuiltInRegistries {
-	public static final Registry<ArmInteractionPointType> ARM_INTERACTION_POINT_TYPE = simpleWithFreezeCallback(CreateRegistries.ARM_INTERACTION_POINT_TYPE, ArmInteractionPointType::init);
-	public static final Registry<FanProcessingType> FAN_PROCESSING_TYPE = simpleWithFreezeCallback(CreateRegistries.FAN_PROCESSING_TYPE, FanProcessingTypeRegistry::init);
+	// fabric: NeoForge's RegistryBuilder#onBake runs its callback once the registry is actually frozen
+	// (after all mod registration), not synchronously at registry creation. Fabric has no equivalent hook here,
+	// so ArmInteractionPointType.init()/FanProcessingTypeRegistry.init() are instead called explicitly from
+	// Create.onRegister(), after AllArmInteractionPointTypes.init()/AllFanProcessingTypes.init() have actually
+	// populated these registries. Calling them here (synchronously, on an empty registry, during this very
+	// static initializer) would NPE on this class's own fields before they're even assigned.
+	public static final Registry<ArmInteractionPointType> ARM_INTERACTION_POINT_TYPE = simple(CreateRegistries.ARM_INTERACTION_POINT_TYPE);
+	public static final Registry<FanProcessingType> FAN_PROCESSING_TYPE = simple(CreateRegistries.FAN_PROCESSING_TYPE);
 	public static final Registry<ItemAttributeType> ITEM_ATTRIBUTE_TYPE = simple(CreateRegistries.ITEM_ATTRIBUTE_TYPE);
 	public static final Registry<DisplaySource> DISPLAY_SOURCE = simple(CreateRegistries.DISPLAY_SOURCE);
 	public static final Registry<DisplayTarget> DISPLAY_TARGET = simple(CreateRegistries.DISPLAY_TARGET);
@@ -49,23 +54,17 @@ public class CreateBuiltInRegistries {
 	public static final Registry<MapCodec<? extends PotatoProjectileBlockHitAction>> POTATO_PROJECTILE_BLOCK_HIT_ACTION = simple(CreateRegistries.POTATO_PROJECTILE_BLOCK_HIT_ACTION);
 
 	private static <T> Registry<T> simple(ResourceKey<Registry<T>> key) {
-		return register(key, false, () -> {});
-	}
-
-	private static <T> Registry<T> simpleWithFreezeCallback(ResourceKey<Registry<T>> key, Runnable onBakeCallback) {
-		return register(key, false, onBakeCallback);
+		return register(key, false);
 	}
 
 	private static <T> Registry<T> withIntrusiveHolders(ResourceKey<Registry<T>> key) {
-		return register(key, true, () -> {});
+		return register(key, true);
 	}
 
-	private static <T> Registry<T> register(ResourceKey<Registry<T>> key, boolean hasIntrusiveHolders, Runnable onBakeCallback) {
-		Registry<T> registry = FabricRegistryBuilder.from(new MappedRegistry<>(key, Lifecycle.stable(), hasIntrusiveHolders))
+	private static <T> Registry<T> register(ResourceKey<Registry<T>> key, boolean hasIntrusiveHolders) {
+		return FabricRegistryBuilder.from(new MappedRegistry<>(key, Lifecycle.stable(), hasIntrusiveHolders))
 			.attribute(RegistryAttribute.SYNCED)
 			.buildAndRegister();
-		onBakeCallback.run();
-		return registry;
 	}
 
 	@Internal

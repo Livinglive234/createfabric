@@ -26,12 +26,11 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
-import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidTank;
 
 public class FluidTankMountedStorage extends WrapperMountedFluidStorage<Handler> implements SyncedMountedStorage {
 	public static final MapCodec<FluidTankMountedStorage> CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
-		ExtraCodecs.NON_NEGATIVE_INT.fieldOf("capacity").forGetter(i -> (int) i.getCapacity()),
+		ExtraCodecs.NON_NEGATIVE_INT.fieldOf("capacity").forGetter(s -> (int) s.getCapacity()),
 		FluidStack.OPTIONAL_CODEC.fieldOf("fluid").forGetter(FluidTankMountedStorage::getFluid)
 	).apply(i, FluidTankMountedStorage::new));
 

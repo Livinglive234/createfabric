@@ -2343,3 +2343,29 @@ Trajectory: 220 → 219 (confirmed).
   `FunnelBlockEntity.java`/`ContraptionCollider.java` earlier batches), never referenced in the file body.
 
 **Current verified baseline: 219 errors.**
+
+## Done this session (batch 65, first batched-fix round)
+Trajectory: 219 → 213 (confirmed). First batch fixed per the new workflow note above — 6 independent files, one
+verification compile.
+- [x] `content/kinetics/base/BlockBreakingMovementBehaviour.java` (clean) — `getSoundType(world, breakingPos, null)`
+  is a NeoForge-patched 3-arg overload; vanilla `BlockStateBase#getSoundType()` takes no args (same family as the
+  `getFriction`/`getCloneItemStack` NeoForge-patch mismatches found repeatedly this session) → `stateToBreak.getSoundType()`.
+- [x] `content/fluids/tank/storage/FluidTankMountedStorage.java` (clean) — the codec's outer `RecordCodecBuilder.mapCodec(i -> ...)`
+  lambda param and an inner `forGetter(i -> ...)` lambda param both named `i`, which javac rejects as shadowing in
+  the same scope → renamed the inner one to `s`. Also removed a duplicate `FluidStack` import (same class imported
+  twice, harmless but dead weight).
+- [x] `content/decoration/copycat/CopycatModel.java` (clean) — `Block.shouldRenderFace(material, world, pos, face,
+  neighbourPos)` referenced an undefined `world` var; the method's real parameter is named `level`
+  (`BlockAndTintGetter level`) → fixed the reference.
+- [x] `content/fluids/particle/FluidStackParticle.java` (clean) — leftover `clientFluid.getTintColor(fluid)` call
+  referencing a field that was commented out during the port (`IClientFluidTypeExtensions clientFluid` has no fabric
+  port) — replaced with the same `FluidVariantRenderHandler`/`FluidVariantRendering.getHandlerOrDefault(...)` pattern
+  already used in this class's own constructor, calling `handler.getColor(fluid.getVariant(), level,
+  BlockPos.containing(x, y, z))` instead.
+- [x] `content/equipment/toolbox/RadialToolboxMenu.java` (clean) — called a nonexistent `getMinecraft()` method;
+  this class already uses `Minecraft.getInstance()` directly a few lines earlier in the same file — matched that.
+- [x] `content/equipment/zapper/ShootableGadgetItemMethods.java` (clean) — `item.getUseDuration()` called with no
+  args, but `ItemStack#getUseDuration` takes a `LivingEntity` in 1.21.1 → `item.getUseDuration(player)` (`player` is
+  already a method param here).
+
+**Current verified baseline: 213 errors.**

@@ -62,7 +62,7 @@ public abstract class CopycatModel extends ForwardingBakedModel implements Custo
 			if (!copycatBlock.canFaceBeOccluded(state, face))
 				continue;
 			MutableBlockPos neighbourPos = mutablePos.setWithOffset(pos, face);
-			if (!Block.shouldRenderFace(material, world, pos, face, neighbourPos))
+			if (!Block.shouldRenderFace(material, level, pos, face, neighbourPos))
 				occlusionData.occlude(face);
 		}
 	}

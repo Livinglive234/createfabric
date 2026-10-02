@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import com.simibubi.create.AllPackets;
+import net.createmod.catnip.platform.CatnipServices;
 import com.simibubi.create.content.equipment.blueprint.BlueprintScreen;
 import com.simibubi.create.content.logistics.filter.AbstractFilterScreen;
 import com.simibubi.create.content.logistics.filter.AttributeFilterScreen;
@@ -110,7 +111,7 @@ public class GhostIngredientHandler<T extends GhostItemMenu<?>>
 				return;
 
 			// sync new filter contents with server
-			AllPackets.getChannel().sendToServer(new GhostItemSubmitPacket(stack, slotIndex));
+			CatnipServices.NETWORK.sendToServer(new GhostItemSubmitPacket(stack, slotIndex));
 		}
 
 		@Override

@@ -5,6 +5,7 @@ import java.util.List;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import com.simibubi.create.AllPackets;
+import net.createmod.catnip.platform.CatnipServices;
 import com.simibubi.create.content.equipment.blueprint.BlueprintAssignCompleteRecipePacket;
 import com.simibubi.create.content.equipment.blueprint.BlueprintMenu;
 
@@ -41,7 +42,7 @@ public class BlueprintTransferHandler implements EmiRecipeHandler<BlueprintMenu>
 	public boolean craft(EmiRecipe recipe, EmiCraftContext<BlueprintMenu> context) {
 		if (recipe instanceof EmiCraftingRecipe craftingRecipe) {
 			Minecraft.getInstance().setScreen(context.getScreen());
-			AllPackets.getChannel().sendToServer(new BlueprintAssignCompleteRecipePacket(craftingRecipe.getId()));
+			CatnipServices.NETWORK.sendToServer(new BlueprintAssignCompleteRecipePacket(craftingRecipe.getId()));
 			return true;
 		}
 		return false;

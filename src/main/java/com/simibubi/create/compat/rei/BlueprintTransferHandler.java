@@ -1,6 +1,7 @@
 package com.simibubi.create.compat.rei;
 
 import com.simibubi.create.AllPackets;
+import net.createmod.catnip.platform.CatnipServices;
 import com.simibubi.create.content.equipment.blueprint.BlueprintAssignCompleteRecipePacket;
 import com.simibubi.create.content.equipment.blueprint.BlueprintScreen;
 
@@ -19,7 +20,7 @@ public class BlueprintTransferHandler implements TransferHandler {
 			if (d.getDisplayLocation().isPresent()) {
 				if (d.getCategoryIdentifier().toString().equals("minecraft:plugins/crafting")) {
 					if (context.isActuallyCrafting()) {
-						AllPackets.getChannel().sendToServer(new BlueprintAssignCompleteRecipePacket(d.getDisplayLocation().get()));
+						CatnipServices.NETWORK.sendToServer(new BlueprintAssignCompleteRecipePacket(d.getDisplayLocation().get()));
 						context.getMinecraft().setScreen(blueprint);
 					}
 					return Result.createSuccessful();

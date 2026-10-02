@@ -29,7 +29,7 @@ public enum SpoutCasting implements BlockSpoutingBehaviour {
 		if (blockEntity == null)
 			return 0;
 
-		Storage<FluidVariant> handler = TransferUtil.getFluidStorage(level, pos, blockEntity, Direction.UP);
+		Storage<FluidVariant> handler = TransferUtil.getFluidStorage(level, pos, Direction.UP);
 		if (handler == null)
 			return 0;
 

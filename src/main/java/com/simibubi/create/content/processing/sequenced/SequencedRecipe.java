@@ -12,11 +12,40 @@ import com.simibubi.create.AllRecipeTypes;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 
 public class SequencedRecipe<T extends ProcessingRecipe<?, ?>> {
-	public static final Codec<SequencedRecipe<?>> CODEC = AllRecipeTypes.CODEC
-		.<ProcessingRecipe<?, ?>>dispatch(r -> (AllRecipeTypes) r.getTypeInfo(), AllRecipeTypes::processingCodec)
-		.validate(r -> r instanceof IAssemblyRecipe ? DataResult.success(r) :
-			DataResult.error(() -> r.getType() + " is not a supported recipe type"))
-		.xmap(SequencedRecipe::new, SequencedRecipe::getRecipe);
+	// fabric: lazily computed to break a circular static-init dependency - constructing
+	// AllRecipeTypes.SEQUENCED_ASSEMBLY (an enum constant, initialized before any static fields declared after
+	// it, like AllRecipeTypes.CODEC) loads this class, which would otherwise dereference AllRecipeTypes.CODEC
+	// while it's still null. This datafixerupper version has no Codec.lazyInitialized, so the delay is done by
+	// hand via a memoizing holder instead.
+	private static Codec<SequencedRecipe<?>> lazyCodec;
+
+	private static Codec<SequencedRecipe<?>> lazyCodec() {
+		Codec<SequencedRecipe<?>> result = lazyCodec;
+		if (result == null) {
+			result = AllRecipeTypes.CODEC
+				.<ProcessingRecipe<?, ?>>dispatch(r -> (AllRecipeTypes) r.getTypeInfo(), AllRecipeTypes::processingCodec)
+				.validate(r -> r instanceof IAssemblyRecipe ? DataResult.success(r) :
+					DataResult.error(() -> r.getType() + " is not a supported recipe type"))
+				.xmap(SequencedRecipe::new, SequencedRecipe::getRecipe);
+			lazyCodec = result;
+		}
+		return result;
+	}
+
+	public static final Codec<SequencedRecipe<?>> CODEC = Codec.of(
+		new com.mojang.serialization.Encoder<SequencedRecipe<?>>() {
+			@Override
+			public <T> DataResult<T> encode(SequencedRecipe<?> input, com.mojang.serialization.DynamicOps<T> ops, T prefix) {
+				return lazyCodec().encode(input, ops, prefix);
+			}
+		},
+		new com.mojang.serialization.Decoder<SequencedRecipe<?>>() {
+			@Override
+			public <T> DataResult<com.mojang.datafixers.util.Pair<SequencedRecipe<?>, T>> decode(com.mojang.serialization.DynamicOps<T> ops, T input) {
+				return lazyCodec().decode(ops, input);
+			}
+		}
+	);
 
 	public static final StreamCodec<RegistryFriendlyByteBuf, SequencedRecipe<?>> STREAM_CODEC = StreamCodec.of(
 			(b, v) -> v.writeToBuffer(b), SequencedRecipe::readFromBuffer

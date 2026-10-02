@@ -182,11 +182,20 @@ public enum AllRecipeTypes implements IRecipeTypeInfo, StringRepresentable {
 		};
 	}
 
+	@SuppressWarnings("unchecked")
 	public <T extends ProcessingRecipe<?, ?>> MapCodec<T> processingCodec() {
 		if (!isProcessingRecipe)
 			throw new AssertionError("AllRecipeTypes#processingCodec called on " + name() + ", which is not a processing recipe");
-		if (this == DEPLOYING || this == ITEM_APPLICATION)
-			return ItemApplicationRecipe.codec(this);
+		if (this == DEPLOYING || this == ITEM_APPLICATION) {
+			// fabric: ItemApplicationRecipe.Serializer isn't a StandardProcessingRecipe.Serializer, so
+			// routing it through ProcessingRecipeSerializer.codec() (which hard-requires one) crashes
+			// with "Not a standard processing recipe serializer". Its own Serializer already builds the
+			// correct codec in its constructor (ProcessingRecipe.codec(factory,
+			// ItemApplicationRecipeParams.CODEC), which already includes "keep_held_item" - see
+			// ItemApplicationRecipeParams.CODEC), so just reuse that directly instead.
+			ItemApplicationRecipe.Serializer<?> serializer = getSerializer();
+			return (MapCodec<T>) serializer.codec();
+		}
 		return ProcessingRecipeSerializer.codec(this);
 	}
 }

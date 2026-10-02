@@ -1,14 +1,9 @@
 package com.simibubi.create.content.kinetics.deployer;
 
-import java.util.function.Function;
-
-import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.simibubi.create.AllRecipeTypes;
 import com.simibubi.create.content.processing.recipe.ProcessingRecipe;
 import com.simibubi.create.content.processing.recipe.ProcessingRecipeBuilder;
-import com.simibubi.create.content.processing.recipe.ProcessingRecipeSerializer;
 
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -21,17 +16,6 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.GsonHelper;
 
 public class ItemApplicationRecipe extends ProcessingRecipe<RecipeInput, ItemApplicationRecipeParams> {
-	public static <T extends ProcessingRecipe<?, ?>> MapCodec<T> codec(AllRecipeTypes recipeTypes) {
-		return RecordCodecBuilder.mapCodec(i -> i.group(
-			ProcessingRecipeSerializer.<T>codec(recipeTypes).forGetter(Function.identity()),
-			Codec.BOOL.optionalFieldOf("keep_held_item", false)
-				.forGetter(r -> r instanceof ItemApplicationRecipe iar && iar.keepHeldItem)
-		).apply(i, (parent, keepHeldItem) -> {
-			if (parent instanceof ItemApplicationRecipe iar)
-				iar.keepHeldItem = keepHeldItem;
-			return parent;
-		}));
-	}
 
 	private boolean keepHeldItem;
 

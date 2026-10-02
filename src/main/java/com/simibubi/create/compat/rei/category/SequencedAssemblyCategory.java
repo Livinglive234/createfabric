@@ -109,12 +109,12 @@ public class SequencedAssemblyCategory extends CreateRecipeCategory<SequencedAss
 
 			@Override
 			public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-				TooltipContext context = TooltipContext.of(new Point(mouseX, mouseY));
+				TooltipContext context = TooltipContext.of(new Point(mouseX, mouseY), net.minecraft.world.item.Item.TooltipContext.of(Minecraft.getInstance().level));
 				Point mouse = context.getPoint();
 				if (containsMouse(mouse)) {
 					for (Slot slot : Widgets.<Slot>walk(ingredients, listener -> listener instanceof Slot)) {
 						if (slot.containsMouse(mouse) && slot.isHighlightEnabled()) {
-							if (slot.getCurrentTooltip(TooltipContext.of(mouse)) != null) {
+							if (slot.getCurrentTooltip(TooltipContext.of(mouse, net.minecraft.world.item.Item.TooltipContext.of(Minecraft.getInstance().level))) != null) {
 								return;
 							}
 						}
@@ -273,7 +273,8 @@ public class SequencedAssemblyCategory extends CreateRecipeCategory<SequencedAss
 
 	private List<FluidIngredient> getAllFluidIngredients(SequencedAssemblyRecipe recipe) {
 		List<FluidIngredient> assemblyFluidIngredients = new ArrayList<>();
-		recipe.addAdditionalFluidIngredients(assemblyFluidIngredients);
+		for (com.simibubi.create.content.processing.sequenced.SequencedRecipe<?> sequencedRecipe : recipe.getSequence())
+			assemblyFluidIngredients.addAll(sequencedRecipe.getRecipe().getFluidIngredients());
 		return assemblyFluidIngredients;
 	}
 
@@ -281,7 +282,8 @@ public class SequencedAssemblyCategory extends CreateRecipeCategory<SequencedAss
 		List<Ingredient> assemblyIngredients = new ArrayList<>();
 		assemblyIngredients.add(recipe.getIngredient());
 		assemblyIngredients.add(Ingredient.of(recipe.getTransitionalItem()));
-		recipe.addAdditionalIngredientsAndMachines(assemblyIngredients);
+		for (com.simibubi.create.content.processing.sequenced.SequencedRecipe<?> sequencedRecipe : recipe.getSequence())
+			assemblyIngredients.addAll(sequencedRecipe.getRecipe().getIngredients());
 		return assemblyIngredients;
 	}
 

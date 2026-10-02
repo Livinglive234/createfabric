@@ -19,7 +19,6 @@ import com.simibubi.create.AllCreativeModeTabs.RegistrateDisplayItemsGenerator;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.AllRecipeTypes;
 import com.simibubi.create.Create;
-import com.simibubi.create.compat.recipeViewerCommon.HiddenItems;
 import com.simibubi.create.compat.rei.category.BlockCuttingCategory;
 import com.simibubi.create.compat.rei.category.BlockCuttingCategory.CondensedBlockCuttingRecipe;
 import com.simibubi.create.compat.rei.category.CreateRecipeCategory;
@@ -92,13 +91,13 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.AbstractCookingRecipe;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.ShapedRecipe;
 import net.minecraft.world.item.crafting.SmokingRecipe;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Blocks;
 
-import io.github.fabricators_of_create.porting_lib.mixin.accessors.common.accessor.RecipeManagerAccessor;
 
 @SuppressWarnings("unused")
 @ParametersAreNonnullByDefault
@@ -174,7 +173,7 @@ public class CreateREI implements REIClientPlugin {
 
 		autoShapeless = builder(BasinRecipe.class)
 				.enableWhen(c -> c.allowShapelessInMixer)
-				.addAllRecipesIf(r -> r instanceof CraftingRecipe && !(r instanceof ShapedRecipe)
+				.addAllRecipesIfFromHolders(r -> r instanceof CraftingRecipe && !(r instanceof ShapedRecipe)
 								&& r.getIngredients()
 								.size() > 1
 								&& !MechanicalPressBlockEntity.canCompress(r) && !AllRecipeTypes.shouldIgnoreInAutomation(r),
@@ -187,7 +186,7 @@ public class CreateREI implements REIClientPlugin {
 				.build("automatic_shapeless", MixingCategory::autoShapeless),
 
 		brewing = builder(BasinRecipe.class)
-				.addRecipes(() -> PotionMixingRecipes.ALL)
+				.addRecipes(() -> PotionMixingRecipes.createRecipes(Minecraft.getInstance().level).stream().map(RecipeHolder::value).toList())
 				.catalyst(AllBlocks.MECHANICAL_MIXER::get)
 				.catalyst(AllBlocks.BASIN::get)
 				.doubleItemIcon(AllBlocks.MECHANICAL_MIXER.get(), Blocks.BREWING_STAND)
@@ -206,7 +205,7 @@ public class CreateREI implements REIClientPlugin {
 
 		autoSquare = builder(BasinRecipe.class)
 				.enableWhen(c -> c.allowShapedSquareInPress)
-				.addAllRecipesIf(
+				.addAllRecipesIfFromHolders(
 						r -> (r instanceof CraftingRecipe) && !(r instanceof MechanicalCraftingRecipe)
 								&& MechanicalPressBlockEntity.canCompress(r) && !AllRecipeTypes.shouldIgnoreInAutomation(r),
 						BasinRecipe::convertShapeless)
@@ -242,15 +241,15 @@ public class CreateREI implements REIClientPlugin {
 
 		item_application = builder(ItemApplicationRecipe.class)
 				.addTypedRecipes(AllRecipeTypes.ITEM_APPLICATION)
-				.addRecipes(LogStrippingFakeRecipes::createRecipes)
+				.addRecipes(() -> LogStrippingFakeRecipes.createRecipes().stream().map(RecipeHolder::value).toList())
 				.itemIcon(AllItems.BRASS_HAND.get())
 				.emptyBackground(177, 66)
 				.build("item_application", ItemApplicationCategory::new),
 
 		deploying = builder(DeployerApplicationRecipe.class)
 				.addTypedRecipes(AllRecipeTypes.DEPLOYING)
-				.addTypedRecipes(AllRecipeTypes.SANDPAPER_POLISHING::getType, DeployerApplicationRecipe::convert)
-				.addTypedRecipes(AllRecipeTypes.ITEM_APPLICATION::getType, ManualApplicationRecipe::asDeploying)
+				.addTypedRecipesFromHolders(AllRecipeTypes.SANDPAPER_POLISHING::getType, DeployerApplicationRecipe::convert)
+				.addTypedRecipesFromHolders(AllRecipeTypes.ITEM_APPLICATION::getType, ManualApplicationRecipe::asDeploying)
 				.catalyst(AllBlocks.DEPLOYER::get)
 				.catalyst(AllBlocks.DEPOT::get)
 				.catalyst(AllItems.BELT_CONNECTOR::get)
@@ -438,8 +437,22 @@ public class CreateREI implements REIClientPlugin {
 			}));
 		}
 
+		/**
+		 * fabric: like {@link #addAllRecipesIf(Predicate, Function)}, but for converter factories that need the
+		 * real {@link RecipeHolder} itself (e.g. to derive a synthetic id from the holder's real id), not just
+		 * the unwrapped recipe.
+		 */
+		public CategoryBuilder<T> addAllRecipesIfFromHolders(Predicate<Recipe<?>> pred, Function<RecipeHolder<?>, RecipeHolder<T>> converter) {
+			return addRecipeListConsumer(recipes -> consumeAllRecipeHolders(holder -> {
+				if (pred.test(holder.value())) {
+					recipes.add(converter.apply(holder).value());
+				}
+			}));
+		}
+
+		@SuppressWarnings("unchecked")
 		public CategoryBuilder<T> addTypedRecipes(IRecipeTypeInfo recipeTypeEntry) {
-			return addTypedRecipes(recipeTypeEntry::getType);
+			return addTypedRecipes(() -> (RecipeType<? extends T>) recipeTypeEntry.getType());
 		}
 
 		public CategoryBuilder<T> addTypedRecipes(Supplier<RecipeType<? extends T>> recipeType) {
@@ -448,6 +461,17 @@ public class CreateREI implements REIClientPlugin {
 
 		public CategoryBuilder<T> addTypedRecipes(Supplier<RecipeType<? extends T>> recipeType, Function<Recipe<?>, T> converter) {
 			return addRecipeListConsumer(recipes -> CreateREI.<T>consumeTypedRecipes(recipe -> recipes.add(converter.apply(recipe)), recipeType.get()));
+		}
+
+		/**
+		 * fabric: like {@link #addTypedRecipes(Supplier, Function)}, but for converter factories that need the
+		 * real {@link RecipeHolder} itself (e.g. to derive a synthetic id from the holder's real id), not just
+		 * the unwrapped recipe.
+		 */
+		public CategoryBuilder<T> addTypedRecipesFromHolders(Supplier<RecipeType<?>> recipeType,
+				Function<RecipeHolder<?>, RecipeHolder<T>> converter) {
+			return addRecipeListConsumer(recipes -> CreateREI.consumeTypedRecipeHolders(
+					holder -> recipes.add(converter.apply(holder).value()), recipeType.get()));
 		}
 
 		public CategoryBuilder<T> addTypedRecipesIf(Supplier<RecipeType<? extends T>> recipeType, Predicate<Recipe<?>> pred) {
@@ -575,15 +599,34 @@ public class CreateREI implements REIClientPlugin {
 	public static void consumeAllRecipes(Consumer<Recipe<?>> consumer) {
 		Minecraft.getInstance().level.getRecipeManager()
 			.getRecipes()
+			.forEach(holder -> consumer.accept(holder.value()));
+	}
+
+	public static void consumeAllRecipeHolders(Consumer<RecipeHolder<?>> consumer) {
+		Minecraft.getInstance().level.getRecipeManager()
+			.getRecipes()
 			.forEach(consumer);
 	}
 
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static <T extends Recipe<?>> void consumeTypedRecipes(Consumer<T> consumer, RecipeType<?> type) {
-		Map<ResourceLocation, Recipe<?>> map = ((RecipeManagerAccessor) Minecraft.getInstance()
+		List<RecipeHolder> holders = (List) Minecraft.getInstance()
 			.getConnection()
-			.getRecipeManager()).port_lib$getRecipes().get(type);
-		if (map != null) {
-			map.values().forEach(recipe -> consumer.accept((T) recipe));
+			.getRecipeManager()
+			.getAllRecipesFor((RecipeType) type);
+		for (RecipeHolder<?> holder : holders) {
+			consumer.accept((T) holder.value());
+		}
+	}
+
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	public static void consumeTypedRecipeHolders(Consumer<RecipeHolder<?>> consumer, RecipeType<?> type) {
+		List<RecipeHolder> holders = (List) Minecraft.getInstance()
+			.getConnection()
+			.getRecipeManager()
+			.getAllRecipesFor((RecipeType) type);
+		for (RecipeHolder<?> holder : holders) {
+			consumer.accept(holder);
 		}
 	}
 

@@ -57,9 +57,11 @@ public class PolishingCategory extends CreateRecipeCategory<SandPaperPolishingRe
 			return;
 
 
-		CompoundTag tag = renderedSandpaper.getOrCreateTag();
-		tag.put("Polishing", NBTSerializer.serializeNBT(matchingStacks[0]));
-		tag.putBoolean("JEI", true);
+		net.minecraft.core.HolderLookup.Provider registries = net.minecraft.client.Minecraft.getInstance().level.registryAccess();
+		net.minecraft.world.item.component.CustomData.update(net.minecraft.core.component.DataComponents.CUSTOM_DATA, renderedSandpaper, tag -> {
+			tag.put("Polishing", matchingStacks[0].save(registries));
+			tag.putBoolean("JEI", true);
+		});
 		GuiGameElement.of(renderedSandpaper)
 				.<GuiGameElement.GuiRenderBuilder>at(getDisplayWidth(null) / 2 - 16, 0, 0)
 				.scale(2)

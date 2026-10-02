@@ -1,12 +1,11 @@
 package com.simibubi.create.compat.rei.category.animations;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.math.Axis;
 import com.simibubi.create.AllBlocks;
-import com.simibubi.create.foundation.fluid.FluidRenderer;
 
 import net.createmod.catnip.gui.UIRenderHelper;
+import net.createmod.catnip.render.BasicFluidRenderer;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -36,13 +35,12 @@ public class AnimatedItemDrain extends AnimatedKinetics {
 			.scale(scale)
 			.render(graphics);
 
-		BufferSource buffer = MultiBufferSource.immediate(Tesselator.getInstance()
-			.getBuilder());
+		BufferSource buffer = graphics.bufferSource();
 		UIRenderHelper.flipForGuiRender(matrixStack);
 		matrixStack.scale(scale, scale, scale);
 		float from = 2/16f;
 		float to = 1f - from;
-		FluidRenderer.renderFluidBox(fluid.getFluid(), fluid.getAmount(), from, from, from, to, 3/4f, to, buffer, matrixStack, LightTexture.FULL_BRIGHT, false, true, fluid.getTag());
+		BasicFluidRenderer.renderFluidBox(fluid.getFluid(), fluid.getAmount(), from, from, from, to, 3/4f, to, buffer, matrixStack, LightTexture.FULL_BRIGHT, false, true, fluid.getComponentsPatch());
 		buffer.endBatch();
 
 		matrixStack.popPose();

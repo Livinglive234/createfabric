@@ -76,6 +76,9 @@ public class CreateMainMenuScreen extends AbstractSimiScreen {
 	public CreateMainMenuScreen(Screen parent) {
 		this.parent = parent;
 		returnOnClose = true;
+		// fabric: true when opened from the title screen (OpenCreateMenuButton) or ModMenu's mod list
+		// (CreateModMenuIntegration), false when opened from the in-game pause menu.
+		this.fromTitleOrMods = !(parent instanceof net.minecraft.client.gui.screens.PauseScreen);
 		if (parent instanceof TitleScreen)
 			vanillaPanorama = Screen.PANORAMA;
 		else

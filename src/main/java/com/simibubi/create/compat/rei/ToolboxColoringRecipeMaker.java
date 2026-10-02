@@ -46,8 +46,7 @@ public final class ToolboxColoringRecipeMaker {
 				Block coloredShulkerBox = AllBlocks.TOOLBOXES.get(color)
 					.get();
 				ItemStack output = new ItemStack(coloredShulkerBox);
-				ResourceLocation id = Create.asResource(group + "." + output.getDescriptionId());
-				return new ShapelessRecipe(id, group, CraftingBookCategory.MISC, output, inputs);
+				return new ShapelessRecipe(group, CraftingBookCategory.MISC, output, inputs);
 			});
 	}
 

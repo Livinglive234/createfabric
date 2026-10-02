@@ -155,6 +155,18 @@ public enum AllRecipeTypes implements IRecipeTypeInfo, StringRepresentable {
 		return !CAN_BE_AUTOMATED.test(recipe);
 	}
 
+	/**
+	 * fabric: convenience overload for callers (REI compat) that only have the bare recipe, not the
+	 * {@link RecipeHolder} it was looked up with - finds the real holder by identity so the id-based checks in
+	 * {@link #shouldIgnoreInAutomation(RecipeHolder)} still work.
+	 */
+	public static boolean shouldIgnoreInAutomation(Recipe<?> recipe) {
+		for (RecipeHolder<?> holder : net.minecraft.client.Minecraft.getInstance().level.getRecipeManager().getRecipes())
+			if (holder.value() == recipe)
+				return shouldIgnoreInAutomation(holder);
+		return false;
+	}
+
 	@Override
 	public @NotNull String getSerializedName() {
 		return id.toString();

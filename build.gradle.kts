@@ -8,7 +8,7 @@ val fapiVersion = "0.115.1+1.21.1"
 
 // in-house dependencies
 val flywheelVersion = "1.0.1-11"
-val ponderVersion = "1.0.44"
+val ponderVersion = "1.0.50"
 val registrateVersion = "1.3.77-MC1.21.1"
 val milkLibVersion = "1.1.0-patch+1.21.1"
 // https://mvn.devos.one/#/snapshots/io/github/fabricators_of_create/Porting-Lib

@@ -5,7 +5,13 @@ import java.util.function.Function;
 import com.simibubi.create.Create;
 import com.simibubi.create.compat.Mods;
 
-import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
+// fabric: net.caffeinemc.mods.sodium.api.texture.SpriteUtil (an interface with a static INSTANCE)
+// is a newer public API only present starting some version after 0.6.7 - confirmed via the actual
+// installed Sodium 0.6.7 jar, which only has the older static-method class below. That older class
+// is still present even in newer Sodium versions (0.6.9, which this project compiles against, ships
+// both), so using it directly maximizes compatibility across the Sodium versions actually in use
+// instead of requiring whatever newer version first introduced the api.texture package.
+import net.caffeinemc.mods.sodium.client.render.texture.SpriteUtil;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -35,10 +41,10 @@ public class SodiumCompat {
 		WorldRenderEvents.START.register(ctx -> {
 			Function<ResourceLocation, TextureAtlasSprite> atlas = Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS);
 			TextureAtlasSprite sawSprite = atlas.apply(SAW_TEXTURE);
-			SpriteUtil.INSTANCE.markSpriteActive(sawSprite);
+			SpriteUtil.markSpriteActive(sawSprite);
 
 			TextureAtlasSprite factoryPanelSprite = atlas.apply(FACTORY_PANEL_TEXTURE);
-			SpriteUtil.INSTANCE.markSpriteActive(factoryPanelSprite);
+			SpriteUtil.markSpriteActive(factoryPanelSprite);
 		});
 	}
 }

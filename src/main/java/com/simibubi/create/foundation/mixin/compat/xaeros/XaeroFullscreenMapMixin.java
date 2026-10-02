@@ -12,7 +12,7 @@ import com.simibubi.create.compat.trainmap.XaeroTrainMap;
 import net.minecraft.client.gui.GuiGraphics;
 import xaero.map.gui.GuiMap;
 
-@Mixin(GuiMap.class)
+@Mixin(value = GuiMap.class, remap = false)
 public abstract class XaeroFullscreenMapMixin {
 	@Unique
 	private boolean create$failedToRenderTrainMap = false;

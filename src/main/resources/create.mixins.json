@@ -92,8 +92,10 @@
     "fabric.GuiAccessor",
     "fabric.LivingEntityRendererAccessor",
     "fabric.RenderTargetMixin",
+    "fabric.infra.FabricClientHooksHelperMixin",
     "fabric.infra.GuiGraphicsMixin",
     "fabric.infra.GuiMixin",
+    "fabric.infra.ModMenuMixin",
     "fabric.infra.MultiPlayerGameModeMixin",
     "fabric.infra.block.ParticleEngineMixin"
   ],

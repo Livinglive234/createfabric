@@ -16,7 +16,8 @@ val portingLibVersion = "3.1.0-beta.91+1.21.1"
 val portingLibExtensionsVersion = "3.1.0-beta.54+1.21.1"
 val portingLibModules = listOf(
     "base", "blocks", "brewing", "client_events", "common", "core", "data",
-    "entity", "fluids", "items", "level_events", "mixin_extensions", "models", "resources", "tags", "transfer"
+    "entity", "fluids", "items", "level_events", "mixin_extensions", "models", "obj_loader", "resources", "tags",
+    "transfer"
 )
 // "conditions" and "accessors" aren't published at the same version as the rest of porting-lib (confirmed via
 // each module's own maven-metadata.xml: beta.91+ was never published for either at 1.21.1); pin them separately.
@@ -267,6 +268,7 @@ tasks.named<ProcessResources>("processResources") {
         "port_lib_client_events_version" to portingLibVersion,
         "port_lib_entity_version" to portingLibVersion,
         "port_lib_models_version" to portingLibVersion,
+        "port_lib_obj_loader_version" to portingLibVersion,
         "port_lib_transfer_version" to portingLibVersion
     )
 

@@ -38,15 +38,17 @@ jobs:
       # - name: Run Gametests
       #   run: ./gradlew runGametestServer
 
+      # Publishing targets mvn.devos.one, the upstream Fabricators-of-Create project's own Maven
+      # host - this fork has no credentials for it, so these steps only run there.
       - name: Publish to Maven [Releases]
-        if: ${{ github.event.inputs.release }}
+        if: ${{ github.repository == 'Fabricators-of-Create/Create' && github.event.inputs.release }}
         run: >-
           ./gradlew publishAllPublicationsToDevOsReleasesRepository
           -PdevOsReleasesUsername="${{ secrets.MAVEN_USER }}"
           -PdevOsReleasesPassword="${{ secrets.MAVEN_PASS }}"
 
       - name: Publish to Maven [Snapshots]
-        if: ${{ !github.event.inputs.release }}
+        if: ${{ github.repository == 'Fabricators-of-Create/Create' && !github.event.inputs.release }}
         run: >-
           ./gradlew publishAllPublicationsToDevOsSnapshotsRepository
           -PdevOsSnapshotsUsername="${{ secrets.MAVEN_USER }}"

@@ -2547,3 +2547,23 @@ Trajectory: 173 → 149 (confirmed). Per user direction: core files first, then 
 **Current verified baseline: 149 errors — all four core/deferred files confirmed clean. Every remaining error
 is now in an explicitly deprioritized mod's compat layer** (JourneyMap, EMI, REI, FTB Chunks, CC:Tweaked,
 T-Construct, Sandwichable). Next up per user direction: mod compats, starting with the smallest/cheapest files.
+
+## Done this session (batches 69-71 — mod compats, down to ZERO errors)
+Trajectory: 149 → 114 (batch 69: CC:Tweaked fixed, FTB/JourneyMap stubbed since no working fabric dependency
+exists for either, Sandwichable's NBT→data-component fix) → 85 → 37 (batch 70: EMI fully resolved - see commit
+`de1c49a6f8` for the full writeup, root cause was `Recipe#getId()` no longer existing in 1.21.1 plus
+`RecipeManager#getAllRecipesFor` returning `List<RecipeHolder<T>>` instead of the `List<T>` the whole plugin
+assumed) → 0 (batch 71: REI fully resolved - see commit `b564fdeabc`, same root causes as EMI plus REI's own
+`RecipeManagerAccessor`-mixin-that-never-existed, a few REI-API signature shifts, and one real unrelated latent
+bug in `CreateMainMenuScreen.java` that only surfaced once the rest of the project compiled far enough to
+reach it).
+
+**`Createfabric` now compiles with zero errors, only warnings (deprecations, unchecked casts).** FTB
+Chunks/Library and JourneyMap are stubbed to no-ops (no working fabric artifact exists for either at the
+pinned versions - see batch 69's commit message for the exact investigation) rather than genuinely ported;
+everything else, including every priority mod (Trinkets, JEI, Sodium, Mod Menu, Farmer's Delight, Xaero's) and
+every deprioritized one (EMI, REI, CC:Tweaked, Sandwichable, T-Construct), is a real fix, not a stub.
+
+Next steps for a future session: runtime testing (the project has never been run, only compiled - `./gradlew
+runClient` and working through whatever crashes on startup/world load is the natural next phase), and
+revisiting the FTB/JourneyMap stubs if working fabric dependencies for those become available.

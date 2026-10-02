@@ -2567,3 +2567,75 @@ every deprioritized one (EMI, REI, CC:Tweaked, Sandwichable, T-Construct), is a 
 Next steps for a future session: runtime testing (the project has never been run, only compiled - `./gradlew
 runClient` and working through whatever crashes on startup/world load is the natural next phase), and
 revisiting the FTB/JourneyMap stubs if working fabric dependencies for those become available.
+
+## Done this session (batches 72-82 — runtime testing, zero compile errors → clean client boot)
+
+This was the project's first ever `./gradlew runClient` attempt. Each batch below fixed exactly one crash,
+confirmed by relaunching and seeing the game progress further (a different, later failure) before moving on.
+Trajectory: processResources template failure → mod resolution/version mismatch → milk-lib fork swap (needed
+because tropheusj's pinned milk-lib predates 1.19 entirely - see earlier session) → `ARM_INTERACTION_POINT_TYPE`
+NPE → `StructureBlockEntityMixin`'s three stale injection targets → fabricloader version bump → `Ingredient$
+ValueMixin` codec-type mismatch → registrate `burnTime()` ordering bug + `StructureUtilsMixin`'s dead injection
+→ **batch 78** → **batch 82** below (all fixed this session):
+
+- **Batch 78 — `SequencedRecipe.java`'s circular static-init NPE.** `NullPointerException: ...
+  AllRecipeTypes.CODEC is null` thrown from `SequencedRecipe`'s own `<clinit>`, itself triggered transitively
+  while constructing `AllRecipeTypes.SEQUENCED_ASSEMBLY` (an enum constant, always initialized before any
+  static field declared later in the same enum, like `AllRecipeTypes.CODEC`). Fixed by delaying the actual
+  `AllRecipeTypes.CODEC.dispatch(...)` call until first real use via a hand-rolled memoizing `lazyCodec()`
+  holder (the pinned `datafixerupper:6.0.8` has no `Codec.lazyInitialized`), wrapped in a `Codec.of(Encoder,
+  Decoder)` using anonymous classes rather than lambdas (both `Encoder`/`Decoder`'s abstract methods are
+  themselves generic over a second type parameter, which javac can't infer through a lambda).
+- **Batch 79 — null packet codec in registrate-fabric's `MenuBuilder`.** `NullPointerException: packet codec
+  cannot be null` from `ExtendedScreenHandlerType`'s constructor, crashing on the very first Create menu
+  registered (`schematic_table`, but this would have hit every single menu). Root cause is in the
+  registrate-fabric library itself - its `MenuBuilder#createEntry` passes a literal `null` for the codec
+  argument, with the library's own source commented `// FIXME: pass packet codec here`. Fixed with
+  `MenuBuilderMixin`, a `@Redirect` on the `new ExtendedScreenHandlerType(...)` call (found via `javap -c`
+  disassembly of the actual dependency class) substituting a pass-through
+  `StreamCodec<RegistryFriendlyByteBuf, RegistryFriendlyByteBuf>` - Create's own menus already read their
+  extra constructor data straight off the raw buffer (NeoForge `IContainerFactory` convention), so the codec
+  doesn't need to decode anything, just hand the buffer through unchanged (confirmed against
+  fabric-screen-handler-api-v1's own `Networking`/`ClientNetworking` impl classes, decompiled from the
+  dependency jar, which call `encode`/`decode` directly against the outer packet's buffer with no other
+  processing).
+- **Batch 80 — `GuiMixin`'s stale helmet-overlay injection target.** `Mixin transformation of
+  net.minecraft.client.gui.Gui failed` - the `@ModifyExpressionValue` on `Inventory.getArmor(I)` targeted
+  `method = "render"`, but 1.21.1's `Gui#render(GuiGraphics, DeltaTracker)` is now just a one-line dispatch
+  into `LayeredDraw`; the actual pumpkin/custom-helmet-overlay logic (and the `getArmor(I)` call) moved to a
+  separate private method, `renderCameraOverlays(GuiGraphics, DeltaTracker)` (found via `javap -c`
+  disassembly). Repointed `method` there and updated the handler's second parameter from the stale `float
+  partialTick` to `DeltaTracker` (Mixin requires the handler's non-injected parameters to exactly match the
+  target method's own parameters), pulling the tick float back out via `DeltaTracker#getGameTimeDeltaTicks()`.
+- **Batch 81 — implemented `RenderTarget.enableStencil()`/`disableStencil()` ourselves.**
+  `RuntimeException: this should be overridden via mixin. what?` thrown from
+  `RenderTargetExtensions.enableStencil()` (porting_lib's "extensions" module), called by Catnip's
+  `UIRenderHelper$CustomRenderTarget` on every single game boot. The interface's default methods are
+  deliberate placeholders expecting a library mixin to override them with real GL code - that mixin was never
+  shipped: checked the module's own `porting_lib_extensions.mixins.json` (extracted from the dependency jar)
+  and there's no `RenderTargetMixin` in it, and confirmed via the artifact's `maven-metadata.xml` that
+  `3.1.0-beta.54+1.21.1` (our pinned version) is the *last* 1.21.1 build ever published for that module - no
+  newer version fixes this. Implemented `RenderTargetMixin` ourselves, replicating NeoForge's own
+  (source-patched) `RenderTarget#enableStencil` by disassembling a NeoForge-compiled `RenderTarget.class`:
+  swap the depth attachment's texture between plain `GL_DEPTH_COMPONENT` and combined `GL_DEPTH24_STENCIL8`,
+  attached to both `GL_DEPTH_ATTACHMENT` and `GL_STENCIL_ATTACHMENT`, via direct `GlStateManager` calls (all
+  public static, no further plumbing needed).
+- **Batch 82 — `HumanoidArmorLayerMixin`'s stale 12-arg target.** With batch 81 fixed, the client reached the
+  title screen for the first time, surfacing one last non-fatal error logged during `EntityRenderers`'
+  resource-reload pass: the mixin's `@Inject` on `renderArmorPiece` used the old NeoForge-era 12-parameter
+  descriptor (trailing `limbSwing, limbSwingAmount, partialTick, ageInTicks, netHeadYaw, headPitch`). 1.21.1's
+  `HumanoidArmorLayer#renderArmorPiece` dropped all six animation parameters entirely - confirmed via `javap
+  -c` that it's now just `(PoseStack, MultiBufferSource, T, EquipmentSlot, int, A)`, with the targeted
+  `ItemStack.getItem()` call still present and unchanged inside. Trimmed the mixin's descriptor and handler
+  parameter list to match; `CustomRenderedArmorItem#renderArmorPiece` (the delegate it calls into) already had
+  the shorter signature, so no other files needed changes.
+
+**After batch 82, `./gradlew runClient` boots all the way to the title screen with zero errors and zero
+warnings in the log** - confirmed by watching the process settle into a low-CPU idle sleep state (consistent
+with a GUI app waiting at a menu, not a hang) for 30+ seconds with no further log output. This is the first
+clean boot this porting effort has reached. Not yet tested: actually creating/loading a world (the title
+screen is reached, but no further interaction has been attempted yet - that's the natural next step for a
+future session), and the handful of non-fatal warnings seen earlier in the log (`Registry
+'porting_lib:global_loot_modifier_serializers' was empty after loading`, a `ConcurrentModificationException`
+in Mod Menu's background update-checker thread, `porting_lib:obj` model loader missing/falling back to
+vanilla) which don't block boot but may indicate smaller latent issues worth revisiting.

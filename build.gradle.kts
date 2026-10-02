@@ -15,11 +15,13 @@ val milkLibVersion = "1.1.0-patch+1.21.1"
 val portingLibVersion = "3.1.0-beta.91+1.21.1"
 val portingLibExtensionsVersion = "3.1.0-beta.54+1.21.1"
 val portingLibModules = listOf(
-    "accessors", "base", "blocks", "brewing", "client_events", "common", "core", "data",
+    "base", "blocks", "brewing", "client_events", "common", "core", "data",
     "entity", "fluids", "items", "level_events", "mixin_extensions", "models", "resources", "tags", "transfer"
 )
-// "conditions" isn't published at the same version as the rest of porting-lib; pin it separately.
+// "conditions" and "accessors" aren't published at the same version as the rest of porting-lib (confirmed via
+// each module's own maven-metadata.xml: beta.91+ was never published for either at 1.21.1); pin them separately.
 val portingLibConditionsVersion = "3.1.0-beta.47+1.21.1"
+val portingLibAccessorsVersion = "3.1.0-beta.54+1.21.1"
 
 // external dependencies
 val configApiVersion = "21.1.3"
@@ -134,6 +136,7 @@ dependencies {
     }
     modApi(include("io.github.fabricators_of_create.Porting-Lib:extensions:$portingLibExtensionsVersion")!!)
     modApi(include("io.github.fabricators_of_create.Porting-Lib:conditions:$portingLibConditionsVersion")!!)
+    modApi(include("io.github.fabricators_of_create.Porting-Lib:accessors:$portingLibAccessorsVersion")!!)
 
     if (ponder.exists()) {
         implementation("net.createmod.ponder:Ponder-Fabric-$minecraftVersion:$ponderVersion") { isTransitive = false }

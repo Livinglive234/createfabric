@@ -18,6 +18,10 @@ import net.createmod.catnip.data.Glob;
 
 import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
 
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
+
 public class ComputerUtil {
 
 	public static int bigItemStackToLuaTableFilter(BigItemStack entry, Map<?, ?> filter) throws LuaException {
@@ -304,6 +308,30 @@ public class ComputerUtil {
 		if (slot < 1 || slot > maxSlots)
 			throw new LuaException(String.format("Slot " + slot + " out of range, available slots between " + 1 + " and " + maxSlots));
 		var stack = inventory.getStackInSlot(slot - 1);
+		return stack.isEmpty() ? null : VanillaDetailRegistries.ITEM_STACK.getDetails(stack);
+	}
+
+	public static Map<Integer, Map<String, ?>> list(Storage<ItemVariant> inventory) {
+		Map<Integer, Map<String, ?>> result = new HashMap<>();
+		int i = 0;
+		for (StorageView<ItemVariant> view : inventory.nonEmptyViews()) {
+			var stack = view.getResource().toStack((int) Math.min(view.getAmount(), Integer.MAX_VALUE));
+			if (!stack.isEmpty()) result.put(i + 1, VanillaDetailRegistries.ITEM_STACK.getBasicDetails(stack));
+			i++;
+		}
+
+		return result;
+	}
+
+	public static Map<String, ?> getItemDetail(Storage<ItemVariant> inventory, int slot) throws LuaException {
+		List<StorageView<ItemVariant>> views = new ArrayList<>();
+		for (StorageView<ItemVariant> view : inventory.nonEmptyViews())
+			views.add(view);
+		int maxSlots = views.size();
+		if (slot < 1 || slot > maxSlots)
+			throw new LuaException(String.format("Slot " + slot + " out of range, available slots between " + 1 + " and " + maxSlots));
+		StorageView<ItemVariant> view = views.get(slot - 1);
+		var stack = view.getResource().toStack((int) Math.min(view.getAmount(), Integer.MAX_VALUE));
 		return stack.isEmpty() ? null : VanillaDetailRegistries.ITEM_STACK.getDetails(stack);
 	}
 

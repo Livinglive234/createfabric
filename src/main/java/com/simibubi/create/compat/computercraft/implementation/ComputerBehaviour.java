@@ -1,5 +1,7 @@
 package com.simibubi.create.compat.computercraft.implementation;
 
+import java.util.function.Supplier;
+
 import org.jetbrains.annotations.Nullable;
 
 import org.jetbrains.annotations.NotNull;
@@ -62,7 +64,7 @@ public class ComputerBehaviour extends AbstractComputerBehaviour {
 
 	public ComputerBehaviour(SmartBlockEntity be) {
 		super(be);
-		this.peripheral = getPeripheralFor(be);
+		this.peripheral = getPeripheralFor(be).get();
 		this.be = be;
 	}
 
@@ -84,7 +86,7 @@ public class ComputerBehaviour extends AbstractComputerBehaviour {
 		if (be instanceof SignalBlockEntity sbe)
 			return () -> new SignalPeripheral(sbe);
 		if (be instanceof SpeedGaugeBlockEntity sgbe)
-			return new SpeedGaugePeripheral(sgbe);
+			return () -> new SpeedGaugePeripheral(sgbe);
 		if (be instanceof StressGaugeBlockEntity sgbe)
 			return () -> new StressGaugePeripheral(sgbe);
 		if (be instanceof StockTickerBlockEntity sgbe)

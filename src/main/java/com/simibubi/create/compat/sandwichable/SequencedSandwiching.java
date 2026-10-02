@@ -15,10 +15,12 @@ import io.github.foundationgames.sandwichable.Sandwichable;
 import io.github.foundationgames.sandwichable.items.ItemsRegistry;
 import io.github.foundationgames.sandwichable.util.Sandwich;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 
 public class SequencedSandwiching {
@@ -93,7 +95,7 @@ public class SequencedSandwiching {
 			}
 			CompoundTag newTag = s.writeToNbt(new CompoundTag());
 			ItemStack newSandwich = sandwich.copy();
-			newSandwich.getOrCreateTag().put("BlockEntityTag", newTag);
+			CustomData.update(DataComponents.CUSTOM_DATA, newSandwich, tag -> tag.put("BlockEntityTag", newTag));
 			return newSandwich;
 		} else if (Sandwichable.isBread(sandwich)) {
 			s = new Sandwich();
@@ -106,7 +108,7 @@ public class SequencedSandwiching {
 			}
 			CompoundTag newTag = s.writeToNbt(new CompoundTag());
 			ItemStack freshSandwich = ItemsRegistry.SANDWICH.getDefaultInstance();
-			freshSandwich.getOrCreateTag().put("BlockEntityTag", newTag);
+			CustomData.update(DataComponents.CUSTOM_DATA, freshSandwich, tag -> tag.put("BlockEntityTag", newTag));
 			return freshSandwich;
 		}
 		return ItemStack.EMPTY;
@@ -115,8 +117,8 @@ public class SequencedSandwiching {
 	@Nullable
 	public static Sandwich sandwichFromStack(ItemStack stack) {
 		if (stack.is(ItemsRegistry.SANDWICH)) {
-			CompoundTag tag = stack.getTag();
-			if (tag != null && tag.contains("BlockEntityTag")) {
+			CompoundTag tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+			if (tag.contains("BlockEntityTag")) {
 				tag = tag.getCompound("BlockEntityTag");
 				Sandwich s = new Sandwich();
 				s.addFromNbt(tag);

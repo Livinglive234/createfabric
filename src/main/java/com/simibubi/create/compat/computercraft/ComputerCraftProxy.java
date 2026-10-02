@@ -5,8 +5,6 @@ import java.util.function.Function;
 import com.simibubi.create.compat.Mods;
 import com.simibubi.create.compat.computercraft.implementation.ComputerBehaviour;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
-import static com.simibubi.create.compat.computercraft.implementation.ComputerBehaviour.peripheralProvider;
-import dan200.computercraft.api.peripheral.PeripheralLookup;
 
 public class ComputerCraftProxy {
 

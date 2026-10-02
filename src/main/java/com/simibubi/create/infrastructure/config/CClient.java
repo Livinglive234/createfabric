@@ -38,6 +38,8 @@ public class CClient extends ConfigBase {
 	// Fabric
 	public final ConfigEnum<FluidUnit> fluidUnitType = e(FluidUnit.MILLIBUCKETS, "fluidUnitType",
 			Comments.fluidUnit);
+	public final ConfigBool simplifyFluidUnit = b(true, "simplifyFluidUnit",
+			Comments.simplifyFluidUnit);
 	public final ConfigInt toolboxHotbarOverlayOffset = i(0, Integer.MIN_VALUE, Integer.MAX_VALUE, "toolboxHotbarOverlayOffset",
 			Comments.toolboxHotbarOverlayOffset);
 
@@ -146,6 +148,10 @@ public class CClient extends ConfigBase {
 		static String[] fluidUnit = new String[]{
 				"The fluid unit that will be displayed when viewing fluids",
 				"Example: 1000 mB or 81000 Droplets"
+		};
+		static String[] simplifyFluidUnit = new String[]{
+				"Whether to abbreviate large fluid amounts using unicode fractions/superscripts",
+				"Example: 1⁵⁄₈ B instead of 1125 mB"
 		};
 		static String toolboxHotbarOverlayOffset = "Vertical offset for the Toolbox Hotbar overlay.";
 		static String sound = "Sound settings";

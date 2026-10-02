@@ -50,8 +50,6 @@
     "accessor.StateHolderAccessor",
     "accessor.SystemReportAccessor",
     "accessor.UseOnContextAccessor",
-    "compat.ftbchunks.LargeMapScreenAccessor",
-    "compat.ftbchunks.RegionMapPanelAccessor",
     "datafixer.BlockPosFormatAndRenamesFixMixin",
     "datafixer.ItemStackComponentizationFixMixin",
     "datafixer.V1460Mixin",

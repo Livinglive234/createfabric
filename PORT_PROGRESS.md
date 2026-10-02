@@ -2369,3 +2369,134 @@ verification compile.
   already a method param here).
 
 **Current verified baseline: 213 errors.**
+
+## Done this session (batch 66, first "fix 10+ then compile" round)
+Trajectory: 213 → 178 (confirmed). 33 files fixed in one round before recompiling, per the user's new
+batching preference.
+- Dead/misnamed imports swept: `PeripheralCapability` (CC:Tweaked, unused in core kinetics files —
+  `SequencedGearshiftBlockEntity`/`SpeedControllerBlockEntity`/`StressGaugeBlockEntity`/`SpeedGaugeBlockEntity`),
+  `EnvExecutor` (`ClipboardBlockEntity`), `LivingEntityEvents` (no such class — real one is `LivingEvents`;
+  unused in `CardboardArmorHandler`/`DeployerFakePlayer`), `SequencedAssemblySubCategory` (superseded by
+  `SequencedAssemblySubCategoryType`, unused in `PressingRecipe`/`FillingRecipe`), `LegacyRecipeWrapper` (unused
+  in `StockKeeperTransferHandler`), `CreateComponentProcessors` (doesn't exist, unused in `ClipboardEditPacket`).
+- `content/kinetics/waterwheel/LargeWaterWheelBlockItem.java` (clean) — duplicate `EnvType`/`Environment`
+  imports (javac error, not just a warning) plus a dead `EnvExecutor` import.
+- `content/kinetics/waterwheel/LargeWaterWheelBlock.java` (clean) — `useItemOn` (return type
+  `ItemInteractionResult`) returned `InteractionResult.PASS` → `ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION`.
+- `content/fluids/transfer/GenericItemFilling.java` (clean) — `isFluidHandlerValid(stack, capability)` referenced
+  an undefined `capability` var; the real local is `tank`.
+- `content/equipment/hats/CreateHatArmorLayer.java` / `content/contraptions/render/ContraptionVisual.java` (both
+  clean) — mixin-accessor cast `(ModelPartAccessor) lastChild` doesn't compile since `ModelPart` doesn't implement
+  that interface from javac's view (mixin interfaces are injected at runtime) → cast through `Object` first:
+  `(ModelPartAccessor) (Object) lastChild`. `ContraptionVisual`'s `BlockModelBuilder#materialFunc` call also passed
+  3 lambda params (`renderType, shaded, ao`) but the real type is `BiFunction<RenderType, Boolean, Material>` (2 args)
+  → dropped the `ao` param and the 3rd arg to `ModelUtil.getMaterial`.
+- `content/equipment/armor/NetheriteDivingHandler.java` (clean) — `EquipmentSlot.Type.ARMOR` renamed to
+  `HUMANOID_ARMOR` in 1.21.1 (there's also `ANIMAL_ARMOR` now).
+- `content/equipment/armor/BacktankBlock.java` (clean) — `Level#holderOrThrow`/`ItemStack#getEnchantmentLevel(Holder)`
+  don't exist; the real lookup chain is `EnchantmentHelper.getItemEnchantmentLevel(registryAccess()
+  .lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(key), stack)`.
+- `Create.java` (clean) — `CopperRegistries.inject()` was a stray call to a method that never existed on that class
+  (confirmed absent in Createforge too — `CopperRegistries` is populated via `addWeathering`/`addWaxable` from
+  `CopperBlockSet`, never "injected") → deleted the call and the now-unused import.
+- `AllRecipeTypes.java` (clean) — `ShapedRecipeUtil.setCraftingSize(9, 9)` referenced a class that was never
+  written. Vanilla hard-caps `ShapedRecipePattern.MAX_SIZE` at 3, which NeoForge patches away entirely for the
+  mechanical crafter's 9x9 grid; fabric has no such patch. Access-widened the field
+  (`accessible`+`mutable field ... ShapedRecipePattern MAX_SIZE I`) and wrote a real
+  `infrastructure/fabric/util/ShapedRecipeUtil` that raises it via the widened field.
+- `AllCreativeModeTabs.java` (clean) — missing `RegisteredObjectsHelper` import.
+- `compat/jei/category/SpoutCategory.java` (clean) — JEI recipe-consumer path built a bare `FillingRecipe` and
+  passed it straight to a `Consumer<RecipeHolder<FillingRecipe>>` → wrapped it in `new RecipeHolder<>(id, recipe)`
+  like the rest of the file already does for the potion-bottle case.
+- `content/kinetics/mixer/MechanicalMixerBlockEntity.java` / `content/kinetics/crafter/MechanicalCrafterRenderer.java`
+  (both clean) — `SmartInventory#getItem(int)` doesn't exist (it extends porting-lib's `ItemStackHandler`, not a
+  vanilla `Container`) → `getStackInSlot(int)`.
+- `content/kinetics/mechanicalArm/AllArmInteractionPointTypes.java` (clean) — `JukeboxBlockEntity#getFirstItem()`
+  doesn't exist; the real accessor from `ContainerSingleItem` is `getTheItem()`.
+- `content/kinetics/mechanicalArm/ArmInteractionPoint.java` (clean) — dead `ItemHandlerHelper.copyStackWithSize(...)`
+  (recurring bug) → `stack.copyWithCount(...)`.
+- `content/kinetics/crafter/MechanicalCraftingInput.java` (clean) — extends vanilla `CraftingInput`, whose
+  constructor is package-private in 1.21.1 (NeoForge ATs it public); access-widened it
+  (`accessible method ... CraftingInput <init> (IILjava/util/List;)V` + `extendable class ... CraftingInput`).
+- `content/contraptions/MountedStorageManager.java` (clean) — `allItems` field was `private`, but
+  `content/contraptions/minecart/TrainCargoManager.java` (a subclass) assigns it directly → widened to `protected`.
+- `content/fluids/spout/SpoutBlockEntity.java` (clean) — `FillingBySpout.fillItem` takes `int`, but the computed
+  `requiredAmountForItem` is a fluid-amount `long` → explicit `(int)` cast (fluid amounts realistically never
+  overflow int here, unlike item counts where `ItemHelper.truncateLong` is used instead).
+- `content/fluids/FluidNetwork.java` (clean) — tried to call `.insert(...)` directly on a `FlowSource`, which has
+  no such method; routed the push through `targetHandler.provideHandler()` (the actual `Storage<FluidVariant>`)
+  instead, null-checked.
+- `content/equipment/clipboard/ClipboardBlockItem.java` (clean) — `ClipboardScreen`'s constructor wants a
+  `DataComponentMap`, not the raw `ItemStack` → `stack.getComponents()`.
+- `content/contraptions/minecart/TrainCargoManager.java` — see `MountedStorageManager` above.
+- `content/equipment/bell/HauntedBellPulser.java` + `foundation/events/CommonEvents.java` (both clean) — this was
+  wired to the **wrong event entirely**: `CommonEvents` registered the per-player tick handler against
+  `ServerTickEvents.END_WORLD_TICK` (a per-world event with no `Player` argument), while the handler itself expected
+  a `PlayerTickEvent.Post` (missing import, since it's genuinely never imported). Fixed by importing porting-lib's
+  `entity.events.tick.PlayerTickEvent` and registering against `PlayerTickEvent.Post.EVENT` instead.
+- `content/logistics/stockTicker/StockTickerInteractionHandler.java` +
+  `content/logistics/stockTicker/StockTickerBlockEntity.java` (both clean) — NeoForge's
+  `ServerPlayer#openMenu(MenuProvider, Consumer<RegistryFriendlyByteBuf>)` two-arg overload doesn't exist on fabric.
+  Since the menu (`StockKeeperRequestMenu`) already reads its sync data as a raw `RegistryFriendlyByteBuf` (matching
+  how Registrate-fabric's `MenuBuilder` wires `ExtendedScreenHandlerType` with a `null` packet codec — same
+  raw-buffer passthrough already used by `FactoryPanelBehaviour`/`FactoryPanelSetItemMenu` elsewhere in this
+  codebase), made `RequestMenuProvider` implement `ExtendedScreenHandlerFactory<RegistryFriendlyByteBuf>` and
+  build+return the buffer itself from `getScreenOpeningData`, then call `sp.openMenu(provider)` (1-arg).
+- `compat/jei/ConversionRecipe.java` (clean) — generic type param was NeoForge's
+  `net.neoforged.neoforge.items.wrapper.RecipeWrapper`, which has no fabric equivalent anywhere in the resolved
+  dependency tree; switched to vanilla's `SingleRecipeInput` (same pattern `PressingRecipe` already uses).
+- `compat/jei/category/sequencedAssembly/JeiSequencedAssemblySubCategory.java` (clean) —
+  `FluidIngredient.getFluids()` doesn't exist; real accessor is `getMatchingFluidStacks()` (already returns
+  `List<FluidStack>`, so the `Arrays.asList(...)` wrapper was also removed).
+- `compat/jei/StockKeeperTransferHandler.java` (clean) — see dead-imports note above.
+
+**Current verified baseline: 178 errors.**
+
+## Done this session (batch 67)
+Trajectory: 178 → 173 (confirmed).
+- `compat/emi/BlueprintTransferHandler.java` / `compat/rei/BlueprintTransferHandler.java` /
+  `compat/rei/GhostIngredientHandler.java` (all clean) — `AllPackets.getChannel().sendToServer(...)` doesn't exist
+  (recurring NeoForge-channel-API bug); replaced with the project's existing fabric packet-send helper,
+  `CatnipServices.NETWORK.sendToServer(...)` (same pattern `BlueprintScreen.java` already uses).
+- `compat/tconstruct/SpoutCasting.java` (clean) — called `TransferUtil.getFluidStorage(Level, BlockPos,
+  BlockEntity, Direction)`, but no such 4-arg overload exists (only `(Level,BlockPos)` and
+  `(Level,BlockPos,Direction)`) → dropped the redundant `BlockEntity` arg.
+- `compat/emi/recipes/fan/FanEmiRecipe.java` (clean) — `ItemStack#setHoverName` no longer exists (1.21.1
+  componentization); switched to `stack.set(DataComponents.CUSTOM_NAME, component)` as a separate statement
+  before returning the stack.
+
+**Current verified baseline: 173 errors.**
+
+### Status: all priority-mod errors are gone
+As of this baseline, **every remaining compile error is in an explicitly deprioritized mod's compat layer**
+(JourneyMap, EMI, REI, FTB Chunks, CC:Tweaked, T-Construct, Sandwichable) or in the two files already flagged for
+a dedicated pass (`BlueprintEntity.java`, `MinecartController.java`, plus their direct dependents
+`BlueprintOverlayRenderer.java`/`CapabilityMinecartController.java`). None of the standing-priority mods
+(Trinkets, JEI, Sodium, Mod Menu, Farmer's Delight, Xaero's) have any compile errors left. Breakdown of what's
+left (error count halved from javac's doubled log lines):
+- `compat/trainmap/JourneyTrainMap.java` (24) / `FTBChunksTrainMap.java` (16) / `TrainMapEvents.java` (1) —
+  JourneyMap/FTBChunks map integrations; `journeymap.api.v2.*` and `dev.ftb.mods.*` packages genuinely don't
+  resolve at all (dependency/package-path issue, not a typo) — needs real investigation into whether those compat
+  mods' APIs shifted or the dependency coordinates are wrong.
+- `compat/emi/*` (~40 across `CreateEmiPlugin.java`, `CreateEmiAnimations.java`, and ~15 recipe-wrapper files) —
+  architecturally blocked on `Recipe#getId()` no longer existing in 1.21.1 (recipes aren't self-identifying
+  anymore; the id lives on `RecipeHolder<T>`). `CreateEmiRecipe`'s base constructor and ~6 subclasses all call
+  `recipe.getId()` directly. Fixing this properly means threading `RecipeHolder<T>` through the whole EMI
+  recipe-wrapper hierarchy instead of raw `T`, starting from wherever `CreateEmiPlugin.java` constructs these
+  wrappers (itself 23 errors deep) — a real refactor, not a quick fix.
+- `compat/rei/*` (~30) — same `getId()`-shaped issues plus `ResourceLocation(String,String)` private-constructor
+  calls (needs `ResourceLocation.fromNamespaceAndPath`) and recipe-constructor signature drift
+  (`ShapelessRecipe`/etc no longer take an id argument).
+- `compat/computercraft/*` (CC:Tweaked, ~10) — `ComputerBehaviour.java` references a missing
+  `foundation/blockEntity/LegacyRecipeWrapper` class and an unimported `Supplier`; downstream peripherals cascade
+  from it.
+- `compat/sandwichable/SequencedSandwiching.java` (3) — `ItemStack#getTag()`/`getOrCreateTag()` no longer exist
+  (NBT-tag item data fully replaced by data components in 1.21.1); needs a real redesign of how this mod's sandwich
+  stacking data is stored, not a drop-in rename.
+- `compat/tconstruct/SpoutCasting.java` — now clean (batch 67).
+- `foundation/mixin/compat/ftbchunks/*Accessor.java` (12) — mixin accessors targeting
+  `dev.ftb.mods.ftbchunks.client.gui.*` classes that don't resolve (same FTBChunks dependency issue as above).
+
+None of this blocks the priority mods. Recommend confirming with the user whether to invest in these
+architectural fixes (several hours of real redesign work per mod) or leave them deprioritized as originally
+scoped, before continuing further.

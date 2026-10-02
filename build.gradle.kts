@@ -15,14 +15,26 @@ val milkLibVersion = "1.1.0-patch+1.21.1"
 val portingLibVersion = "3.1.0-beta.91+1.21.1"
 val portingLibExtensionsVersion = "3.1.0-beta.54+1.21.1"
 val portingLibModules = listOf(
-    "base", "blocks", "brewing", "client_events", "common", "core", "data",
-    "entity", "fluids", "items", "level_events", "mixin_extensions", "models", "obj_loader", "resources", "tags",
+    "base", "blocks", "brewing", "client_events", "common", "config", "core", "data",
+    "entity", "fluids", "gametest", "gui_utils", "item_abilities", "items", "level_events", "loot",
+    "mixin_extensions", "model_loader", "models", "obj_loader", "registry", "render_types", "resources", "tags",
     "transfer"
 )
 // "conditions" and "accessors" aren't published at the same version as the rest of porting-lib (confirmed via
 // each module's own maven-metadata.xml: beta.91+ was never published for either at 1.21.1); pin them separately.
 val portingLibConditionsVersion = "3.1.0-beta.47+1.21.1"
 val portingLibAccessorsVersion = "3.1.0-beta.54+1.21.1"
+// "asm" and "attributes" resolve to beta.54 transitively (pulled in by extensions/accessors, which are
+// themselves pinned there) rather than the main portingLibVersion; pin them to match what's actually resolved
+// and already tested, rather than bumping to a newer, untested version. "lazy_registration" similarly resolves
+// to beta.47 transitively, matching portingLibConditionsVersion.
+// NOTE: all of base/blocks/.../transfer above, plus these three, were previously resolved only transitively
+// (via Gradle's normal dependency resolution on the dev classpath) without ever being added to this project's
+// own include() list, meaning they were silently MISSING from the actual distributed mod jar - present and
+// working in `./gradlew runClient` (which resolves the full dependency graph regardless of what's embedded)
+// but absent for any end user installing just the built jar, causing a hard mod-resolution failure
+// (porting_lib_base requiring item_abilities, which wasn't bundled). Found via `./gradlew dependencies
+// --configuration runtimeClasspath`, cross-checked against this project's own explicit include() list.
 
 // external dependencies
 val configApiVersion = "21.1.3"
@@ -138,6 +150,9 @@ dependencies {
     modApi(include("io.github.fabricators_of_create.Porting-Lib:extensions:$portingLibExtensionsVersion")!!)
     modApi(include("io.github.fabricators_of_create.Porting-Lib:conditions:$portingLibConditionsVersion")!!)
     modApi(include("io.github.fabricators_of_create.Porting-Lib:accessors:$portingLibAccessorsVersion")!!)
+    modApi(include("io.github.fabricators_of_create.Porting-Lib:asm:$portingLibExtensionsVersion")!!)
+    modApi(include("io.github.fabricators_of_create.Porting-Lib:attributes:$portingLibExtensionsVersion")!!)
+    modApi(include("io.github.fabricators_of_create.Porting-Lib:lazy_registration:$portingLibConditionsVersion")!!)
 
     if (ponder.exists()) {
         implementation("net.createmod.ponder:Ponder-Fabric-$minecraftVersion:$ponderVersion") { isTransitive = false }

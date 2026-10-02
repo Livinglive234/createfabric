@@ -37,18 +37,22 @@ public class CreateDatagen implements DataGeneratorEntrypoint {
 	public void onInitializeDataGenerator(FabricDataGenerator generator) {
 		ExistingFileHelper helper = ExistingFileHelper.withResourcesFromArg();
 		FabricDataGenerator.Pack pack = generator.createPack();
+		// fabric: must run before setupDatagen() - that call constructs Registrate's root data
+		// generator, after which further addDataGenerator() calls (as addExtraRegistrateData() makes)
+		// throw "Cannot add data generator after construction of root generator". NeoForge avoids this
+		// naturally via its separate gatherDataHighPriority/gatherData event priorities; Fabric's single
+		// entrypoint method has to replicate that ordering explicitly.
+		addExtraRegistrateData();
+		// fabric: tag lang - also calls addDataGenerator(), so it has to run before setupDatagen() too
+		TagLangGen.datagen();
+		// fabric: archex compat - its LangProvider also lazily calls addDataGenerator() via
+		// Registrate#addRawLang(), so it has to run before setupDatagen() too
+		ArchExCompat.init(pack);
 		Create.registrate().setupDatagen(pack, helper);
 		gatherData(generator, pack, helper);
 	}
 
 	public static void gatherData(FabricDataGenerator generator, FabricDataGenerator.Pack pack, ExistingFileHelper existingFileHelper) {
-		addExtraRegistrateData();
-
-		// fabric: tag lang
-		TagLangGen.datagen();
-		// fabric: archex compat
-		ArchExCompat.init(pack);
-
 		pack.addProvider((output, registries) -> new CreateRecipeSerializerTagsProvider(output, registries));
 		pack.addProvider((output, registries) -> new CreateContraptionTypeTagsProvider(output, registries, existingFileHelper));
 		pack.addProvider((output, registries) -> new CreateMountedItemStorageTypeTagsProvider(output, registries, existingFileHelper));

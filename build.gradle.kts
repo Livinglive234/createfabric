@@ -238,6 +238,7 @@ loom {
             vmArg("-Dfabric-api.datagen")
             vmArg("-Dfabric-api.datagen.output-dir=${file("src/generated/resources")}")
             vmArg("-Dfabric-api.datagen.modid=create")
+            vmArg("-Dporting_lib.datagen.existing_resources=${file("src/main/resources")}")
         }
 
         register("gametestServer") {

@@ -60,6 +60,7 @@
     "fabric.ServerGamePacketListenerImplAccessor",
     "fabric.SortedArraySetAccessor",
     "fabric.TagAppenderAccessor",
+    "fabric.MenuBuilderMixin",
     "fabric.gametest.StructureBlockEntityMixin",
     "fabric.gametest.StructureUtilsMixin",
     "fabric.infra.ServerPlayerGameModeMixin",

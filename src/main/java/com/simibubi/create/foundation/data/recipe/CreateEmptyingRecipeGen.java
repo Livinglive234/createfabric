@@ -12,7 +12,7 @@ import net.minecraft.data.PackOutput;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.material.Fluids;
 
-import io.github.tropheusj.milk.Milk;
+import net.george.milk.MilkLib;
 
 /**
  * Create's own Data Generation for Emptying recipes
@@ -36,7 +36,7 @@ public final class CreateEmptyingRecipeGen extends EmptyingRecipeGen {
 		.output(Items.GLASS_BOTTLE)),
 
 	FD_MILK = create(Mods.FD.recipeId("milk_bottle"), b -> b.require(Mods.FD, "milk_bottle")
-		.output(Milk.STILL_MILK, 250)
+		.output(MilkLib.STILL_MILK, 250)
 		.output(Items.GLASS_BOTTLE)
 		.whenModLoaded(Mods.FD.getId())),
 
@@ -46,7 +46,7 @@ public final class CreateEmptyingRecipeGen extends EmptyingRecipeGen {
 		.whenModLoaded(Mods.AM.getId())),
 
 	NEA_MILK = create(Mods.NEA.recipeId("milk_bottle"), b -> b.require(Mods.NEA, "milk_bottle")
-		.output(Milk.STILL_MILK, 250)
+		.output(MilkLib.STILL_MILK, 250)
 		.output(Items.GLASS_BOTTLE)
 		.whenModLoaded(Mods.NEA.getId()))
 

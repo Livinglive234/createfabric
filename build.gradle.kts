@@ -10,7 +10,7 @@ val fapiVersion = "0.115.1+1.21.1"
 val flywheelVersion = "1.0.1-11"
 val ponderVersion = "1.0.44"
 val registrateVersion = "1.3.77-MC1.21.1"
-val milkLibVersion = "1.2.60"
+val milkLibVersion = "1.1.0-patch+1.21.1"
 // https://mvn.devos.one/#/snapshots/io/github/fabricators_of_create/Porting-Lib
 val portingLibVersion = "3.1.0-beta.91+1.21.1"
 val portingLibExtensionsVersion = "3.1.0-beta.54+1.21.1"
@@ -126,7 +126,7 @@ dependencies {
     modApi(include("com.electronwill.night-config:toml:$nightConfigVersion")!!)
     modApi(include("fuzs.forgeconfigapiport:forgeconfigapiport-fabric:$configApiVersion")!!)
     modApi(include("dev.engine-room.flywheel:flywheel-fabric-$minecraftVersion:$flywheelVersion")!!)
-    modApi(include("io.github.tropheusj:milk-lib:$milkLibVersion")!!)
+    modApi(include("maven.modrinth:milk-lib:$milkLibVersion")!!)
     api(include("com.google.code.findbugs:jsr305:$jsr305Version")!!)
 
     for (module in portingLibModules) {
@@ -260,7 +260,6 @@ tasks.named<ProcessResources>("processResources") {
         "loader_version" to loaderVersion,
         "fabric_version" to fapiVersion,
         "forge_config_version" to configApiVersion,
-        "milk_lib_version" to milkLibVersion,
         "port_lib_base_version" to portingLibVersion,
         "port_lib_client_events_version" to portingLibVersion,
         "port_lib_entity_version" to portingLibVersion,

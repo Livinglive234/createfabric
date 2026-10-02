@@ -31,7 +31,7 @@ public abstract class StructureBlockEntityMixin implements StructureBlockEntityE
 	}
 
 	@Inject(method = "saveAdditional", at = @At("TAIL"))
-	private void saveIsGameTest(CompoundTag tag, CallbackInfo ci) {
+	private void saveIsGameTest(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries, CallbackInfo ci) {
 		if (this.isGameTest) {
 			NBTHelper.putMarker(tag, "create:is_game_test");
 		}
@@ -43,7 +43,7 @@ public abstract class StructureBlockEntityMixin implements StructureBlockEntityE
 	}
 
 	@ModifyArg(
-		method = "loadStructure(Lnet/minecraft/server/level/ServerLevel;ZLnet/minecraft/world/level/levelgen/structure/templatesystem/StructureTemplate;)Z",
+		method = "placeStructure(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/levelgen/structure/templatesystem/StructureTemplate;)V",
 		at = @At(
 			value = "INVOKE",
 			target = "Lnet/minecraft/world/level/levelgen/structure/templatesystem/StructureTemplate;placeInWorld(Lnet/minecraft/world/level/ServerLevelAccessor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/levelgen/structure/templatesystem/StructurePlaceSettings;Lnet/minecraft/util/RandomSource;I)Z"

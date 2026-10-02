@@ -14,7 +14,7 @@ import com.simibubi.create.infrastructure.config.AllConfigs;
 
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
 
-import io.github.tropheusj.milk.Milk;
+import net.george.milk.MilkLib;
 import net.createmod.catnip.math.BlockFace;
 
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
@@ -188,7 +188,7 @@ public class OpenEndedPipe extends FlowSource {
 			return false;
 		if (!(fluid.getFluid() instanceof FlowingFluid))
 			return false;
-		if (!FluidHelper.hasBlockState(fluid.getFluid()) || fluid.getFluid().is(Milk.MILK_FLUID_TAG)) // fabric: milk logic is different
+		if (!FluidHelper.hasBlockState(fluid.getFluid()) || fluid.getFluid() == MilkLib.STILL_MILK || fluid.getFluid() == MilkLib.FLOWING_MILK) // fabric: milk logic is different
 			return true;
 
 		// fabric: note - this is possibly prone to issues but follows what forge does.

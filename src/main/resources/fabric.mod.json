@@ -63,7 +63,7 @@
     "porting_lib_client_events": ">=${port_lib_client_events_version}",
 
     "forgeconfigapiport": ">=${forge_config_version}",
-    "milk": ">=${milk_lib_version}"
+    "milk-lib": "*"
   },
 
   "breaks": {

@@ -50,7 +50,6 @@ import com.simibubi.create.infrastructure.worldgen.AllBiomeModifiers;
 import com.simibubi.create.infrastructure.worldgen.AllFeatures;
 import com.simibubi.create.infrastructure.worldgen.AllPlacementModifiers;
 
-import io.github.tropheusj.milk.Milk;
 import net.createmod.catnip.lang.FontHelper;
 import net.createmod.catnip.lang.LangBuilder;
 import net.minecraft.resources.ResourceKey;
@@ -147,7 +146,8 @@ public class Create implements ModInitializer {
 
 		ComputerCraftProxy.register();
 
-		Milk.enableMilkFluid();
+		// fabric: the milk-lib fork for 1.21.1 (net.george.milk.MilkLib) self-initializes via its own
+		// ModInitializer entrypoint; there's no enableMilkFluid()-style call to make here anymore.
 
 		Create.init();
 		Create.onRegister();

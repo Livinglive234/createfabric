@@ -3,7 +3,7 @@
 val parchmentVersion = "2024.11.17"
 // https://fabricmc.net/develop/
 val minecraftVersion = "1.21.1"
-val loaderVersion = "0.16.10"
+val loaderVersion = "0.19.5"
 val fapiVersion = "0.115.1+1.21.1"
 
 // in-house dependencies

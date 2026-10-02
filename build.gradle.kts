@@ -22,7 +22,6 @@ val portingLibModules = listOf(
 val portingLibConditionsVersion = "3.1.0-beta.47+1.21.1"
 
 // external dependencies
-val reachEntityAttributesVersion = "2.5.0"
 val configApiVersion = "21.1.3"
 val nightConfigVersion =  "3.6.3"
 val jsr305Version = "3.0.2"
@@ -100,9 +99,6 @@ repositories {
     maven("https://maven.terraformersmc.com") // Mod Menu, Trinkets
     maven("https://maven.squiddev.cc") // CC:T
     maven("https://modmaven.dev") // Botania
-    maven("https://maven.jamieswhiteshirt.com/libs-release") { // Reach Entity Attributes
-        content { includeGroup("com.jamieswhiteshirt") }
-    }
     maven("https://maven.ladysnake.org/releases") // CCA, for Trinkets
     maven("https://maven.saps.dev/releases") // FTB
     maven("https://maven.architectury.dev") // Architectury API
@@ -131,7 +127,6 @@ dependencies {
     modApi(include("fuzs.forgeconfigapiport:forgeconfigapiport-fabric:$configApiVersion")!!)
     modApi(include("dev.engine-room.flywheel:flywheel-fabric-$minecraftVersion:$flywheelVersion")!!)
     modApi(include("io.github.tropheusj:milk-lib:$milkLibVersion")!!)
-    modApi(include("com.jamieswhiteshirt:reach-entity-attributes:$reachEntityAttributesVersion")!!)
     api(include("com.google.code.findbugs:jsr305:$jsr305Version")!!)
 
     for (module in portingLibModules) {
@@ -265,7 +260,12 @@ tasks.named<ProcessResources>("processResources") {
         "loader_version" to loaderVersion,
         "fabric_version" to fapiVersion,
         "forge_config_version" to configApiVersion,
-        "milk_lib_version" to milkLibVersion
+        "milk_lib_version" to milkLibVersion,
+        "port_lib_base_version" to portingLibVersion,
+        "port_lib_client_events_version" to portingLibVersion,
+        "port_lib_entity_version" to portingLibVersion,
+        "port_lib_models_version" to portingLibVersion,
+        "port_lib_transfer_version" to portingLibVersion
     )
 
     inputs.properties(properties)

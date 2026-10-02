@@ -7,7 +7,6 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.mutable.MutableObject;
 
-import com.jamieswhiteshirt.reachentityattributes.ReachEntityAttributes;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.content.contraptions.sync.ContraptionInteractionPacket;
 import com.simibubi.create.content.trains.entity.CarriageContraptionEntity;

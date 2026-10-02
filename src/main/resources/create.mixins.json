@@ -63,6 +63,7 @@
     "fabric.MenuBuilderMixin",
     "fabric.gametest.StructureBlockEntityMixin",
     "fabric.gametest.StructureUtilsMixin",
+    "fabric.infra.BlockStateExtensionsMixin",
     "fabric.infra.ServerPlayerGameModeMixin",
     "fabric.infra.block.SignalGetterMixin"
   ],

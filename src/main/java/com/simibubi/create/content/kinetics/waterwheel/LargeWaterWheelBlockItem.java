@@ -21,11 +21,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-
-import io.github.fabricators_of_create.porting_lib.util.EnvExecutor;
-
 public class LargeWaterWheelBlockItem extends BlockItem {
 
 	public LargeWaterWheelBlockItem(Block pBlock, Properties pProperties) {

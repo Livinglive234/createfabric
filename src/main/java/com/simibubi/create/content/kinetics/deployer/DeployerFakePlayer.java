@@ -45,7 +45,6 @@ import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingCh
 import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingDropsEvent;
 import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingExperienceDropEvent;
 import io.github.fabricators_of_create.porting_lib.util.UsernameCache;
-import io.github.fabricators_of_create.porting_lib.entity.events.LivingEntityEvents;
 
 public class DeployerFakePlayer extends FakePlayer {
 

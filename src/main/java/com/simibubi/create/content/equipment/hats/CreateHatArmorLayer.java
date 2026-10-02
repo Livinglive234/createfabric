@@ -76,7 +76,7 @@ public class CreateHatArmorLayer<T extends LivingEntity, M extends EntityModel<T
 
 			ModelPart lastChild = partsToHead.get(partsToHead.size() - 1);
 			if (!lastChild.isEmpty()) {
-				List<Cube> cubes = ((ModelPartAccessor) lastChild).porting_lib$cubes();
+				List<Cube> cubes = ((ModelPartAccessor) (Object) lastChild).porting_lib$cubes();
 				Cube cube = cubes.get(Mth.clamp(info.cubeIndex(), 0, cubes.size() - 1));
 				ms.translate(info.offset().x() / 16.0F, (cube.minY - cube.maxY + info.offset().y()) / 16.0F, info.offset().z() / 16.0F);
 				float max = Math.max(cube.maxX - cube.minX, cube.maxZ - cube.minZ) / 8.0F * info.scale();

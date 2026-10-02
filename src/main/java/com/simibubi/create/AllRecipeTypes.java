@@ -50,6 +50,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.core.Registry;
 import com.mojang.serialization.MapCodec;
 import com.simibubi.create.content.processing.recipe.ProcessingRecipeSerializer;
+import com.simibubi.create.infrastructure.fabric.util.ShapedRecipeUtil;
 
 public enum AllRecipeTypes implements IRecipeTypeInfo, StringRepresentable {
 

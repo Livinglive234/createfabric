@@ -83,11 +83,7 @@ public class StockTickerInteractionHandler {
 				stbe.behaviour.mayAdministrate(player) && Create.LOGISTICS.isLockable(stbe.behaviour.freqId);
 			boolean isCurrentlyLocked = Create.LOGISTICS.isLocked(stbe.behaviour.freqId);
 
-			sp.openMenu(stbe.new RequestMenuProvider(), buf -> {
-				buf.writeBoolean(showLockOption);
-				buf.writeBoolean(isCurrentlyLocked);
-				buf.writeBlockPos(targetPos);
-			});
+			sp.openMenu(stbe.new RequestMenuProvider(showLockOption, isCurrentlyLocked, targetPos));
 			stbe.getRecentSummary()
 				.divideAndSendTo(sp, targetPos);
 		}

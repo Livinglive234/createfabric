@@ -221,7 +221,9 @@ public class FluidNetwork {
 					}
 					FluidStack divided = transfer.copy();
 					divided.setAmount(toTransfer);
-					long fill = targetHandler.insert(divided.getVariant(), divided.getAmount(), t);
+					Storage<FluidVariant> targetStorage = targetHandler.provideHandler();
+					long fill = targetStorage == null ? 0
+						: targetStorage.insert(divided.getVariant(), divided.getAmount(), t);
 					transfer.setAmount(transfer.getAmount() - fill);
 					transferredAmount += fill;
 					if (fill < toTransfer)

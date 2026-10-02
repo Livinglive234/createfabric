@@ -8,14 +8,14 @@ import com.simibubi.create.content.processing.recipe.ProcessingRecipeParams;
 import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
 
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.Level;
 import com.simibubi.create.content.processing.recipe.ProcessingRecipe;
 import com.simibubi.create.content.processing.recipe.ProcessingRecipeBuilder;
-public class ConversionRecipe extends StandardProcessingRecipe<RecipeWrapper> {
+public class ConversionRecipe extends StandardProcessingRecipe<SingleRecipeInput> {
 
 	static int counter = 0;
 
@@ -33,7 +33,7 @@ public class ConversionRecipe extends StandardProcessingRecipe<RecipeWrapper> {
 	}
 
 	@Override
-	public boolean matches(Container inv, Level worldIn) {
+	public boolean matches(SingleRecipeInput inv, Level worldIn) {
 		return false;
 	}
 

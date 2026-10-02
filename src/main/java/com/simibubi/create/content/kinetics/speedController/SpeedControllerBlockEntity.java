@@ -24,7 +24,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import dan200.computercraft.api.peripheral.PeripheralCapability;
 
 public class SpeedControllerBlockEntity extends KineticBlockEntity {
 

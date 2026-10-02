@@ -18,7 +18,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import dan200.computercraft.api.peripheral.PeripheralCapability;
 
 public class SpeedGaugeBlockEntity extends GaugeBlockEntity {
 

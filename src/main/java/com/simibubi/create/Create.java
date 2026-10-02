@@ -17,7 +17,6 @@ import com.simibubi.create.content.equipment.potatoCannon.AllPotatoProjectileBlo
 import com.simibubi.create.content.equipment.potatoCannon.AllPotatoProjectileEntityHitActions;
 import com.simibubi.create.content.equipment.potatoCannon.AllPotatoProjectileRenderModes;
 import com.simibubi.create.content.fluids.tank.BoilerHeaters;
-import com.simibubi.create.foundation.block.CopperRegistries;
 import com.simibubi.create.content.kinetics.TorquePropagator;
 import com.simibubi.create.content.kinetics.fan.processing.AllFanProcessingTypes;
 import com.simibubi.create.content.kinetics.mechanicalArm.AllArmInteractionPointTypes;
@@ -147,7 +146,6 @@ public class Create implements ModInitializer {
 		ComputerCraftProxy.register();
 
 		Milk.enableMilkFluid();
-		CopperRegistries.inject();
 
 		Create.init();
 		Create.onRegister();

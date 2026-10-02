@@ -328,7 +328,7 @@ public class CommonEvents {
 		AttackBlockCallback.EVENT.register(ClipboardValueSettingsHandler::leftClickToPaste);
 		AttackBlockCallback.EVENT.register(ZapperInteractionHandler::leftClickingBlocksWithTheZapperSelectsTheBlock);
 		UseEntityCallback.EVENT.register(ScheduleItemEntityInteraction::interactWithConductor);
-		ServerTickEvents.END_WORLD_TICK.register(HauntedBellPulser::hauntedBellCreatesPulse);
+		io.github.fabricators_of_create.porting_lib.entity.events.tick.PlayerTickEvent.Post.EVENT.register(HauntedBellPulser::hauntedBellCreatesPulse);
 		EntityMountEvent.EVENT.register(CouplingHandler::preventEntitiesFromMoutingOccupiedCart);
 		LivingExperienceDropEvent.EVENT.register(DeployerFakePlayer::deployerKillsDoNotSpawnXP);
 		LivingHurtEvent.EVENT.register(ExtendoGripItem::bufferLivingAttackEvent);

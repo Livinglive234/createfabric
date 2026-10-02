@@ -105,13 +105,14 @@ public class SpoutCategory extends CreateRecipeCategory<FillingRecipe> {
 				Ingredient bucket = Ingredient.of(stack);
 				ResourceLocation itemName = BuiltInRegistries.ITEM.getKey(stack.getItem());
 				ResourceLocation fluidName = BuiltInRegistries.FLUID.getKey(fluidCopy.getFluid());
-				consumer.accept(new StandardProcessingRecipe.Builder<>(FillingRecipe::new,
-					Create.asResource("fill_" + itemName.getNamespace() + "_" + itemName.getPath()
-						+ "_with_" + fluidName.getNamespace() + "_" + fluidName.getPath()))
+				ResourceLocation fillId = Create.asResource("fill_" + itemName.getNamespace() + "_" + itemName.getPath()
+					+ "_with_" + fluidName.getNamespace() + "_" + fluidName.getPath());
+				FillingRecipe fillRecipe = new StandardProcessingRecipe.Builder<>(FillingRecipe::new, fillId)
 					.withItemIngredients(bucket)
 					.withFluidIngredients(FluidIngredient.fromFluidStack(fluidCopy))
 					.withSingleItemOutput(container)
-					.build());
+					.build();
+				consumer.accept(new RecipeHolder<>(fillId, fillRecipe));
 			}
 		}
 	}

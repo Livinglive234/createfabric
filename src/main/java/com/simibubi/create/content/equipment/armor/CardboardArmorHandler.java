@@ -20,7 +20,6 @@ import net.minecraft.world.item.ItemStack;
 import io.github.fabricators_of_create.porting_lib.entity.events.EntityEvents;
 import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingEvents.LivingVisibilityEvent;
 import com.simibubi.create.AllItems;
-import io.github.fabricators_of_create.porting_lib.entity.events.LivingEntityEvents;
 
 public class CardboardArmorHandler {
 

@@ -20,7 +20,6 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import dan200.computercraft.api.peripheral.PeripheralCapability;
 
 public class SequencedGearshiftBlockEntity extends SplitShaftBlockEntity {
 

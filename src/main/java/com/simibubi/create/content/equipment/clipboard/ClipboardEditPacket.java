@@ -19,7 +19,6 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import com.simibubi.create.foundation.utility.CreateComponentProcessors;
 import net.minecraft.core.component.DataComponentPatch;
 
 public record ClipboardEditPacket(int hotbarSlot, @Nullable ClipboardContent clipboardContent,

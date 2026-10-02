@@ -25,7 +25,6 @@ import net.fabricmc.fabric.api.transfer.v1.storage.base.ResourceAmount;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 
 import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
-import io.github.fabricators_of_create.porting_lib.transfer.item.ItemHandlerHelper;
 import io.github.fabricators_of_create.porting_lib.util.StorageProvider;
 
 public class ArmInteractionPoint {
@@ -111,7 +110,7 @@ public class ArmInteractionPoint {
 		if (handler == null)
 			return stack;
 		long inserted = handler.insert(ItemVariant.of(stack), stack.getCount(), ctx);
-		return ItemHandlerHelper.copyStackWithSize(stack, ItemHelper.truncateLong(stack.getCount() - inserted));
+		return stack.copyWithCount(ItemHelper.truncateLong(stack.getCount() - inserted));
 	}
 
 	public ItemStack extract(int amount, TransactionContext ctx) {

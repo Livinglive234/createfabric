@@ -75,7 +75,7 @@ public class ClipboardBlockItem extends BlockItem implements SupportsItemCopying
 	@Environment(EnvType.CLIENT)
 	private void openScreen(Player player, ItemStack stack) {
 		if (Minecraft.getInstance().player == player)
-			ScreenOpener.open(new ClipboardScreen(player.getInventory().selected, stack, null));
+			ScreenOpener.open(new ClipboardScreen(player.getInventory().selected, stack.getComponents(), null));
 	}
 
 	public void registerModelOverrides() {

@@ -28,6 +28,12 @@ accessible field net/minecraft/data/models/ItemModelGenerators GENERATED_TRIM_MO
 
 accessible class net/minecraft/util/datafix/fixes/ItemStackComponentizationFix$ItemStackData
 
+accessible field net/minecraft/world/item/crafting/ShapedRecipePattern MAX_SIZE I
+mutable field net/minecraft/world/item/crafting/ShapedRecipePattern MAX_SIZE I
+
+accessible method net/minecraft/world/item/crafting/CraftingInput <init> (IILjava/util/List;)V
+extendable class net/minecraft/world/item/crafting/CraftingInput
+
 # TODO - Convert to accessor
 accessible field net/minecraft/world/entity/Mob targetSelector Lnet/minecraft/world/entity/ai/goal/GoalSelector;
 accessible field net/minecraft/client/particle/Particle stoppedByCollision Z

@@ -2500,3 +2500,50 @@ left (error count halved from javac's doubled log lines):
 None of this blocks the priority mods. Recommend confirming with the user whether to invest in these
 architectural fixes (several hours of real redesign work per mod) or leave them deprioritized as originally
 scoped, before continuing further.
+
+## Done this session (batch 68 — the two deferred core files)
+Trajectory: 173 → 149 (confirmed). Per user direction: core files first, then mod compats.
+- `content/contraptions/minecart/capability/MinecartController.java` (clean) — this was a half-finished port
+  of the NeoForge version, which uses NeoForge's generic data-attachment API
+  (`IAttachmentSerializer`/`IAttachmentHolder`) plus a `Type` enum (`NORMAL`/`EMPTY`) to pick the right
+  (de)serializer when NeoForge calls back into the attachment registry. Fabric has no such registry —
+  `AllAttachmentTypes.java` already documents (from an earlier session) that this project attaches
+  `MinecartController` directly via `AbstractMinecartMixin`, which calls `controller.serializeNBT()`/
+  `deserializeNBT()` itself on cart load/save. So the `SERIALIZER` field, `Type` enum, and
+  `IAttachmentSerializer` import were all dead weight pointing at nonexistent classes — removed them and
+  replaced `isEmpty()`'s `getType() == Type.EMPTY` check with a plain `instanceof Empty`. Separately, the
+  `Empty` sentinel subclass **didn't exist in the file at all** despite being referenced and genuinely needed —
+  `MinecartController.EMPTY` is used as a real sentinel elsewhere (`CouplingHandler#getNextInCouplingChain`,
+  `CapabilityMinecartController#handleKilledMinecart`) wherever forge's version would return it. Restored the
+  class from the NeoForge source, minus the `Type`/attachment-serializer parts. Also fixed a duplicate
+  `MinecartAndRailUtil` import and its real package (porting-lib moved it to `.blocks.util`, not top-level
+  `.util`, between versions).
+- `content/contraptions/minecart/capability/CapabilityMinecartController.java` (clean) — this class is pure
+  static utility methods (the world-scoped registry of loaded minecarts) and had no business implementing
+  `INBTSerializable<CompoundTag>` — another leftover from the NeoForge copy, and the actual compile blocker
+  (no `deserializeNBT` override). Dropped the interface entirely.
+- `content/equipment/blueprint/BlueprintEntity.java` + `BlueprintOverlayRenderer.java` (both clean) — several
+  independent bugs stacked in the same hot path:
+  - Missing import for `IEntityWithComplexSpawn` (porting-lib) meant `writeSpawnData`/`readSpawnData`'s
+    `@Override` failed even though their signatures already matched the interface exactly — classic "import
+    missing, not a real override mismatch" trap.
+  - `CraftingContainer` can no longer be passed directly to `RecipeManager#getRecipeFor`/
+    `getRemainingItemsFor` or `Recipe#matches`/`assemble` — 1.21.1 wants a `RecipeInput`. Converted through
+    `CraftingContainer`'s own default method, `asCraftInput()` (same fix applied in both files, since
+    `BlueprintOverlayRenderer` duplicates this exact crafting-simulation logic for the client-side ghost
+    overlay).
+  - `RecipeHolder<T>` doesn't expose `matches()`/`assemble()` itself anymore (it's a record wrapping
+    `id`+`value`); routed through `r.value().matches(...)`/`r.value().assemble(...)`.
+  - NeoForge's `CommonHooks.setCraftingPlayer(player)` has no fabric equivalent; left a `// TODO fabric:`
+    comment rather than faking it (it only matters for other mods hooking the "current crafting player",
+    not for this logic to function).
+  - `player.openMenu(MenuProvider, Consumer<RegistryFriendlyByteBuf>)` — another instance of the recurring
+    NeoForge-only 2-arg overload (same shape as `StockTicker` in batch 66). Fixed the same way:
+    `BlueprintSection` now implements `ExtendedScreenHandlerFactory<RegistryFriendlyByteBuf>` and builds the
+    buffer itself in `getScreenOpeningData`, writing the exact same `entityId`/`sectionIndex` pair that
+    `BlueprintMenu`'s existing client-side `createOnClient` already expects to read — no client-side changes
+    needed since that side was already written correctly.
+
+**Current verified baseline: 149 errors — all four core/deferred files confirmed clean. Every remaining error
+is now in an explicitly deprioritized mod's compat layer** (JourneyMap, EMI, REI, FTB Chunks, CC:Tweaked,
+T-Construct, Sandwichable). Next up per user direction: mod compats, starting with the smallest/cheapest files.

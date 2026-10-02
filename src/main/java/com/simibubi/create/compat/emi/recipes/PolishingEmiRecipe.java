@@ -8,9 +8,11 @@ import com.simibubi.create.foundation.gui.AllGuiTextures;
 
 import dev.emi.emi.api.widget.WidgetHolder;
 import net.createmod.catnip.gui.element.GuiGameElement;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.NonNullList;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.crafting.Ingredient;
 
 
@@ -34,9 +36,11 @@ public class PolishingEmiRecipe extends CreateEmiRecipe<SandPaperPolishingRecipe
 		if (!ingredients.isEmpty() && !ingredients.get(0).isEmpty()) {
 			ItemStack[] matchingStacks = ingredients.get(0).getItems();
 			ItemStack stack = AllItems.SAND_PAPER.asStack();
-			CompoundTag tag = stack.getOrCreateTag();
-			tag.put("Polishing", NBTSerializer.serializeNBT(matchingStacks[0]));
-			tag.putBoolean("JEI", true);
+			net.minecraft.core.HolderLookup.Provider registries = Minecraft.getInstance().level.registryAccess();
+			CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
+				tag.put("Polishing", matchingStacks[0].save(registries));
+				tag.putBoolean("JEI", true);
+			});
 			widgets.addDrawable(49, 4, 0, 0, (graphics, mouseX, mouseY, delta) -> {
 				PoseStack matrices = graphics.pose();
 				matrices.translate(0, 0, 100);

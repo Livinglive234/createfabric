@@ -44,10 +44,22 @@ public abstract class CreateEmiRecipe<T extends Recipe<?>> implements EmiRecipe 
 	protected List<EmiStack> output;
 	protected int width, height;
 
+	/**
+	 * fabric: {@code Recipe#getId()} no longer exists in 1.21.1 - the id lives on the {@code RecipeHolder<T>}
+	 * a recipe is looked up with, not the recipe instance itself, and most of these wrapper classes are only
+	 * ever handed the bare recipe. EMI only needs a stable, unique id for its own bookkeeping (it doesn't have
+	 * to match any real datapack recipe id), so synthesize one from the recipe's class and identity.
+	 */
+	public static ResourceLocation syntheticId(Recipe<?> recipe) {
+		return ResourceLocation.fromNamespaceAndPath("emi",
+			"create/" + recipe.getClass().getSimpleName().toLowerCase(java.util.Locale.ROOT) + "/"
+				+ Integer.toHexString(System.identityHashCode(recipe)));
+	}
+
 	public CreateEmiRecipe(EmiRecipeCategory category, T recipe, int width, int height) {
 		this.category = category;
 		this.recipe = recipe;
-		this.id = recipe.getId();
+		this.id = syntheticId(recipe);
 		this.width = width;
 		this.height = height;
 		if (recipe instanceof BasinRecipe basin) {
@@ -103,7 +115,7 @@ public abstract class CreateEmiRecipe<T extends Recipe<?>> implements EmiRecipe 
 	public CreateEmiRecipe(EmiRecipeCategory category, T recipe, int width, int height, Consumer<CreateEmiRecipe<T>> setup) {
 		this.category = category;
 		this.recipe = recipe;
-		this.id = recipe.getId();
+		this.id = syntheticId(recipe);
 		this.width = width;
 		this.height = height;
 		setup.accept(this);
@@ -149,7 +161,7 @@ public abstract class CreateEmiRecipe<T extends Recipe<?>> implements EmiRecipe 
 	}
 
 	public static EmiStack fluidStack(FluidStack stack) {
-		return EmiStack.of(stack.getFluid(), stack.getTag(), stack.getAmount());
+		return EmiStack.of(stack.getFluid(), stack.getComponentsPatch(), stack.getAmount());
 	}
 
 	public static TextureWidget addTexture(WidgetHolder widgets, AllGuiTextures texture, int x, int y) {

@@ -40,11 +40,11 @@ public class DeployingEmiRecipe extends CreateEmiRecipe<DeployerApplicationRecip
 		CreateEmiAnimations.addDeployer(widgets, widgets.getWidth() / 2 - 13, 30);
 	}
 
-	public static DeployingEmiRecipe fromSandpaper(SandPaperPolishingRecipe recipe) {
-		return new DeployingEmiRecipe(DeployerApplicationRecipe.convert(recipe));
+	public static DeployingEmiRecipe fromSandpaper(net.minecraft.world.item.crafting.RecipeHolder<SandPaperPolishingRecipe> recipe) {
+		return new DeployingEmiRecipe(DeployerApplicationRecipe.convert(recipe).value());
 	}
 
-	public static DeployingEmiRecipe fromItemApplication(ManualApplicationRecipe recipe) {
-		return new DeployingEmiRecipe(ManualApplicationRecipe.asDeploying(recipe));
+	public static DeployingEmiRecipe fromItemApplication(net.minecraft.world.item.crafting.RecipeHolder<ManualApplicationRecipe> recipe) {
+		return new DeployingEmiRecipe(ManualApplicationRecipe.asDeploying(recipe).value());
 	}
 }

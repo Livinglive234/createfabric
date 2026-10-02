@@ -57,13 +57,13 @@ public class GhostIngredientHandler<T extends GhostItemMenu<?>>
 	}
 
 	private void acceptStack(AbstractSimiContainerScreen<T> gui, boolean isAttributeFilter, int slotIndex, ItemStack stack) {
-		stack = ItemHandlerHelper.copyStackWithSize(stack, 1);
+		stack = stack.copyWithCount(1);
 		gui.getMenu().ghostInventory.setStackInSlot(slotIndex, stack);
 
 		if (isAttributeFilter)
 			return;
 
 		// sync new filter contents with server
-		AllPackets.getChannel().sendToServer(new GhostItemSubmitPacket(stack, slotIndex));
+		net.createmod.catnip.platform.CatnipServices.NETWORK.sendToServer(new GhostItemSubmitPacket(stack, slotIndex));
 	}
 }

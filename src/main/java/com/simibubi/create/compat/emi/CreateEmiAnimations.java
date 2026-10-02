@@ -13,7 +13,7 @@ import com.simibubi.create.AllSpriteShifts;
 import com.simibubi.create.content.kinetics.deployer.DeployerBlock;
 import com.simibubi.create.content.kinetics.saw.SawBlock;
 import com.simibubi.create.content.processing.burner.BlazeBurnerBlock.HeatLevel;
-import com.simibubi.create.foundation.fluid.FluidRenderer;
+import net.createmod.catnip.render.BasicFluidRenderer;
 import com.simibubi.create.foundation.gui.CustomLightingSettings;
 
 import dev.emi.emi.api.widget.WidgetHolder;
@@ -410,15 +410,15 @@ public class CreateEmiAnimations {
 			.render(graphics);
 
 		DEFAULT_LIGHTING.applyLighting();
-		MultiBufferSource.BufferSource buffer = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+		MultiBufferSource.BufferSource buffer = graphics.bufferSource();
 		matrices.pushPose();
 		UIRenderHelper.flipForGuiRender(matrices);
 		matrices.scale(16, 16, 16);
 		float from = 3f / 16f;
 		float to = 17f / 16f;
 		FluidStack fluid = fluids.get(0);
-		FluidRenderer.renderFluidBox(fluid.getFluid(), fluid.getAmount(), from, from, from, to, to, to, buffer, matrices,
-			LightTexture.FULL_BRIGHT, false, true, fluid.getTag());
+		BasicFluidRenderer.renderFluidBox(fluid.getFluid(), fluid.getAmount(), from, from, from, to, to, to, buffer, matrices,
+			LightTexture.FULL_BRIGHT, false, true, fluid.getComponentsPatch());
 		matrices.popPose();
 
 		float width = 1 / 128f * squeeze;
@@ -428,8 +428,8 @@ public class CreateEmiAnimations {
 		matrices.translate(-0.5f, 0, -0.5f);
 		from = -width / 2 + 0.5f;
 		to = width / 2 + 0.5f;
-		FluidRenderer.renderFluidBox(fluid.getFluid(), fluid.getAmount(), from, 0, from, to, 2, to, buffer, matrices,
-			LightTexture.FULL_BRIGHT, false, true, fluid.getTag());
+		BasicFluidRenderer.renderFluidBox(fluid.getFluid(), fluid.getAmount(), from, 0, from, to, 2, to, buffer, matrices,
+			LightTexture.FULL_BRIGHT, false, true, fluid.getComponentsPatch());
 		buffer.endBatch();
 		Lighting.setupFor3DItems();
 	}
@@ -446,14 +446,14 @@ public class CreateEmiAnimations {
 				.scale(scale)
 				.render(graphics);
 
-			MultiBufferSource.BufferSource buffer = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+			MultiBufferSource.BufferSource buffer = graphics.bufferSource();
 			//MatrixStack ms = new MatrixStack();
 			UIRenderHelper.flipForGuiRender(matrices);
 			matrices.scale(scale, scale, scale);
 			float from = 2 / 16f;
 			float to = 1f - from;
-			FluidRenderer.renderFluidBox(fluid.getFluid(), fluid.getAmount(), from, from, from, to, 3/4f, to, buffer, matrices,
-				LightTexture.FULL_BRIGHT, false, true, fluid.getTag());
+			BasicFluidRenderer.renderFluidBox(fluid.getFluid(), fluid.getAmount(), from, from, from, to, 3/4f, to, buffer, matrices,
+				LightTexture.FULL_BRIGHT, false, true, fluid.getComponentsPatch());
 			buffer.endBatch();
 		});
 	}

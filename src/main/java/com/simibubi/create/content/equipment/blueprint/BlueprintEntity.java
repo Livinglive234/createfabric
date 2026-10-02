@@ -51,6 +51,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.inventory.TransientCraftingContainer;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeType;
@@ -71,6 +72,7 @@ import net.fabricmc.fabric.api.transfer.v1.storage.base.ResourceAmount;
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 
 import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
+import io.github.fabricators_of_create.porting_lib.entity.IEntityWithComplexSpawn;
 
 public class BlueprintEntity extends HangingEntity
 	implements IEntityWithComplexSpawn, SpecialEntityItemRequirement, ISyncPersistentData, IInteractionChecker {
@@ -359,7 +361,7 @@ public class BlueprintEntity extends HangingEntity
 			PlayerInventoryStorage playerInv = PlayerInventoryStorage.of(player);
 			boolean firstPass = true;
 			int amountCrafted = 0;
-			CommonHooks.setCraftingPlayer(player);
+			// TODO fabric: NeoForge's CommonHooks.setCraftingPlayer(player) has no fabric equivalent
 			Optional<RecipeHolder<CraftingRecipe>> recipe = Optional.empty();
 
 			do {
@@ -389,12 +391,13 @@ public class BlueprintEntity extends HangingEntity
 
 					if (success) {
 						CraftingContainer craftingInventory = new BlueprintCraftingInventory(craftingGrid);
+						CraftingInput craftingInput = craftingInventory.asCraftInput();
 
 						if (!recipe.isPresent())
 							recipe = level().getRecipeManager()
-									.getRecipeFor(RecipeType.CRAFTING, craftingInventory, level());
-						ItemStack result = recipe.filter(r -> r.matches(craftingInventory, level()))
-								.map(r -> r.assemble(craftingInventory, level().registryAccess()))
+									.getRecipeFor(RecipeType.CRAFTING, craftingInput, level());
+						ItemStack result = recipe.filter(r -> r.value().matches(craftingInput, level()))
+								.map(r -> r.value().assemble(craftingInput, level().registryAccess()))
 								.orElse(ItemStack.EMPTY);
 
 						if (result.isEmpty()) {
@@ -406,7 +409,7 @@ public class BlueprintEntity extends HangingEntity
 							result.onCraftedBy(player.level(), player, 1);
 //						ForgeEventFactory.firePlayerCraftingEvent(player, result, craftingInventory);
 							NonNullList<ItemStack> nonnulllist = level().getRecipeManager()
-									.getRemainingItemsFor(RecipeType.CRAFTING, craftingInventory, level());
+									.getRemainingItemsFor(RecipeType.CRAFTING, craftingInput, level());
 
 							if (firstPass)
 								level().playSound(null, player.blockPosition(), SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS,
@@ -431,12 +434,8 @@ public class BlueprintEntity extends HangingEntity
 			return InteractionResult.SUCCESS;
 		}
 
-		int i = section.index;
 		if (!level().isClientSide && player instanceof ServerPlayer) {
-			player.openMenu(section, buf -> {
-				buf.writeVarInt(getId());
-				buf.writeVarInt(i);
-			});
+			player.openMenu(section);
 		}
 
 		return InteractionResult.SUCCESS;
@@ -497,7 +496,7 @@ public class BlueprintEntity extends HangingEntity
 		return sectionCache.computeIfAbsent(index, i -> new BlueprintSection(i));
 	}
 
-	class BlueprintSection implements MenuProvider, IInteractionChecker {
+	class BlueprintSection implements net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<RegistryFriendlyByteBuf>, IInteractionChecker {
 		int index;
 		Couple<ItemStack> cachedDisplayItems;
 		public boolean inferredIcon = false;
@@ -543,6 +542,15 @@ public class BlueprintEntity extends HangingEntity
 		@Override
 		public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
 			return BlueprintMenu.create(id, inv, this);
+		}
+
+		@Override
+		public RegistryFriendlyByteBuf getScreenOpeningData(ServerPlayer player) {
+			RegistryFriendlyByteBuf buf =
+				new RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(), player.registryAccess());
+			buf.writeVarInt(getId());
+			buf.writeVarInt(index);
+			return buf;
 		}
 
 		@Override

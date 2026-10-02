@@ -8,8 +8,6 @@ import java.util.UUID;
 
 import org.jetbrains.annotations.Nullable;
 
-import io.github.fabricators_of_create.porting_lib.util.MinecartAndRailUtil;
-
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.jetbrains.annotations.NotNull;
 
@@ -32,7 +30,6 @@ import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
-import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.entity.vehicle.Minecart;
@@ -42,16 +39,16 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 import io.github.fabricators_of_create.porting_lib.core.util.INBTSerializable;
-import io.github.fabricators_of_create.porting_lib.util.MinecartAndRailUtil;
+import io.github.fabricators_of_create.porting_lib.blocks.util.MinecartAndRailUtil;
 
 /**
  * Extended code for Minecarts, this allows for handling stalled carts and
  * coupled trains
  */
 public class MinecartController implements INBTSerializable<CompoundTag> {
+	// fabric: no NeoForge attachment system to serialize this through (see AllAttachmentTypes) - this is
+	// just a sentinel instance returned in place of null by CouplingHandler#getNextInCouplingChain and friends.
 	public static final MinecartController EMPTY = new MinecartController.Empty();
-
-	public static final IAttachmentSerializer<CompoundTag, MinecartController> SERIALIZER = Type.SERIALIZER;
 
 	private boolean needsEntryRefresh;
 	private WeakReference<AbstractMinecart> weakRef;
@@ -76,12 +73,7 @@ public class MinecartController implements INBTSerializable<CompoundTag> {
 	}
 
 	public final boolean isEmpty() {
-		return getType() == Type.EMPTY;
-	}
-
-	@NotNull
-	protected Type getType() {
-		return Type.NORMAL;
+		return this instanceof Empty;
 	}
 
 	public void tick() {
@@ -454,6 +446,121 @@ public class MinecartController implements INBTSerializable<CompoundTag> {
 			stallData.yaw = nbt.getFloat("Yaw");
 			stallData.pitch = nbt.getFloat("Pitch");
 			return stallData;
+		}
+	}
+
+	private static class Empty extends MinecartController {
+
+		private Empty() {
+			super(null);
+		}
+
+		private static void warn() {
+			Create.LOGGER.warn("Method called on EMPTY MinecartController", new Exception());
+		}
+
+		@Override
+		public void tick() {
+			warn();
+		}
+
+		@Override
+		public boolean isFullyCoupled() {
+			warn();
+			return false;
+		}
+
+		@Override
+		public boolean isLeadingCoupling() {
+			warn();
+			return false;
+		}
+
+		@Override
+		public boolean isConnectedToCoupling() {
+			warn();
+			return false;
+		}
+
+		@Override
+		public boolean isCoupledThroughContraption() {
+			warn();
+			return false;
+		}
+
+		@Override
+		public boolean hasContraptionCoupling(boolean current) {
+			warn();
+			return false;
+		}
+
+		@Override
+		public float getCouplingLength(boolean leading) {
+			warn();
+			return 0.0f;
+		}
+
+		@Override
+		public void decouple() {
+			warn();
+		}
+
+		@Override
+		public void removeConnection(boolean main) {
+			warn();
+		}
+
+		@Override
+		public void prepareForCoupling(boolean isLeading) {
+			warn();
+		}
+
+		@Override
+		public void coupleWith(boolean isLeading, UUID coupled, float length, boolean contraption) {
+			warn();
+		}
+
+		@Nullable
+		@Override
+		public UUID getCoupledCart(boolean asMain) {
+			warn();
+			return null;
+		}
+
+		@Override
+		public boolean isStalled() {
+			warn();
+			return false;
+		}
+
+		@Override
+		public void setStalledExternally(boolean stall) {
+			warn();
+		}
+
+		@Override
+		public void sendData() {
+			super.sendData();
+		}
+
+		@Override
+		public CompoundTag serializeNBT(@NotNull HolderLookup.Provider provider) {
+			return super.serializeNBT(provider);
+		}
+
+		@Override
+		public void deserializeNBT(@NotNull HolderLookup.Provider provider, CompoundTag nbt) {
+			super.deserializeNBT(provider, nbt);
+		}
+
+		@Override
+		public boolean isPresent() {
+			return super.isPresent();
+		}
+
+		@Override
+		public AbstractMinecart cart() {
+			return super.cart();
 		}
 	}
 }

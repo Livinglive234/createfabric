@@ -2639,3 +2639,102 @@ future session), and the handful of non-fatal warnings seen earlier in the log (
 'porting_lib:global_loot_modifier_serializers' was empty after loading`, a `ConcurrentModificationException`
 in Mod Menu's background update-checker thread, `porting_lib:obj` model loader missing/falling back to
 vanilla) which don't block boot but may indicate smaller latent issues worth revisiting.
+
+## Done this session (batches 83-88 — real-world packaging/runtime bugs, found via `./gradlew build` and an
+actual PrismLauncher install rather than `runClient`)
+
+Everything up through batch 82 was only ever verified via `./gradlew runClient`, which resolves the full
+dependency graph and runs entirely under named (dev) mappings - it never exercises dependency *packaging*
+(what actually ends up embedded in the distributed jar) or *remapping* (translating named-mapping references to
+the intermediary mappings real, non-dev installs run under). Both turned out to hide real bugs:
+
+- **Batch 83 — `porting_lib_accessors` pinned to a version that was never published for 1.21.1.** First-ever
+  `./gradlew build` (as opposed to `compileJava`/`runClient`) failed outright resolving dependencies, the same
+  "this module's 1.21.1 releases stop earlier than the rest of porting-lib" issue already known for
+  `conditions`/`extensions` - confirmed via `accessors`' own `maven-metadata.xml` and pinned it separately,
+  same pattern.
+- **Batch 84 — the committed `gradle.properties` hardcoded a machine-local JDK path, breaking GitHub Actions
+  outright** (`org.gradle.java.home` pointed at this Mac's `jdk-21.jdk`, which doesn't exist on any CI runner).
+  Moved that override to this machine's own `~/.gradle/gradle.properties` (never commit machine-specific paths),
+  bumped CI's `actions/setup-java` from 17 to 21 to match what this project actually needs, and added an
+  explicit Gradle toolchain (`languageVersion = 21`) to `build.gradle.kts` so the project's own compile/test JVM
+  is pinned correctly regardless of whichever JDK happens to be first on a contributor's `PATH`. Also gated the
+  Maven-publish steps in `build.yml` behind `github.repository == 'Fabricators-of-Create/Create'`, since this
+  fork has no credentials for upstream's private Maven host and those steps were failing red on every push here
+  for no actionable reason.
+- **Batch 85 — cleaned up three of the four non-fatal boot warnings flagged at the end of batch 82.** Mod
+  Menu's own background update-checker races its `MODS` map (a plain `HashMap`, read via
+  `.values().stream()...toList()` from a background thread while still being populated on the main thread) -
+  fixed with a `HashMap` subclass that synchronizes every mutator and returns snapshot copies from
+  `values()`/`keySet()`/`entrySet()` (not just swapped to `ConcurrentHashMap`, since Mixin's `@Redirect` on a
+  constructor call requires the handler's declared return type to exactly match the original, `java.util.HashMap`
+  itself). The `porting_lib:obj` model loader warning turned out not to be cosmetic at all - EVERY one of
+  Create's `.obj`-based block models (water wheel, crushing wheel, blaze burner, bogeys, flywheel, chain
+  conveyor, etc.) depends on it, and it was simply never added as a dependency; it publishes at the same
+  version as the rest of porting-lib, so just needed adding. Investigating that also surfaced a real bug:
+  Ponder/Catnip's `FabricClientHooksHelper#getCurrentLocale()` calls `LanguageManager#getJavaLocale()`, removed
+  in 1.21.1, throwing on every resource reload and causing Minecraft to silently drop any selected resource
+  pack - fixed with a mixin rebuilding an equivalent `Locale` from `getSelected()`'s language code instead. The
+  fourth warning (`global_loot_modifier_serializers` empty registry) was confirmed benign - it's a NeoForge-API
+  compat registry porting_lib creates unconditionally, and Create never uses Forge's Global Loot Modifiers API,
+  so nothing populates it.
+- **Batch 86 — 11 more porting_lib modules missing from the actual shipped jar**, the same root cause as batch
+  83 but far larger in scope: a real end-user running the packaged jar (not `runClient`) hit
+  `HARD_DEP_NO_CANDIDATE porting_lib_base ... {depends porting_lib_item_abilities @ [*]}` - `item_abilities`
+  was never added to this project's `include()` list, so never bundled, even though `porting_lib_base` itself
+  requires it to be present. `./gradlew runClient` never caught this because Loom's dev environment resolves
+  the *full* transitive dependency graph as separate mod jars regardless of what's explicitly embedded - only
+  the actual packaged jar is limited to exactly what's listed in `include()`. Diffed
+  `./gradlew dependencies --configuration runtimeClasspath`'s full porting_lib module list against this
+  project's `include()` list to find every other module with the same gap in one pass rather than fixing them
+  one crash report at a time: `asm`, `attributes`, `config`, `gametest`, `gui_utils`, `item_abilities`,
+  `lazy_registration`, `loot`, `model_loader`, `registry`, and `render_types` were all present transitively on
+  the dev classpath but absent from the shipped jar. Added all eleven, each pinned to its actual
+  currently-resolved version (cross-checked per module against the dependency tree) rather than bumping to
+  whatever's newest and untested. Verified by unzipping the actual built jar afterward: all 30 required
+  porting_lib modules now appear under `META-INF/jars/`.
+- **Batch 87 — Ponder-Fabric 1.0.44's own packaging bug**: its `ponder.mixins.json` declares
+  `"refmap": "ponder.refmap.json"`, but the actual refmap file shipped inside that version of the jar is named
+  `Ponder-Fabric-1.21.1-refmap.json` - a filename mismatch in Ponder's own build, confirmed by extracting
+  `ponder.mixins.json` directly from the compiled jar (not its sources jar) and comparing against its real file
+  listing. Since Mixin can never find "ponder.refmap.json", none of Ponder's own mixins targeting vanilla
+  classes can translate their named-mapping references to intermediary at runtime - invisible in `runClient`
+  (dev never remaps), but a guaranteed `InvalidAccessorException` crash on any real install, on the very first
+  Ponder accessor unlucky enough to run early (`ScreenAccessor`, core rendering plumbing for most of Create's
+  custom screens, as it happened). Downloaded and inspected several Ponder releases directly (not full Gradle
+  re-resolutions) to bisect a fix: the filename bug is fixed starting at 1.0.50, but 1.0.55+ introduces an
+  unrelated breaking API redesign (`BasicFluidRenderer` -> a generic, instance-based `FluidRenderHelper<T>`)
+  that would require migrating ~10 of Create's own fluid-rendering files for no benefit here. Bumped to 1.0.50
+  specifically - fixes the crash, keeps the old fluid-rendering API, confirmed via the actual built jar that its
+  embedded Ponder now ships a correctly-named refmap.
+- **Batch 88 — `BuiltInRegistriesMixin`'s `@At` target couldn't be remapped at all, crashing the game during
+  bootstrap** (`SharedConstants.<clinit>`, before even the title screen) - the first bug this session actually
+  found via a REAL PrismLauncher install with 150+ other mods rather than anything self-discovered. Dug in by
+  extracting the actual shipped, remapped `BuiltInRegistriesMixin.class` from `build/libs` (not dev output) and
+  comparing against source: the `@Mixin` class target and the `@WrapOperation` `method` selector were both
+  correctly translated to intermediary names, but the `@At(INVOKE)` target,
+  `Lnet/minecraft/core/Registry;forEach(Ljava/util/function/Consumer;)V`, was left completely untouched in
+  named-mapping form. Root cause: `Registry<T>` doesn't declare `forEach` itself (confirmed via `javap` - it
+  only declares `key()` plus two static `register()` overloads); `forEach` is inherited all the way from
+  `java.lang.Iterable` (`Registry -> IdMap -> Iterable`, none of which override it), and whatever remaps this
+  project's mixins at build time can't resolve `@At` references through an interface hierarchy like it can for
+  `@Mixin`/`method` selectors. Fixed by pointing `@At` at `Iterable`'s own `forEach` directly - the real
+  invokeinterface instruction's static owner is still `Registry`, but naming the JDK interface that actually
+  declares the method sidesteps the remapping gap entirely, since `java.lang.Iterable` is never part of
+  Minecraft's mapping tables and has nothing to translate. Verified the fix via a full `./gradlew build` +
+  disassembling the shipped class again: the `@At` target now survives packaging unchanged, as expected for a
+  JDK type. Audited every other `@At(INVOKE)` target across all of Create's mixins afterward for the same
+  "method inherited from an unmapped JDK interface" pattern (`List.add`, the only other JDK-ish one, is
+  directly declared on `List` itself per `javap` - not at risk) - no other instances found.
+
+**Correcting a claim from batch 88's own commit message**: investigating that bug surfaced that this project's
+`annotationProcessor` configuration and `compileJava`'s `annotationProcessorPath` are both completely empty,
+and no `refmap.json` is generated for `create.mixins.json` at all. That commit flagged this as an open gap to
+maybe fix - but it isn't one: searching Fabric Loom 1.13.6's own jar for any `annotationProcessor` wiring
+related to Mixin turns up nothing, confirming that modern Loom doesn't use the classic Mixin
+Annotation-Processor/refmap mechanism at all anymore - it remaps mixin annotation references directly from
+already-compiled bytecode via TinyRemapper's own Mixin-aware extension at `:remapJar` time, which is exactly
+consistent with everything observed: the `@Mixin`/`method` selectors above remap correctly with zero refmap
+present, and the *only* real limitation found is the narrower inherited-interface-method gap batch 88 actually
+fixed. There is no project-level configuration to "turn on" a refmap here; it's simply not how this tool works,
+and nothing further needs doing on that front.

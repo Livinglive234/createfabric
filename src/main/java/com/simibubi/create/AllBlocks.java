@@ -2600,7 +2600,7 @@ public class AllBlocks {
 			.tag(Tags.Blocks.STORAGE_BLOCKS)
 			.tag(AllBlockTags.CARDBOARD_STORAGE_BLOCKS.tag)
 			.item()
-			.burnTime(4000)
+			.onRegister(item -> FuelRegistry.INSTANCE.add(item, 4000))
 			.tag(AllItemTags.CARDBOARD_STORAGE_BLOCKS.tag)
 			.tag(Tags.Items.STORAGE_BLOCKS)
 			.build()
@@ -2627,7 +2627,7 @@ public class AllBlocks {
 					.add(LootItem.lootTableItem(AllBlocks.CARDBOARD_BLOCK.asItem()))
 					.when(((BlockLootSubProviderAccessor) r).create$hasSilkTouch().invert())))))
 			.item()
-			.burnTime(4000)
+			.onRegister(item -> FuelRegistry.INSTANCE.add(item, 4000))
 			.build()
 			.lang("Bound Block of Cardboard")
 			.register();

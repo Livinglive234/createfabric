@@ -3631,3 +3631,64 @@ errors).
 **Running total: 40 real bugs found and fixed across seven reference-diff/data audit waves (33 code-logic bugs
 across six waves against the old 1.20.1 Fabric reference, plus 7 more — items 34-40 — in this wave's
 data/resource audit against the real upstream NeoForge mc1.21.1/dev source).**
+
+## Batch 109 — live GUI testing, milk-lib datagen crash, self-correction on batch 108's stonecutting "cleanup"
+
+This session finally got live client testing working: Xvfb + Mesa software rendering + a small Java AWT Robot
+tool for screenshots and clicks, letting the actual client run and be interacted with for the first time all
+session (everything before this was `compileJava`/`build`/dedicated-server-boot only).
+
+41. **`CreateMainMenuScreen`'s Create logo was invisible — confirmed and fixed via live screenshot testing.**
+    User-reported: "the create button has a black background and no create logo, it had one before." Live-tested
+    by actually launching the client and clicking through to the screen: confirmed the big Create logo graphic
+    (`AllGuiTextures.LOGO`) rendered nothing at all, while the black background box behind it (by-design, a
+    `BoxElement`) rendered fine. Diffed this file against the 1.20.1 reference first — byte-identical in the
+    relevant section, so the regression isn't in this repo's own code, but in how it interacts with the external
+    `flywheel`/`catnip` rendering libraries used for the two rotating 3D cogwheel block icons drawn immediately
+    before the logo (same method, with depth testing enabled for that whole section). Tested the hypothesis
+    directly: wrapped just the logo's blit call in `RenderSystem.disableDepthTest()`/`enableDepthTest()`,
+    rebuilt, relaunched the live client, and confirmed via a fresh screenshot that the logo now renders correctly
+    — the 3D block icons were leaving closer Z-buffer values at the logo's screen position that occluded its 2D
+    blit quad. (Investigated the CurseForge/Modrinth platform-icon buttons as a second suspected case first —
+    they turned out to be rendering correctly all along; their flat brand-color icon art just looks unfamiliar
+    zoomed out. Not a bug, no action taken there.)
+42. **`./gradlew runDatagen` crashed outright on an unrelated third-party dependency.** `milk-lib` (a transitive
+    dependency providing milk-cauldron support) ships a `milk_cauldron` block with no loot table at all anywhere
+    in its jar, which trips vanilla's `BlockLootSubProvider` validation (every registered block across every
+    loaded mod must have a loot table) and aborts the entire datagen run before any of Create's own providers
+    can finish — this is what was blocking `runDatagen` for every fix this session that needed it, each of which
+    had to be hand-written against the dedicated-server/build pipeline instead. Fixed by shipping a minimal empty
+    loot table for `milk-lib:milk_cauldron` (mirroring vanilla's own `minecraft:cauldron` loot table exactly,
+    since the block behaves the same way) at
+    `src/generated/resources/data/milk-lib/loot_table/blocks/milk_cauldron.json`. Verified: this specific crash
+    no longer occurs. (A second, separate, deterministically-reproducible datagen crash was then hit —
+    `Missing loottable 'create:blocks/schematicannon'`, even though `AllBlocks.java`'s own `.loot(...)` callback
+    for that block is present and correct, and the static output file on disk already matches real NeoForge
+    exactly. This looks like a pre-existing Registrate/vanilla `LootTableProvider` validation-ordering issue
+    unrelated to anything touched this session — not chased further, since it's a datagen-tooling reliability
+    issue, not a content bug; the shipped `schematicannon.json` loot table is already correct.)
+43. **Self-correction: batch 108's "dead duplicate stonecutting recipes" cleanup was wrong, caught here by
+    actually running real datagen.** The earlier data-resource audit characterized
+    `industrial_iron_block_from_iron_ingots_stonecutting.json`/`weathered_iron_block_from_iron_ingots_stonecutting.json`
+    (using the legacy flat `c:iron_ingots` tag) as dead clutter duplicating the correctly-named
+    `..._from_ingots_iron_stonecutting.json` files (using the modern `c:ingots/iron` tag), and batch 108 deleted
+    them along with their advancements. Running real datagen this batch (after the milk-lib fix got far enough
+    to reach recipe generation) silently regenerated those exact files — proving this Fabric port's own
+    stonecutting-recipe datagen code deliberately generates a recipe variant for every known synonym tag of a
+    material, specifically so the recipe works regardless of which convention another mod's iron ingots are
+    tagged under. That's a genuine, intentional Fabric cross-mod-compat feature (not present in real NeoForge,
+    which doesn't carry the same legacy-flat-tag duplication), not dead merge debris. Restored both recipe files
+    and their original advancements; the new advancements added in batch 108 for the modern-tag-named recipes
+    remain, since those were genuinely missing and are unaffected by this correction. The adjacent
+    `copper_tiles_from_copper_ingots_stonecutting.json` orphan advancement deletion from batch 108 was re-checked
+    and confirmed still correct — no matching recipe variant exists or regenerates for that one, so it really was
+    a dead leftover.
+
+This batch is a reminder of the value of actually running the tools (live client, live datagen) rather than
+reasoning from static diffs alone — both the GUI fix and the stonecutting self-correction only became possible/
+visible once real execution was in the loop. Verified with `compileJava`, a full `build`, and a clean
+`runServer` boot (Done in 2.549s, no new errors) after all fixes, plus live client screenshots confirming the
+logo fix specifically.
+
+**Running total: 42 real bugs found and fixed (41 and 42 above; item 43 is a correction to an earlier count, not
+a new bug, so the running total stays net +2 from this batch's 40).**

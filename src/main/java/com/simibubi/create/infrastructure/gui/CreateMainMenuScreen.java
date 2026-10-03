@@ -136,7 +136,9 @@ public class CreateMainMenuScreen extends AbstractSimiScreen {
 		ms.translate(width / 2 - 32, 32, -10);
 		ms.pushPose();
 		ms.scale(0.25f, 0.25f, 0.25f);
+		RenderSystem.disableDepthTest();
 		AllGuiTextures.LOGO.render(graphics, 0, 0);
+		RenderSystem.enableDepthTest();
 		ms.popPose();
 		new BoxElement().withBackground(0x88_000000)
 			.flatBorder(new Color(0x01_000000))

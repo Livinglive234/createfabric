@@ -3528,3 +3528,27 @@ errors).
 
 **Running total: 33 real bugs found and fixed across six reference-diff audit waves. The low-ratio-tail and
 packet-handler-logic gaps flagged after wave five are now closed for every subsystem in the codebase.**
+
+## Batch 108 — data/resources audit against the real NeoForge mc1.21.1/dev branch (seventh wave, starting)
+
+Everything before this batch audited Java *code logic* only, against an old 1.20.1 Fabric port found in this
+repo's own git history (used as a proxy for "a working Fabric adaptation," reasoned to be behaviorally
+equivalent to this port's merged-in NeoForge logic). This wave changes both the target and the scope: cloned the
+actual upstream Create mod's real `mc1.21.1/dev` branch (NeoForge, same MC version as this port) from
+`https://github.com/Creators-of-Create/create` as read-only ground truth, and is auditing DATA/resource files
+(recipes, loot tables, advancements, tags, lang, models/blockstates) that were never checked at all this
+session — only `.java` logic had been audited before now.
+
+34. `src/generated/resources/data/create/recipes/` (plural, 302 files) — found independently while preparing
+    this wave, before dispatching any audit agent. This directory is dead stale datagen output: `git log`
+    traces its most recent touch back through a `mc1.18/fabric/dev` merge. Minecraft renamed the recipe
+    datapack folder from `recipes` (plural) to `recipe` (singular) around the 1.20.5 data format changes; the
+    current datagen code (confirmed via `CRecipes.java`) only outputs to the singular `recipe/` folder, and the
+    real upstream NeoForge `mc1.21.1/dev` branch has no `recipes/` folder at all. This plural directory was
+    inert — Minecraft 1.21.1 never reads it — but still got bundled into the built jar as 1.5MB of dead weight,
+    carried forward unnoticed through years of merges. Deleted it; confirmed nothing in the codebase referenced
+    it by path, and the build still succeeds.
+
+Three parallel audits are now running against the real NeoForge source for: recipes/loot tables/advancements,
+tags (accounting for the expected `neoforge:`/`c:` common-tag namespace difference), and lang/models/blockstates.
+Results and any fixes will be appended here once they report back.

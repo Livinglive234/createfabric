@@ -6,6 +6,8 @@ import com.simibubi.create.infrastructure.fabric.HelmetOverlay;
 
 import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.animation.LerpedFloat.Chaser;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.resources.ResourceLocation;
@@ -24,6 +26,7 @@ public class CardboardArmorStealthOverlay extends HelmetOverlay {
 		.startWithValue(0)
 		.chase(0, 0.25f, Chaser.EXP);
 
+	@Environment(EnvType.CLIENT)
 	public static void clientTick() {
 		LocalPlayer player = Minecraft.getInstance().player;
 		if (player == null)

@@ -2936,3 +2936,109 @@ open issue above) is believed correct from direct source inspection but remains 
 **If this gets tested on a real install and any of these 33 recipes still fail to load, that's the first place to
 look** — and the `runGametestServer`/`BakedModel`-on-`SERVER` crash above is unrelated prior art worth fixing
 separately, since it currently blocks the most direct in-sandbox verification path for any future recipe/data work.
+
+## Done this session (batch 98 — fixed the `runGametestServer`/dedicated-server boot crash, 5 root causes)
+
+User explicitly asked for this: they intend to actually run this on a dedicated server, so the batch-97 note above
+("the `BakedModel`-on-`SERVER` crash blocks in-sandbox verification") became priority #1. Chased it to a full fix
+across 5 independent root causes — `runGametestServer` now boots all the way to a running, ticking world
+(`Server Running: true`, all data packs loaded) instead of dying before `Create.<clinit>` even finishes. All 5 are
+the **same underlying mechanism**, confirmed by reading Fabric Loader 0.19.5's own source
+(`FabricTransformer`/`EnvironmentStrippingData`/`ClassStripper`, extracted from its sources jar):
+`@Environment(EnvType.CLIENT)` strips a method/field from a class **only** by exact `name+descriptor` match against
+members that carry that exact annotation directly — nothing else. In particular:
+- It does **not** protect a raw lambda's compiled body. A lambda literal becomes a separate synthetic method
+  (`lambda$methodName$N`) that never inherits the enclosing method's `@Environment` annotation, so if the lambda's
+  own SAM-implementation parameter/return type (or a variable it *captures*, e.g. a local `Minecraft mc`) is a
+  client-only class, that synthetic method stays in the class file on the server, unstripped.
+- Verifying/loading *any* class on the server requires the JVM to resolve every method/field descriptor in that
+  class, including ones that are never called server-side — so a single unstripped client-only reference anywhere
+  in a class crashes the whole class load (`Cannot load class <X> in environment type SERVER`) the moment
+  *anything* (even one unrelated, perfectly safe static method) causes that class to be referenced from common/
+  server-reachable code.
+- This only matters for classes actually reachable from common code. Purely client-only classes (e.g.
+  `ClientEvents`, only ever invoked through `CreateClient`'s `ClientModInitializer` entrypoint) never get loaded on
+  a dedicated server regardless of what they contain, so the same patterns inside them are harmless.
+
+The 5 fixes, in the order `runGametestServer` surfaced them (each confirmed by re-running and seeing the game
+progress further before hitting the next one):
+
+1. **`CreateRegistrate.registerCTBehviour`** (`foundation/data/CreateRegistrate.java`) — correctly
+   `@Environment(CLIENT)`-annotated itself, but its body built a raw lambda
+   `model -> new CTModel(model, behavior)` implementing `NonNullFunction<BakedModel, BakedModel>` — the
+   synthetic method for that lambda has a real (non-generic-erased) `BakedModel` parameter/return type, unstripped.
+   The file already had a purpose-built `@Environment(CLIENT)`-annotated record for exactly this
+   (`CTModelProvider`, with its own comment: "these records are required jank since @Environment doesn't strip
+   lambdas") but this one call site used a raw lambda instead of it. Fixed: `new CTModelProvider(behavior)`.
+2. **Ponder-Fabric 1.0.50's own `FabricNetworkHelper.registerPackets`** (external dependency, not this project's
+   code) unconditionally calls the client-only `ClientPlayNetworking.registerGlobalReceiver(...)` for every
+   clientbound packet from a method that's invoked from common init code
+   (`CatnipPacketRegistry.registerAllPackets` → `AllPackets.register()`, runs on the server too) — a genuine logic
+   bug in the library, not just a stripping gap (confirmed by extracting and reading its sources jar). Can't edit
+   Ponder's source directly, so added `foundation/mixin/fabric/FabricNetworkHelperMixin.java` (`@Inject` at
+   `HEAD`, `cancellable = true`): on a dedicated server, reimplements the loop registering both S2C and C2S
+   payload *types/codecs* as before, but skips the client-only receiver registration entirely (the server never
+   receives its own S2C packets, so it was never needed there) — deliberately written with zero reference anywhere
+   to `ClientPlayNetworking`/`PlayPayloadHandler`/`LocalPlayer` so the mixin class itself loads safely on the
+   server. Registered in `create.mixins.json`'s common (non-client) `"mixins"` list, alongside the existing
+   `fabric.MenuBuilderMixin` (same "mixin-patch a third-party dependency's bug" pattern, precedent from batch 79).
+3. **`AllItems.java`'s `CARDBOARD_HELMET` registration** called `new CardboardArmorStealthOverlay()` directly
+   inside `.onRegister(...)` — a common registration hook, invoked on both sides. `CardboardArmorStealthOverlay`
+   itself must stay loadable on both sides (since `AllItems` references it directly), but its `clientTick()`
+   static method (local var `LocalPlayer player = Minecraft.getInstance().player;`) had **no** `@Environment`
+   annotation at all — a plain missing-annotation bug, not the lambda-escape kind. Fixed by (a) annotating
+   `clientTick()` `@Environment(CLIENT)` so it strips correctly now that the class itself stays common-loadable,
+   and (b) wrapping the actual registration in `CatnipServices.PLATFORM.executeOnClientOnly(...)` (matching this
+   codebase's established convention, e.g. `CreateRegistrate.casingConnectivity`) so the overlay is never
+   constructed/registered on a server that has no use for a HUD element at all.
+4. **`ClipboardValueSettingsHandler`**'s `drawCustomBlockSelection`/`clientTick` (both correctly
+   `@Environment(CLIENT)`-annotated already) each contained 3 `.stream().anyMatch/noneMatch(...)` lambdas that
+   captured the enclosing method's `Minecraft mc` local directly (e.g. `cc.writeToClipboard(mc.level.registryAccess(), ...)`
+   inside the lambda) — captured locals become extra parameters on the synthetic lambda method, so each of these
+   lambdas' compiled method carried an unstripped `Minecraft`-typed parameter despite living inside an annotated
+   method. The file already had the right idea in one spot (`Player player = mc.player; // fabric: keep LocalPlayer
+   out of lambdas`) but didn't apply it to these other lambdas. Fixed by extracting `RegistryAccess registryAccess
+   = mc.level.registryAccess();` / `Direction targetDirection = target.getDirection();` as plain locals before each
+   lambda block and having the lambdas capture those (common-typed) locals instead of `mc` itself; also switched
+   `mc.player` → the already-captured `player` (typed `Player`) at one remaining call site.
+5. **`ChainConveyorConnectionHandler`** had two bugs stacked in the same class: (a) `onRightClick()`/`clientTick()`
+   directly used `Minecraft`/`LocalPlayer` with **no** `@Environment` annotation at all (same missing-annotation
+   shape as fix #3) — annotated both `@Environment(CLIENT)`; (b) a real logic bug in `fail(String message)`
+   (called from `validateAndConnect`, which *does* run on the server for the actual connection logic, not just
+   client-side preview) — it called `Minecraft.getInstance().player` to send the failure message instead of using
+   the actual target player already passed into `validateAndConnect` as a parameter. This wasn't just a classload
+   crash waiting to happen — even if it had been annotated away, `Minecraft.getInstance()` returns null on a
+   dedicated server, so every validation failure (too far, too close, too steep, not enough chains, etc.) would
+   NPE server-side. Fixed by changing `fail`'s signature to `fail(Player player, String message)` and threading the
+   real `player` through all 8 call sites instead of reaching for a client-side singleton.
+
+**Verification method**: no `compileJava`/`build` alone would have caught any of these (client-only type
+references inside a method body don't trip `javac` at all — only Fabric Loader's own runtime environment-stripping
+transform, applied during actual classloading, does). Each fix was verified by rerunning `./gradlew
+runGametestServer` end-to-end and confirming the boot progressed further than the previous attempt before hitting
+the next (different) crash, exactly matching the "drive to green" methodology from batches 72-96 — just resumed
+after a session gap, now specifically for the server-boot path this project had apparently never been tested
+against before (everything in batches 72-96 was verified via `runClient`/a real launcher install, never
+`runGametestServer`/a dedicated server specifically).
+
+**Status at the end of this batch: the dedicated/gametest server boots fully** — registration, world creation, and
+tick loop all start successfully (`Server Running: true`, every data pack active, no more environment-stripping
+crashes of any kind observed). **New, unrelated issue found at this point, not yet fixed:**
+`java.lang.IllegalStateException: An outer transaction is already active on this thread` during the first server
+tick, plus a wave of `(FluidStack) Failed to read invalid fluid: No key amount/id in MapLike[...]` errors logged
+just before it (likely pre-existing test-world fixture data in an old/incompatible `FluidStack` NBT/codec shape —
+needs its own investigation, probably unrelated to the transaction error). This is a genuine runtime/gameplay bug,
+not a boot-time environment-stripping issue — a different class of problem from everything fixed in this batch,
+and the natural next thing to chase for anyone continuing this.
+
+**General lesson for future batches**: when writing or reviewing any code containing `@Environment(CLIENT)`,
+specifically check (1) any lambda or method reference inside that annotated method/class — does its own SAM
+parameter type, or any local variable it captures, mention a `net.minecraft.client.*` (or other client-only
+library) type? If so, it needs its own fix (extract the capture to a common-typed local first, or move the lambda
+body into a properly-annotated helper class/record), not just the enclosing method's annotation. And (2) is the
+method missing the annotation entirely despite clearly using `Minecraft.getInstance()`/`LocalPlayer`/other
+client-only APIs? `grep -rn "Minecraft.getInstance()\|LocalPlayer" src/main/java` and cross-checking each hit's
+enclosing method for `@Environment(CLIENT)` would catch both patterns in one pass if this needs auditing more
+broadly later — not done exhaustively this batch, since the 5 found were enough to get a real server boot working
+end-to-end, but more may exist elsewhere in the codebase, only surfacing once something else starts calling into
+them from common code.

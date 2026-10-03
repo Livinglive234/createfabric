@@ -82,6 +82,7 @@ import com.tterrag.registrate.providers.ProviderType;
 import com.tterrag.registrate.util.entry.ItemEntry;
 import com.tterrag.registrate.util.nullness.NonNullBiConsumer;
 
+import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
@@ -365,7 +366,8 @@ public class AllItems {
 			.onRegister(item -> FuelRegistry.INSTANCE.add(item, 1000))
 			.onRegisterAfter(Registries.ITEM, v -> ItemDescription.useKey(v, "item.create.cardboard_armor"))
 			.model(TrimmableArmorModelGenerator::generate)
-			.onRegister(item -> HelmetOverlay.REGISTRY.register(item, new CardboardArmorStealthOverlay()))
+			.onRegister(item -> CatnipServices.PLATFORM.executeOnClientOnly(
+				() -> () -> HelmetOverlay.REGISTRY.register(item, new CardboardArmorStealthOverlay())))
 			.register(),
 
 		CARDBOARD_CHESTPLATE =

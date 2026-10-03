@@ -12,7 +12,17 @@ Baseline compile counts (full clean `./gradlew compileJava`, not incremental):
 - After bulk import-restoration script (see below), 267 files / 552 imports: 2,964 errors
 - After fixing ProcessingRecipeSerializer.java (stale pre-refactor dead code): 2,942 errors
 - After ChuteBlockEntity/ItemDrainBlock/AllItemAttributeTypes (Capabilities.* → Fabric Storage/BlockApiCache) + ClientEvents (AllFluids import, ClientWorldEvents wrong package, duplicate CommonEvents registration) + CreateEmptyingRecipeGen (NeoForgeMod.MILK → Milk.STILL_MILK): pending re-verify (cr_verify10.log)
-- **Current (batch 60, fresh-container verified): 252 errors** — see "Session resumed" / batch 50-60 notes near the end of this file for the full trajectory from the last documented checkpoint (503) through this session's confirmed 478 → 455 → 441 → 407 → 395 → 389 → 367 → 345 → 330 → 311 → 271 → 252. Development also moved from a throwaway session branch onto `main` directly partway through (see "Branch consolidation" note below) — all commits from batch 56 onward are on `main`.
+- **Compile-error sweep finished at batch 71: ZERO compile errors.** Trajectory from the batch-60 checkpoint
+  (252) through zero: 252 → 237 → 221 → 220 → 219 → 213 (batches 61-65) → batch 66-68 (down to 149, both deferred
+  core files resolved) → batch 69-71 (149 → 114 → 85 → 37 → 0). See "Session resumed" / batch 50-65 notes further
+  down for the full earlier trajectory, and "Done this session (batches 69-71)" for the final run to zero.
+- **Current status (batch 96): the project `./gradlew build`s successfully and has been verified to actually run**
+  — boots, loads a world, and supports real gameplay on a PrismLauncher install with 150+ other mods. Work since
+  batch 71 has been runtime bug-hunting (crashes found via real, non-dev launches — see "Done this session
+  (batches 72-96)" near the end of this file), not compile-error counting. **One known open issue remains**: ~35
+  core recipes still fail to parse due to leftover NeoForge `FluidIngredient`/`Ingredient` JSON schema — see "Known
+  open issue" near the end of this file. Development also moved from a throwaway session branch onto `main`
+  directly partway through (see "Branch consolidation" note below) — all commits from batch 56 onward are on `main`.
 
 ## Workflow note: batch fixes before recompiling (user preference, established batch 64)
 Fix several small files per round (a handful to a dozen, depending on how independent/low-risk they are) and run
@@ -2738,3 +2748,142 @@ consistent with everything observed: the `@Mixin`/`method` selectors above remap
 present, and the *only* real limitation found is the narrower inherited-interface-method gap batch 88 actually
 fixed. There is no project-level configuration to "turn on" a refmap here; it's simply not how this tool works,
 and nothing further needs doing on that front.
+
+## Done this session (batches 89-96 — more runtime bugs, found via real non-dev launches and actual gameplay)
+
+- **Batch 89 — batch 88's fix was wrong.** A real (non-dev) launch hit the identical crash on
+  `BuiltInRegistriesMixin` even with batch 88's "point `@At` at `Iterable.forEach` instead of `Registry.forEach`"
+  fix built in (confirmed via checksum this was really the fixed jar) — Mixin's injector does not match an
+  `@At(INVOKE)` whose named owner sits above the real instruction's compiled owner in the interface hierarchy, at
+  least not in this toolchain. Rewrote the mixin to avoid `@At(INVOKE)` for the `forEach` call entirely: `@Inject`
+  at `HEAD` only needs the `method` selector to remap (already proven to work), and the loop body is now plain
+  compiled Java (`Registry<T> extends IdMap<T> extends Iterable<T>`), resolved through ordinary classfile
+  remapping with zero Mixin string-based `@At` involved. Reproduced the original per-entry validation logic exactly
+  by disassembling the real vanilla method. Verified via a full `./gradlew build` + disassembling the shipped class.
+- **Batch 90 — same unmappable-`@At` bug, different mixin, this time unfixable by *any* retargeting.**
+  `FabricClientHooksHelperMixin`'s `@Redirect` targeted `LanguageManager.getJavaLocale()`, a method that doesn't
+  exist anywhere in vanilla 1.21.1 under any name (`LanguageManager` only has `getSelected()`) — there's no
+  intermediary name to map a nonexistent method to, so it's necessarily left exactly as written and can never
+  match real bytecode. Same fix shape as batch 89: `@Inject` at `HEAD` instead of `@Redirect`, loop body rewritten
+  as plain Java. Audited every remaining `@Redirect`/`@ModifyArg`/`@ModifyExpressionValue`/`@ModifyVariable`/
+  `@ModifyConstant` mixin in the project for the same risk class afterward — no further instances found.
+- **Batch 91 — `SimpleDatagenIngredient`'s decode path crashed on real recipes.** The write-only datagen helper
+  added in batch 76 (wrapped into every ingredient's decode via `Codec.either`) threw a raw `AssertionError`
+  instead of a graceful `DataResult.error` whenever JSON referenced a mod namespace its own internal `Mods` enum
+  didn't recognize — crashing the instant any installed mod (here, Better End Remastered) had a recipe Create's
+  datagen doesn't know about. Worse, for namespaces it *did* recognize it would have silently and incorrectly
+  decoded an ordinary vanilla `{"item": "..."}` ingredient as a `SimpleDatagenIngredient`, only to crash later when
+  something called `getItems()` on it (always throws — "Only for datagen output"). Fixed by making decode
+  unconditionally return `DataResult.error` — there's no namespace for which decoding through this codec is ever
+  correct, so `Codec.either` can now always fall through to vanilla's own ingredient parsing.
+- **Batch 92 — a NeoForge-incompatible fabric-port addition broke `ItemApplicationRecipe` and crashed world load
+  outright.** `AllRecipeTypes#processingCodec()`'s DEPLOYING/ITEM_APPLICATION branch called a
+  `ItemApplicationRecipe.codec(AllRecipeTypes)` static method that doesn't exist in NeoForge's original Create at
+  all (confirmed by diffing against `Createforge`) — a fabric-port addition that routed through
+  `ProcessingRecipeSerializer.codec()`, which hard-requires an `instanceof StandardProcessingRecipe.Serializer`
+  check that this serializer has never satisfied (same as upstream NeoForge). Deleted the broken method and had
+  the branch reuse the serializer's own already-correct codec (`getSerializer().codec()`) directly.
+- **Batch 93 — a genuine compile-time/runtime version mismatch in an optional compat dependency.** `SodiumCompat`
+  crashed with `NoClassDefFoundError` on `net.caffeinemc.mods.sodium.api.texture.SpriteUtil` while actually
+  playing (furthest the port had gotten — 89s uptime, a loaded world, the player moving). This project compiles
+  against Sodium 0.6.9, which ships a newer public `api`-package `SpriteUtil`; the actual installed pack had Sodium
+  0.6.7, which only has the older internal `client.render.texture.SpriteUtil` (confirmed directly from both jars'
+  contents) — the newer class literally doesn't exist in the older Sodium a player might realistically have
+  installed. Fixed by switching to the older, internal class (present in both 0.6.7 and 0.6.9, so no
+  `build.gradle.kts` version bump needed), accepting a "deprecated for removal" warning as the tradeoff for
+  actually working across the Sodium versions players have.
+- **Batch 94 — a world-gen crash from a missing porting_lib mixin.** porting_lib's `extensions` module (pinned to
+  `beta.54`, no newer 1.21.1 release exists) ships a `TrunkPlacerMixin` that unconditionally calls
+  `BlockState#onTreeGrow(...)`, expecting `BlockState` to implement `BlockStateExtensions` — but that release's jar
+  declares the `BlockStateExtensions` interface without ever actually applying it to `BlockState` via a mixin
+  (unlike the analogous `Block`/`BlockExtensions` pair, which *is* wired correctly). Produced a `NoSuchMethodError`
+  that froze world generation outright. Fixed by adding this project's own `BlockStateExtensionsMixin`, mirroring
+  porting_lib's own `BlockMixin` pattern, so the default method `TrunkPlacerMixin` expects actually exists at
+  runtime.
+- **Batch 95 — three separate issues found chasing noisy `latest.log` output:** (1) `CreateDatagen`'s
+  `onInitializeDataGenerator()` called Registrate's `setupDatagen()` (which constructs its root data generator)
+  *before* several other calls that themselves call `Registrate#addDataGenerator()` — fine on NeoForge, which
+  splits this across separate event priorities, but fatal on Fabric's single entrypoint method, which has to
+  replicate that ordering explicitly; reordered the calls. (2) 12 generated advancement JSON files still contained
+  literal unresolved git merge-conflict markers left over from the original Forge-to-Fabric merge, shipped as-is —
+  the actual cause of several `JsonParseException` crashes; resolved all 12 by hand. (3) 444 Create-bundled compat
+  recipes for optional mods carried only a NeoForge-only `"neoforge:conditions"`/`"neoforge:mod_loaded"`/
+  `"neoforge:tag_empty"` condition block that Fabric's resource loader silently ignores, parsing the recipe
+  unconditionally and crashing with "Unknown registry key" whenever the target mod wasn't installed — converted
+  all 444 to Fabric's native Resource Conditions API schema (`"fabric:load_conditions"`/
+  `"fabric:all_mods_loaded"`/`"fabric:not"`/`"fabric:tags_populated"`). **Flagged but not fixed this batch:** ~35
+  core (non-conditional) recipes still carry NeoForge's `FluidIngredient` type strings — see "Known open issue"
+  below.
+- **Batch 96 — three more issues found by diffing a fresh `latest.log` against the batch 95 fixes:** (1) all 4 core
+  Mechanical Crafting recipes (crushing_wheel, extendo_grip, wand_of_symmetry, potato_cannon) failed to parse with
+  "No key accept_mirrored" — `MechanicalCraftingRecipe`'s codec requires the snake_case field `"accept_mirrored"`,
+  but these 4 generated JSON files still had the old camelCase `"acceptMirrored"`; renamed in all 4. (2) Create's
+  own recipe-id generator produces two different ids for the same stonecutting recipe depending on which
+  generator pass created it (e.g. `x_from_copper_ingots_stonecutting` vs `x_from_ingots_copper_stonecutting`) — 20
+  such duplicate pairs exist; for 18 of them the stale committed copy used the old pre-1.21.2 plain-string
+  `"result"` schema and crashed outright while its differently-named, freshly-regenerated sibling was already
+  correct, so deleted the 18 broken orphans (and their matching advancement files) rather than fixing their schema
+  in place. (3) found 76 more recipes (4 zinc_ingot smelting/blasting + 72 compat smelting/blasting recipes for
+  optional ore mods not in the current test pack, e.g. Mekanism/IC2/Thermal/Immersive Engineering/TechReborn)
+  with the same old plain-string `"result"` schema — not crashing yet since those mods aren't installed, but would
+  the instant they were — normalized all of them to the object-form result.
+
+**Status as of batch 96: the project builds (`./gradlew build` → BUILD SUCCESSFUL) and has been verified to launch,
+reach a loaded world, and support actual gameplay on a real PrismLauncher install with 150+ other mods.** This is
+qualitatively different from every earlier "baseline: N errors" checkpoint above — those tracked `compileJava`
+only; everything from batch 72 onward has been runtime verification against a real modpack, not the dev
+environment (`./gradlew runClient` alone has repeatedly missed bugs — see batches 86/93 — because Loom's dev
+classpath and a packaged jar's bundled dependencies aren't the same thing).
+
+## Known open issue: ~35 core recipes still carry NeoForge's `FluidIngredient`/`Ingredient` type strings (not yet fixed)
+
+Found while chasing `latest.log` crashes in batches 95-96; still open as of batch 96. **Root cause:** these JSON
+recipe files were carried over from `Createforge` during the original NeoForge→Fabric merge and were never
+regenerated through this project's own Fabric-native datagen, so they still contain NeoForge's `FluidIngredient`
+dispatch-codec type strings (and, in one file, a NeoForge-only item `Ingredient` type) instead of this project's
+own Fabric `FluidIngredient` schema (`src/main/java/.../FluidIngredient.java`, confirmed via direct read 2026-10-03).
+
+Affected files (33, confirmed via `grep -rl "neoforge:single\|neoforge:tag\|neoforge:components"` across
+`src/generated/resources`): core mixing recipes (`chocolate.json`, `dough_by_mixing.json`, `mud_by_mixing.json`,
+`tea.json`, `cardboard_pulp.json`, + 3 compat ones), filling recipes (`glowstone.json`, `gunpowder.json`,
+`redstone.json`, `honey_bottle.json`, `blaze_cake.json`, `grass_block.json`, `sweet_roll.json`, `builders_tea.json`,
+`honeyed_apple.json`, `chocolate_glazed_berries.json`, + 7 compat ones), compacting recipes (`andesite_from_flint`/
+`granite_from_flint`/`diorite_from_flint.json`, `chocolate.json`, `honey.json`), and `sequenced_assembly/sturdy_sheet.json`.
+
+**What's actually broken, concretely** (confirmed by reading the affected JSON directly, not just grepping):
+- `"type": "neoforge:single"` (e.g. `fluix_crystal.json`, `mud_by_mixing.json`) — fields `"fluid"` + `"amount"`.
+- `"type": "neoforge:tag"` (e.g. `chocolate.json`) — fields `"tag"` + `"amount"`.
+- `"type": "neoforge:components"` (e.g. `glowstone.json`) — fields `"fluids"` (the fluid id — note the odd plural
+  key name, NOT `"fluid"`) + `"components"` (a component-type-id → value map) + `"amount"`.
+- `mud_by_mixing.json` additionally has a sibling bug in the *same* ingredients array: `"type": "neoforge:block_tag"`
+  with a `"tag"` field — this is a NeoForge-only **item** `Ingredient` value type (matches the item form of any
+  block in a block tag), not a `FluidIngredient` at all, and has nothing to do with the fluid-ingredient issue
+  below.
+
+**Correcting batch 95/96's own commit-message claim** ("our FluidIngredient class ... doesn't have a components
+variant at all yet... needs an actual code fix, not just a JSON rewrite"): reading `FluidIngredient.java` directly
+shows this is likely **not quite right**. There is no separate `Type.FLUID_COMPONENTS` enum value — correct — but
+`FluidIngredient.Type` only has two dispatch values, `FLUID_STACK` and `FLUID_TAG` (`Type.CODEC` is a plain
+`StringRepresentable`, snake_case names, no namespace prefix: `"fluid_stack"` / `"fluid_tag"`, not
+`"create:fluid_stack"`). However, `FluidStackIngredient.CODEC` (the `FLUID_STACK` variant) *already* has an
+optional `"components"` field (`DataComponentPatch.CODEC.optionalFieldOf("components", DataComponentPatch.EMPTY)`)
+alongside its required `"fluid"` field — i.e. component/NBT matching is already supported, just folded into the
+existing `fluid_stack` variant rather than being its own type. This suggests the NeoForge-style `"components"`
+ingredient shape may decode correctly as `fluid_stack` with **no code change at all**, via a pure JSON rewrite:
+  - `neoforge:single` → `"type": "fluid_stack"` (fields unchanged: `"fluid"`, `"amount"`)
+  - `neoforge:tag` → `"type": "fluid_tag"`, rename field `"tag"` → `"fluid_tag"` (keep `"amount"`)
+  - `neoforge:components` → `"type": "fluid_stack"`, rename field `"fluids"` → `"fluid"` (keep `"components"`,
+    `"amount"`)
+This is **analysis, not a verified fix** — it hasn't been tested against the actual codec (would need a real
+decode attempt, e.g. via a quick unit test or an actual recipe reload) — but if correct, this whole issue is a
+one-pass JSON-rewrite script across 33 files, not a `FluidIngredient.java` code change, contradicting what batch
+95/96 assumed. **The separate `neoforge:block_tag` item-`Ingredient` bug in `mud_by_mixing.json` is a genuinely
+different, so-far-undiscovered gap**: `Ingredient$ValueMixin` (added batch 76) only wires in an alternate decode
+path for `SimpleDatagenIngredient`, nothing for a block-tag-matches-item-form ingredient type — this one likely
+*does* need an actual code fix (a new `Ingredient`-dispatch codec branch), not just a JSON rename, since no
+equivalent concept exists anywhere in this codebase yet.
+
+**Next step for whoever picks this up:** verify the JSON-rewrite theory above against the real codec (smallest
+test: hand-edit `chocolate.json` to the proposed `fluid_tag` shape, reload recipes, confirm `create:chocolate`
+mixing recipe appears/works) before writing a bulk-rewrite script across all 33 files — and treat
+`mud_by_mixing.json`'s `block_tag` ingredient as a separate follow-up, not part of the same fix.

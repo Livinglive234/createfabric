@@ -118,7 +118,7 @@ public abstract class FilterItem extends Item implements MenuProvider, SupportsI
 	public static boolean doPackagesHaveSameData(@NotNull ItemStack a, @NotNull ItemStack b) {
 		if (a.isEmpty())
 			return false;
-		if (!ItemStack.isSameItemSameComponents(a, b))
+		if (!ItemStack.isSameItem(a, b))
 			return false;
 		for (TypedDataComponent<?> component : a.getComponents()) {
 			DataComponentType<?> type = component.type();

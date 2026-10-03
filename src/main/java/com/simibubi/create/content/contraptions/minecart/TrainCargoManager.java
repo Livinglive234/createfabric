@@ -94,14 +94,18 @@ public class TrainCargoManager extends MountedStorageManager {
 
 		@Override
 		public long insert(ItemVariant resource, long maxAmount, TransactionContext transaction) {
-			TransactionSuccessCallback.register(transaction, TrainCargoManager.this::changeDetected);
-			return super.insert(resource, maxAmount, transaction);
+			long inserted = super.insert(resource, maxAmount, transaction);
+			if (inserted != 0)
+				TransactionSuccessCallback.register(transaction, TrainCargoManager.this::changeDetected);
+			return inserted;
 		}
 
 		@Override
 		public long extract(ItemVariant resource, long maxAmount, TransactionContext transaction) {
-			TransactionSuccessCallback.register(transaction, TrainCargoManager.this::changeDetected);
-			return super.extract(resource, maxAmount, transaction);
+			long extracted = super.extract(resource, maxAmount, transaction);
+			if (extracted != 0)
+				TransactionSuccessCallback.register(transaction, TrainCargoManager.this::changeDetected);
+			return extracted;
 		}
 
 		@Override
@@ -127,14 +131,18 @@ public class TrainCargoManager extends MountedStorageManager {
 
 		@Override
 		public long insert(FluidVariant resource, long maxAmount, TransactionContext transaction) {
-			TransactionSuccessCallback.register(transaction, TrainCargoManager.this::changeDetected);
-			return super.insert(resource, maxAmount, transaction);
+			long inserted = super.insert(resource, maxAmount, transaction);
+			if (inserted != 0)
+				TransactionSuccessCallback.register(transaction, TrainCargoManager.this::changeDetected);
+			return inserted;
 		}
 
 		@Override
 		public long extract(FluidVariant resource, long maxAmount, TransactionContext transaction) {
-			TransactionSuccessCallback.register(transaction, TrainCargoManager.this::changeDetected);
-			return super.extract(resource, maxAmount, transaction);
+			long extracted = super.extract(resource, maxAmount, transaction);
+			if (extracted != 0)
+				TransactionSuccessCallback.register(transaction, TrainCargoManager.this::changeDetected);
+			return extracted;
 		}
 
 		@Override

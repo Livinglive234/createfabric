@@ -124,7 +124,8 @@ public class PackagerBlock extends WrenchableDirectionalBlock implements IBE<Pac
 							return ItemInteractionResult.SUCCESS;
 					}
 					try (Transaction real = Transaction.openOuter()) {
-						be.unwrapBox(stack.copy(), real);
+						if (!be.unwrapBox(stack.copy(), real))
+							return ItemInteractionResult.SUCCESS;
 						real.commit();
 					}
 					be.triggerStockCheck();

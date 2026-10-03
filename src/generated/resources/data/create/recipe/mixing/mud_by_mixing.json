@@ -2,7 +2,7 @@
   "type": "create:mixing",
   "ingredients": [
     {
-      "type": "neoforge:block_tag",
+      "fabric:type": "create:block_tag_ingredient",
       "tag": "minecraft:convertable_to_mud"
     },
     {

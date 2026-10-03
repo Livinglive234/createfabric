@@ -1,10 +1,9 @@
 package com.simibubi.create.foundation.recipe;
 
-import org.jetbrains.annotations.ApiStatus.Internal;
-import com.simibubi.create.Create;
-public class AllIngredients {
-	// Unused currently
+import net.fabricmc.fabric.api.recipe.v1.ingredient.CustomIngredientSerializer;
 
+public class AllIngredients {
 	public static void register() {
+		CustomIngredientSerializer.register(BlockTagIngredient.Serializer.INSTANCE);
 	}
 }

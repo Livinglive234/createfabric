@@ -45,13 +45,14 @@ public record ColorAttribute(DyeColor color) implements ItemAttribute {
 			return Collections.singletonList(color);
 
 		Set<DyeColor> colors = new HashSet<>();
-		if (stack.has(DataComponents.FIREWORKS)) {
-			if (stack.getItem() instanceof FireworkRocketItem || stack.getItem() instanceof FireworkStarItem) {
-				List<FireworkExplosion> explosions = stack.get(DataComponents.FIREWORKS).explosions();
-				for (FireworkExplosion explosion : explosions) {
-					colors.addAll(getFireworkStarColors(explosion));
-				}
+		if (stack.getItem() instanceof FireworkRocketItem && stack.has(DataComponents.FIREWORKS)) {
+			List<FireworkExplosion> explosions = stack.get(DataComponents.FIREWORKS).explosions();
+			for (FireworkExplosion explosion : explosions) {
+				colors.addAll(getFireworkStarColors(explosion));
 			}
+		}
+		if (stack.getItem() instanceof FireworkStarItem && stack.has(DataComponents.FIREWORK_EXPLOSION)) {
+			colors.addAll(getFireworkStarColors(stack.get(DataComponents.FIREWORK_EXPLOSION)));
 		}
 
 		Arrays.stream(DyeColor.values()).filter(c -> RegisteredObjectsHelper.getKeyOrThrow(stack.getItem()).getPath().startsWith(c.getName() + "_")).forEach(colors::add);

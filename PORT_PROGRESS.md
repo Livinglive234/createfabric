@@ -3298,3 +3298,30 @@ subsystems audited: contraptions, trains, kinetics, logistics x2, redstone [clea
 decoration/schematics/processing).** Still not yet audited: `content/legacy/`, `foundation/`, `infrastructure/`,
 `compat/`, `api/`, and the handful of top-level `All*.java` registration files — natural next targets for a third
 wave if continuing this methodology.
+
+## Batch 102 — foundation/block/blockEntity/data audit wave: SyncedBlockEntity network-sync regression (mod-wide)
+
+Third reference-diff audit wave. `foundation/block/`, `foundation/blockEntity/`, and `foundation/data/` came back
+with one finding, but it's the highest-impact single bug found this session:
+
+13. `foundation/blockEntity/SyncedBlockEntity.java` — this is the base class every synced block entity in the mod
+    extends (transitively, via `SmartBlockEntity`) — roughly 110+ `BlockEntity` subclasses mod-wide. The class had
+    dropped its `handleUpdateTag`/`onDataPacket` overrides entirely, replaced by a comment claiming "vanilla
+    removed the separate handleUpdateTag/onDataPacket override points this class used to hook for network-received
+    data." That claim is false: verified directly against the actual `porting-lib` dependency on this project's
+    classpath (`beta.91+1.21.1`) — `io.github.fabricators_of_create.porting_lib.blocks.extensions
+    .CustomDataPacketHandlingBlockEntity`/`CustomUpdateTagHandlingBlockEntity` still exist with the exact same
+    default-method hooks the reference used. Without implementing them, `BlockEntity`'s own vanilla
+    `handleUpdateTag`/`onDataPacket` ran instead of this mod's versions, so `readClient(...)` was never invoked on
+    the network-sync path — meaning `SmartBlockEntity.readClient()`'s `clientPacket = true` flag-driven special
+    client-side handling (every behaviour/subclass that branches on "was this read triggered by a network packet
+    vs. an NBT load") was unreachable mod-wide; block entities silently fell back to treating every client-side
+    sync packet like a full NBT load. Fixed by implementing both interfaces and restoring the two `@Override`
+    methods, routing to `readClient(tag, registries)` as the reference does. Confirmed `SmartBlockEntity.readClient`
+    is still `final` so the override chain reaches the intended behaviour. `compileJava` and full `build` both
+    succeeded; verified via a real `runServer` boot.
+
+**Running total: 17 real bugs found and fixed.** Remaining unaudited: `infrastructure/`, `compat/` [clean, already
+audited], `api/`, `impl/`, and the top-level `All*.java`/`Create.java`/`CreateClient.java` registration files —
+three audits (foundation-rest, infrastructure, api/impl/top-level) were interrupted by a session rate limit and
+are queued to resume.

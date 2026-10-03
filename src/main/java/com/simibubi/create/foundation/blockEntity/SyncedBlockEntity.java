@@ -9,6 +9,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
@@ -16,9 +17,13 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomDataPacketHandlingBlockEntity;
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomUpdateTagHandlingBlockEntity;
+
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public abstract class SyncedBlockEntity extends BlockEntity {
+public abstract class SyncedBlockEntity extends BlockEntity
+	implements CustomDataPacketHandlingBlockEntity, CustomUpdateTagHandlingBlockEntity {
 	public SyncedBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);
 	}
@@ -33,12 +38,15 @@ public abstract class SyncedBlockEntity extends BlockEntity {
 		return ClientboundBlockEntityDataPacket.create(this);
 	}
 
-	// TODO fabric: vanilla removed the separate handleUpdateTag/onDataPacket override points this class
-	// used to hook for network-received data — both getUpdatePacket's tag and any disk-loaded tag are
-	// now applied through the same final BlockEntity#loadWithComponents -> #loadAdditional path, so the
-	// "clientPacket" distinction SmartBlockEntity's read()/write() split relies on can no longer be
-	// driven from here. readClient/writeClient stay available as plain methods for callers that invoke
-	// them directly (menus, ClientContraption's virtual block entities).
+	@Override
+	public void handleUpdateTag(CompoundTag tag, HolderLookup.Provider registries) {
+		readClient(tag, registries);
+	}
+
+	@Override
+	public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt, HolderLookup.Provider registries) {
+		readClient(pkt.getTag(), registries);
+	}
 
 	// Special handling for client update packets
 	public void readClient(CompoundTag tag, HolderLookup.Provider registries) {

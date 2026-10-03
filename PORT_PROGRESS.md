@@ -3549,6 +3549,85 @@ session — only `.java` logic had been audited before now.
     carried forward unnoticed through years of merges. Deleted it; confirmed nothing in the codebase referenced
     it by path, and the build still succeeds.
 
-Three parallel audits are now running against the real NeoForge source for: recipes/loot tables/advancements,
-tags (accounting for the expected `neoforge:`/`c:` common-tag namespace difference), and lang/models/blockstates.
-Results and any fixes will be appended here once they report back.
+Three parallel audits ran against the real NeoForge source: recipes/loot tables/advancements, tags (accounting
+for the expected `neoforge:`/`c:` common-tag namespace difference), and lang/models/blockstates. Two came back
+clean; the other two found real, confirmed content bugs, all fixed below.
+
+**Lang/models/blockstates — CLEAN.** `en_us.json` is byte-for-byte identical to real NeoForge (3639 keys, 0
+diffs); 10 other heavily-populated locales spot-checked, all identical key counts. Every model/blockstate file
+NeoForge has, this port has too (797/35/1180/741/643 file-count matches across main+generated `models/block`,
+`models/item`, `blockstates` — 0 missing, 0 extra anywhere). The only content differences in matched files are
+the expected OBJ/composite custom-geometry-loader namespace substitution (`neoforge:obj`→`porting_lib:obj`, ~48
+files) and an inert extra `light_level=0` blockstate property on fluid tank variants (fixed at 0 in every
+variant, no rendering impact). Neither is a bug. Two low-priority, non-bug notes: a stale `en_ud.json` joke-locale
+file missing ~1276 ponder keys (cosmetic, no gameplay impact), and the `light_level` property just mentioned.
+
+35. **`AllFluids.CHOCOLATE`/`TEA` never actually tagged with their own `AllFluidTags` enum constants.**
+    `AllFluids.java` tagged these fluids with ad-hoc string-literal tags `"teas"`/`"chocolates"` (plural,
+    apparently only meant to piggyback `FluidTags.WATER` onto Chocolate for Fabric's water-physics-tag hack)
+    instead of the real `AllTags.AllFluidTags.TEA.tag`/`CHOCOLATE.tag` constants already defined in `AllTags.java`
+    — which were otherwise only ever referenced by `TagLangGenerator` for display names, never bound to any
+    actual membership. Real NeoForge uses `AllFluidTags.TEA.tag`/`CHOCOLATE.tag` directly. Fixed both calls to
+    use the correct tag constants; regenerated the backing files as `c:fluid/tea.json`/`chocolate.json` (deleting
+    the old plural `teas.json`/`chocolates.json`, confirmed unreferenced anywhere else).
+36. **`AllFluids.CHOCOLATE` never actually registered its own bucket item — a real, user-facing regression.**
+    Unlike `HONEY` in the same file (which correctly calls `.bucket().tag(AllTags.commonItemTag("buckets/honey")).build()`),
+    `CHOCOLATE`'s builder chain never called `.bucket()` at all, even though `onRegisterAfter` already calls
+    `source.getBucket()` expecting a real per-fluid bucket item (matching `HONEY`'s pattern exactly), and three
+    separate ponder scenes plus the chocolate-bucket advancement icon (`AllAdvancements.java`) already reference
+    `AllFluids.CHOCOLATE.get().getBucket()` as if it were a genuine distinct item. Confirmed this was a dropped
+    registration, not a deliberate design choice: `src/main/resources/assets/create/textures/item/chocolate_bucket.png`
+    already exists in the repo as a hand-authored, otherwise-orphaned art asset, and
+    `assets/create/models/item/chocolate_bucket.json` was already checked into `src/generated/resources` from an
+    old commit, unused. Fixed by mirroring `HONEY`'s exact pattern: added `.source(SimpleFlowableFluid.Source::new)
+    .bucket().tag(AllTags.commonItemTag("buckets/chocolate")).build()` to `CHOCOLATE`'s builder chain. Hand-wrote
+    the resulting generated tag files (`c:item/buckets/chocolate.json`, legacy `c:items/chocolate_buckets.json`)
+    since a full `runDatagen` run is currently blocked by an unrelated, pre-existing crash in a third-party
+    dependency (`milk-lib:milk_cauldron` missing its own loot table) — out of scope to fix here. A real
+    `create:chocolate_bucket` item with its own model/texture/tags now exists, matching upstream.
+37. **28 compat recipe files used the wrong JSON key `processingTime` (camelCase) instead of `processing_time`
+    (snake_case).** All 461 other recipes in this port, and all 489 equivalent files in real NeoForge, correctly
+    use `processing_time`; the recipe deserializer only reads that key, so these 28 recipes were silently falling
+    back to a default processing time instead of the value actually written in the file. All 28 are optional
+    cross-mod compat recipes (AE2 milling ×2, Botania petal milling ×16, Immersive Engineering wire cutting ×5,
+    and 5 assorted crushing recipes for exnihilosequentia/galosphere/neapolitan/quark). Fixed the key in all 28
+    files via a single sweep.
+38. **`recipe/milling/compat/ae2/certus_quartz.json` referenced an undefined tag `c:certus_quartz`.** The actual
+    tag used elsewhere in this port's own recipe generator code (`CreateMillingRecipeGen.java`,
+    `AllItemTags.CERTUS_QUARTZ` → `"gems/certus_quartz"`) and by real NeoForge's equivalent recipe is
+    `c:gems/certus_quartz` — this port ships no local file defining that tag's membership (neither does real
+    NeoForge), because it's supplied by AE2's own mod jar when AE2 is actually installed (this recipe is already
+    gated behind an `ae2`-mod-loaded condition). Fixed the tag reference to match.
+39. **Three dead/orphan data files from an old merge, same root cause as the already-removed plural `recipes/`
+    folder (batch 108's first fix).** `recipe/industrial_iron_block_from_iron_ingots_stonecutting.json` and
+    `recipe/weathered_iron_block_from_iron_ingots_stonecutting.json` were exact-duplicate stonecutting recipes
+    of the correctly-named `..._from_ingots_iron_stonecutting.json` files (which already use the correct
+    `c:ingots/iron` tag matching real NeoForge) — the duplicates used a different, narrower tag (`c:iron_ingots`,
+    vanilla-iron-only) and were pure dead clutter. Deleted both, along with their now-pointless matching
+    advancements, and in their place added the two advancements the *correctly-named* recipes were actually
+    missing (confirmed byte-for-byte against real NeoForge's own generated output) — without them, those two
+    recipes had no recipe-book unlock advancement at all. Also deleted
+    `advancement/recipes/building_blocks/copper_tiles_from_copper_ingots_stonecutting.json`, an orphan
+    advancement referencing a recipe ID (`copper_tiles_from_copper_ingots_stonecutting`) that doesn't exist — the
+    real recipe (`copper_tiles_from_ingots_copper_stonecutting`) already has its own correct advancement.
+40. Cleanup: removed a stray empty duplicate `data/create/tags/entity_types/ignore_seat.json` (plural, `values: []`)
+    sitting alongside the correct, working `entity_type/ignore_seat.json` (singular, non-empty) — harmless but
+    dead.
+
+One tag finding was investigated and NOT fixed, flagged to the user as a genuine NeoForge-vs-Fabric-adaptation
+question rather than decided unilaterally: `contraption_type`/`mounted_item_storage_type` tag files sit at a
+different path than real NeoForge's generated output (missing an extra `create/` segment). Digging in, this
+traces to NeoForge's `CreateContraptionTypeTagsProvider` using a NeoForge-specific 5-argument `TagsProvider`
+constructor (for NeoForge's own custom-registry tag-loading extension) that doesn't exist in vanilla, while this
+Fabric port's registries are built with `FabricRegistryBuilder` plugging into vanilla's own built-in-registry/tag
+machinery directly — decompiled vanilla's actual tag-path formula from this project's real classpath and it
+matches the Fabric port's current path, not NeoForge's. No boot log this session has ever warned about these
+tags. Likely NOT a bug (two legitimately different registry frameworks each internally consistent), but kept
+as-is pending an in-game check (carriage controls while mounted) rather than guessed at.
+
+Verified all fixes with `compileJava`, a full `build`, and a clean `runServer` boot (Done in 2.394s, no new
+errors).
+
+**Running total: 40 real bugs found and fixed across seven reference-diff/data audit waves (33 code-logic bugs
+across six waves against the old 1.20.1 Fabric reference, plus 7 more — items 34-40 — in this wave's
+data/resource audit against the real upstream NeoForge mc1.21.1/dev source).**

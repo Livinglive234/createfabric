@@ -10,10 +10,10 @@
   "type": "create:milling",
   "ingredients": [
     {
-      "tag": "c:certus_quartz"
+      "tag": "c:gems/certus_quartz"
     }
   ],
-  "processingTime": 200,
+  "processing_time": 200,
   "results": [
     {
       "id": "ae2:certus_quartz_dust"

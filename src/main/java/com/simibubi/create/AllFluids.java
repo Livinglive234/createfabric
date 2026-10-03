@@ -78,7 +78,7 @@ public class AllFluids {
 
 	public static final FluidEntry<VirtualFluid> TEA = REGISTRATE.virtualFluid("tea")
 			.lang("Builder's Tea")
-		.tag(AllTags.commonFluidTag("teas"))
+		.tag(AllTags.AllFluidTags.TEA.tag)
 			.fluidAttributes(() -> new CreateAttributeHandler("fluid.create.tea"))
 			.onRegisterAfter(Registries.ITEM, tea -> {
 				Fluid still = tea.getSource();
@@ -118,12 +118,16 @@ public class AllFluids {
 	public static final FluidEntry<SimpleFlowableFluid.Flowing> CHOCOLATE =
 			REGISTRATE.standardFluid("chocolate")
 					.lang("Chocolate")
-					.tag(AllTags.commonFluidTag("chocolates"), FluidTags.WATER) // fabric: water tag controls physics
+					.tag(AllTags.AllFluidTags.CHOCOLATE.tag, FluidTags.WATER) // fabric: water tag controls physics
 					.fluidProperties(p -> p.levelDecreasePerBlock(2)
 							.tickRate(25)
 							.flowSpeed(3)
 							.blastResistance(100f))
 					.fluidAttributes(() -> new CreateAttributeHandler("block.create.chocolate", 1500, 1400))
+					.source(SimpleFlowableFluid.Source::new) // TODO: remove when Registrate fixes FluidBuilder
+					.bucket()
+					.tag(AllTags.commonItemTag("buckets/chocolate"))
+					.build()
 					.onRegisterAfter(Registries.ITEM, chocolate -> {
 						Fluid source = chocolate.getSource();
 						// transfer values

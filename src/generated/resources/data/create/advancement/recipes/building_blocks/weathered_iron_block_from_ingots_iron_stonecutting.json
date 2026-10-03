@@ -1,11 +1,11 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "has_iron_ingots": {
+    "has_ingots_iron": {
       "conditions": {
         "items": [
           {
-            "items": "#c:iron_ingots"
+            "items": "#c:ingots/iron"
           }
         ]
       },
@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "create:weathered_iron_block_from_iron_ingots_stonecutting"
+        "recipe": "create:weathered_iron_block_from_ingots_iron_stonecutting"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
@@ -21,12 +21,12 @@
   "requirements": [
     [
       "has_the_recipe",
-      "has_iron_ingots"
+      "has_ingots_iron"
     ]
   ],
   "rewards": {
     "recipes": [
-      "create:weathered_iron_block_from_iron_ingots_stonecutting"
+      "create:weathered_iron_block_from_ingots_iron_stonecutting"
     ]
   }
 }

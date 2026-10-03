@@ -103,6 +103,7 @@ public abstract class ProcessingRecipeBuilder<P extends ProcessingRecipeParams, 
 	}
 
 	public R build() {
+		validateFluidAmounts();
 		return factory.create(params);
 	}
 

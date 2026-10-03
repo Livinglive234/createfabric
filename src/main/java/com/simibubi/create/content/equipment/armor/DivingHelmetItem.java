@@ -13,6 +13,8 @@ import net.minecraft.core.HolderLookup.RegistryLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -72,6 +74,7 @@ public class DivingHelmetItem extends BaseArmorItem implements CustomEnchantingB
 	public static void breatheUnderwater(LivingEntity entity) {
 		Level world = entity.level();
 		boolean second = world.getGameTime() % 20 == 0;
+		boolean drowning = entity.getAirSupply() == 0;
 
 		if (world.isClientSide)
 			entity.getCustomData()
@@ -105,6 +108,9 @@ public class DivingHelmetItem extends BaseArmorItem implements CustomEnchantingB
 		for (ItemStack stack : backtanks)
 			visualBacktankAir += BacktankUtil.getAir(stack);
 
+		if (drowning)
+			entity.setAirSupply(10);
+
 		if (world.isClientSide)
 			entity.getCustomData()
 				.putInt("VisualBacktankAir", Math.round(backtanks.stream()
@@ -122,6 +128,7 @@ public class DivingHelmetItem extends BaseArmorItem implements CustomEnchantingB
 		if (entity instanceof ServerPlayer sp)
 			AllAdvancements.DIVING_SUIT.awardTo(sp);
 
-		entity.setAirSupply(entity.getMaxAirSupply());
+		entity.setAirSupply(Math.min(entity.getMaxAirSupply(), entity.getAirSupply() + 10));
+		entity.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 30, 0, true, false, true));
 	}
 }

@@ -3205,3 +3205,96 @@ worldgen, rendering, and foundation/infrastructure code have not had this treatm
 targets. The reference commit (`82eb2f7a`) is not on any branch — find it again via
 `git log --all --oneline | grep "mc1.20.1/fabric/dev' into mc1.21.1"` if the hash is lost, or just use `82eb2f7a`
 directly since it's a real, permanent commit object in this repo regardless of branch pointers.
+
+## Done this session (batch 101 — second reference-diff audit wave: redstone/fluids/equipment/decoration/schematics/processing, 12 more real bugs found and fixed)
+
+Continuation of the batch-100 methodology. 4 more parallel agents audited `content/redstone/` (69 files),
+`content/fluids/` (56 files), `content/equipment/` (97 files), and `content/decoration/`+`schematics/`+`processing/`
+combined (93 files) against the same 1.20.1 Fabric reference (`82eb2f7a`). **redstone came back clean** (no new
+bugs — useful negative signal that the method isn't just pattern-matching noise; it genuinely only flags real
+divergence). The other three each found real bugs; 12 fixed this batch, all verified via `compileJava` + `build`
++ a real `runServer` boot (zero recipe errors, zero other error-level log lines, clean `Done!`):
+
+**Fluids** (`content/fluids/`):
+1. `tank/FluidTankBlock.java` (`useItemOn`) — after a bucket/bottle exchange with a tank, the code computed
+   `fluidInTank` as `prevFluidInTank.copy()` instead of re-reading the tank's actual post-exchange contents, so
+   `!FluidStack.isSameFluidSameComponents(fluidInTank, prevFluidInTank)` was always false — the whole block that
+   sends an immediate network sync and spawns the fill/drain particle effect never ran. Fixed by re-fetching via
+   `TransferUtil.firstOrEmpty(tankCapability)` after the exchange, matching the reference.
+2. `transfer/FluidManipulationBehaviour.java` (`comparePositions`) — lost the reference's explicit tie-breaker
+   (`// fabric: since we're using a set for the queue, we need to only have them equal if they're really equal`).
+   `FluidFillingBehaviour`/`FluidDrainingBehaviour` use this comparator inside a `SortedArraySet`, which silently
+   drops a second entry that compares equal (cmp==0) to one already present — meaning two genuinely different,
+   equidistant `BlockPos` entries (common in symmetric pools/tanks) would collide and one gets dropped from the
+   flood-fill frontier, leaving parts of a symmetric body of fluid un-drained/un-filled. Restored the X/Z
+   tie-breaker exactly as in the reference.
+3. `tank/FluidTankBlockEntity.java` (`setWindows`) — dropped the reference's `tankAt.updateStateLuminosity()` call
+   on each multiblock tank segment when toggling its window. Toggling a tank's window with a glowing fluid (e.g.
+   lava) already inside no longer immediately updates each segment's emitted light; it goes stale until an
+   unrelated fluid-amount change happens to trigger it elsewhere. Restored the call.
+4. `OpenEndedPipe.java` (`provideFluidToSpace`) — the `pipesPlaceFluidSourceBlocks` config check (meant only to
+   gate placing a new infinite source block in the open world) was hoisted to the very top of the method, above
+   the Nether ultra-warm fire-extinguish effect and the waterlogging branch — both of which have nothing to do
+   with that setting. With the config disabled (a legitimate anti-griefing server option), open-ended pipes could
+   no longer waterlog blocks or play the fire-extinguish sound at all. Moved the check back down to only gate the
+   final source-block placement, matching the reference's narrower scope.
+
+**Equipment** (`content/equipment/`):
+5. `extendoGrip/ExtendoGripItem.java` — the reach-boost attribute modifiers only applied to
+   `Attributes.BLOCK_INTERACTION_RANGE`; the reference applied the bonus to both block AND entity/attack reach
+   (the old dual-attribute model, now vanilla's separate `BLOCK_INTERACTION_RANGE`/`ENTITY_INTERACTION_RANGE`).
+   Holding (or dual-wielding) Extendo Grips extended block reach only, not attack/entity-interaction reach. Added
+   `Attributes.ENTITY_INTERACTION_RANGE` to both the single and double range modifier multimaps.
+6. `symmetryWand/SymmetryWandItem.java` (`apply`) — dropped the reference's post-placement
+   `world.isUnobstructed(cachedState, position, CollisionContext.empty())` safety check (replicating Forge's
+   block-place-cancel event), so the Symmetry Wand could place mirrored blocks directly into entities/players
+   standing at the mirror position. Restored the check: captures the pre-placement state, and if the new block
+   placement is obstructed, reverts to the cached state instead of keeping it.
+7. `potatoCannon/PotatoCannonItem.java` + `PotatoProjectileEntity.java` — Power/Punch/Flame enchantment support
+   was silently dropped in two places: (a) `PotatoProjectileEntity.setEnchantmentEffectsFromCannon` only read
+   `POTATO_RECOVERY`, never Power/Punch/Flame, so `additionalDamageMult`/`additionalKnockback`/fire-on-hit always
+   defaulted to no bonus even if somehow enchanted; (b) `PotatoCannonItem.supportsEnchantment` only whitelisted
+   `LOOTING`, so Power/Punch/Flame/Potato Recovery couldn't even be applied via an enchanting table in the first
+   place — while `appendHoverText` kept computing and displaying Power/Punch bonus numbers in the tooltip
+   regardless, making the tooltip actively misleading. Restored both: the enchantment-level reads (ported to
+   1.21.1's `Registry<Enchantment>`/`Holder<Enchantment>` lookup pattern, matching the existing `POTATO_RECOVERY`
+   code already in the file) and the `supportsEnchantment` whitelist for `POWER`/`PUNCH`/`FLAME`/`POTATO_RECOVERY`.
+   Also hit a real 1.21.1 API rename while porting: `Entity#setSecondsOnFire(int)` is gone, replaced by
+   `igniteForSeconds(int)` (confirmed via the file's own existing `target.igniteForSeconds(5)` call elsewhere).
+8. `armor/DivingHelmetItem.java` (`breatheUnderwater`) — two regressions: (a) the immediate
+   `if (drowning) entity.setAirSupply(10);` safeguard (ran every tick, independent of the 20-tick throttle) was
+   dropped, so a diver's air wasn't topped up the instant it hit 0, leaving a window where real vanilla drowning
+   damage could land despite having backtank air; (b) the final effect application was simplified from
+   `setAirSupply(air+10, capped)` **plus** `addEffect(WATER_BREATHING, 30 ticks, ...)` down to just
+   `setAirSupply(maxAirSupply)` — the Water Breathing status effect itself was silently dropped, not just
+   refactored. Restored both.
+9. `clipboard/ClipboardValueSettingsHandler.java` (`drawCustomBlockSelection`) — a De Morgan's-law inversion bug:
+   the reference's `!(...) && !anyMatch(...) && !(...)` (skip drawing when nothing supports clipboard read/write)
+   had its `anyMatch` changed to `noneMatch` while keeping the surrounding `!`, making
+   `!(...) && !noneMatch(...) && !(...)` equivalent to `!(...) && anyMatch(...) && !(...)` — the exact opposite
+   condition. The clipboard copy/paste highlight outline rendered for blocks that DON'T support clipboard
+   interaction and failed to render for blocks that DO. Changed `.noneMatch(...)` back to `.anyMatch(...)`.
+
+**Schematics/Processing** (`content/schematics/`, `content/processing/`):
+10. `schematics/SchematicPrinter.java` (`loadSchematic`) — the "must be deployed" guard checked
+    `!blueprint.has(AllDataComponents.SCHEMATIC_DEPLOYED)` instead of the component's actual value.
+    `SCHEMATIC_DEPLOYED` is always present (set to `false` at creation), so `.has(...)` is always true and the
+    check was a no-op — it never actually blocked printing from an undeployed schematic item. This was the one
+    server-side safety net before `SchematicPlacePacket.handle()` (reachable directly from a client packet,
+    creative-only) calls `printer.loadSchematic(...)` on a client-supplied `ItemStack`. Every other call site
+    in the codebase already correctly used `.getOrDefault(AllDataComponents.SCHEMATIC_DEPLOYED, false)` — fixed
+    this one to match.
+11. `processing/basin/BasinRecipe.java` (`getMaxInputCount`) — returned `64` instead of `9`; the Basin's actual
+    input inventory is still only 9 slots (unchanged), so this only gates `ProcessingRecipe.validate()`'s
+    datapack-load-time sanity check — a malformed recipe with 10-64 ingredients would now silently pass validation
+    instead of being rejected with a clear error (it just could never match in practice). Reverted to `9`.
+12. `processing/recipe/ProcessingRecipeBuilder.java` (`build()`) — stopped calling `validateFluidAmounts()` (a
+    datagen-time sanity check warning about suspicious fluid-ingredient amounts, e.g. common off-by-1000 mL/bucket
+    mistakes); the method still existed but had become dead code, called from nowhere. Datagen-only impact, no
+    runtime effect, but a silently dropped safety check with no explanation in the diff. Restored the call.
+
+**Running total: 16 real bugs found and fixed across this session's two reference-diff audit waves (8
+subsystems audited: contraptions, trains, kinetics, logistics x2, redstone [clean], fluids, equipment,
+decoration/schematics/processing).** Still not yet audited: `content/legacy/`, `foundation/`, `infrastructure/`,
+`compat/`, `api/`, and the handful of top-level `All*.java` registration files — natural next targets for a third
+wave if continuing this methodology.

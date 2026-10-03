@@ -326,6 +326,8 @@ public class FluidTankBlockEntity extends SmartBlockEntity implements IHaveGoggl
 					}
 
 					level.setBlock(pos, blockState.setValue(FluidTankBlock.SHAPE, shape), Block.UPDATE_CLIENTS | Block.UPDATE_INVISIBLE | Block.UPDATE_KNOWN_SHAPE);
+					if (level.getBlockEntity(pos) instanceof FluidTankBlockEntity tankAt)
+						tankAt.updateStateLuminosity();
 					level.getChunkSource()
 							.getLightEngine()
 							.checkBlock(pos);

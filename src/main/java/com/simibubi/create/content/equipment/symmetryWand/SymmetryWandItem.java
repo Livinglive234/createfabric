@@ -233,10 +233,16 @@ public class SymmetryWandItem extends Item {
 						continue;
 				}
 
+				BlockState cachedState = world.getBlockState(position);
 				FluidState ifluidstate = world.getFluidState(position);
 				world.setBlock(position, ifluidstate.createLegacyBlock(), Block.UPDATE_KNOWN_SHAPE);
 				world.setBlockAndUpdate(position, blockState);
 
+				boolean placeInterrupted = !world.isUnobstructed(cachedState, position, CollisionContext.empty());
+				if (placeInterrupted) {
+					world.setBlockAndUpdate(position, cachedState);
+					continue;
+				}
 				targets.add(position);
 			}
 		}

@@ -64,7 +64,7 @@ public class ClipboardValueSettingsHandler {
 		Direction targetDirection = target.getDirection();
 		if (!(smartBE instanceof ClipboardBlockEntity) && !smartBE.getAllBehaviours()
 			.stream()
-			.noneMatch(b -> b instanceof ClipboardCloneable cc
+			.anyMatch(b -> b instanceof ClipboardCloneable cc
 				&& cc.writeToClipboard(registryAccess, new CompoundTag(), targetDirection))
 			&& !(smartBE instanceof ClipboardCloneable))
 			return false;

@@ -94,7 +94,7 @@ public class SchematicPrinter {
 	}
 
 	public void loadSchematic(ItemStack blueprint, Level originalWorld, boolean processNBT) {
-		if (!blueprint.has(AllDataComponents.SCHEMATIC_ANCHOR) || !blueprint.has(AllDataComponents.SCHEMATIC_DEPLOYED))
+		if (!blueprint.has(AllDataComponents.SCHEMATIC_ANCHOR) || !blueprint.getOrDefault(AllDataComponents.SCHEMATIC_DEPLOYED, false))
 			return;
 
 		StructureTemplate activeTemplate =

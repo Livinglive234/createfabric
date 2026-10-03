@@ -62,10 +62,14 @@ public class ExtendoGripItem extends Item {
 
 	private static final Supplier<Multimap<Holder<Attribute>, AttributeModifier>> rangeModifier = Suppliers.memoize(() ->
 		// Holding an ExtendoGrip
-		ImmutableMultimap.of(Attributes.BLOCK_INTERACTION_RANGE, singleRangeAttributeModifier));
+		ImmutableMultimap.of(
+			Attributes.BLOCK_INTERACTION_RANGE, singleRangeAttributeModifier,
+			Attributes.ENTITY_INTERACTION_RANGE, singleRangeAttributeModifier));
 	private static final Supplier<Multimap<Holder<Attribute>, AttributeModifier>> doubleRangeModifier = Suppliers.memoize(() ->
 		// Holding two ExtendoGrips o.O
-		ImmutableMultimap.of(Attributes.BLOCK_INTERACTION_RANGE, doubleRangeAttributeModifier));
+		ImmutableMultimap.of(
+			Attributes.BLOCK_INTERACTION_RANGE, doubleRangeAttributeModifier,
+			Attributes.ENTITY_INTERACTION_RANGE, doubleRangeAttributeModifier));
 
 	private static DamageSource lastActiveDamageSource;
 

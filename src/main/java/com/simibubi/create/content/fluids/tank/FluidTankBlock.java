@@ -205,7 +205,7 @@ public class FluidTankBlock extends Block implements IWrenchable, IBE<FluidTankB
 
 		SoundEvent soundevent = null;
 		BlockState fluidState = null;
-		FluidStack fluidInTank = prevFluidInTank.copy();
+		FluidStack fluidInTank = TransferUtil.firstOrEmpty(tankCapability);
 
 		if (exchange == FluidExchange.ITEM_TO_TANK) {
 			if (creative && !onClient) {

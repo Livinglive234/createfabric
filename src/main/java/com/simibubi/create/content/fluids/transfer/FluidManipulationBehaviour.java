@@ -153,10 +153,18 @@ public abstract class FluidManipulationBehaviour extends BlockEntityBehaviour {
 		int compareDistance = Integer.compare(e2.distance, e1.distance);
 		if (compareDistance != 0)
 			return compareDistance;
-		return Double.compare(VecHelper.getCenterOf(pos2)
+		int distanceCompared = Double.compare(VecHelper.getCenterOf(pos2)
 				.distanceToSqr(centerOfRoot),
 			VecHelper.getCenterOf(pos1)
 				.distanceToSqr(centerOfRoot));
+		// fabric: since we're using a set for the queue, we need to only have them equal if they're really equal.
+		if (distanceCompared != 0)
+			return distanceCompared;
+		// equidistant, go by X and Z
+		int xCompared = Integer.compare(pos2.getX(), pos1.getX());
+		if (xCompared != 0)
+			return xCompared;
+		return Integer.compare(pos2.getZ(), pos1.getZ());
 	}
 
 	protected Fluid search(Fluid fluid, List<BlockPosEntry> frontier, Set<BlockPos> visited,

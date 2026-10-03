@@ -42,6 +42,7 @@ import net.minecraft.world.entity.projectile.AbstractHurtingProjectile;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
@@ -77,8 +78,17 @@ public class PotatoProjectileEntity extends AbstractHurtingProjectile implements
 	public void setEnchantmentEffectsFromCannon(ItemStack cannon) {
 		Registry<Enchantment> enchantmentRegistry = registryAccess().registryOrThrow(Registries.ENCHANTMENT);
 
+		int power = EnchantmentHelper.getItemEnchantmentLevel(enchantmentRegistry.getHolderOrThrow(Enchantments.POWER), cannon);
+		int punch = EnchantmentHelper.getItemEnchantmentLevel(enchantmentRegistry.getHolderOrThrow(Enchantments.PUNCH), cannon);
+		int flame = EnchantmentHelper.getItemEnchantmentLevel(enchantmentRegistry.getHolderOrThrow(Enchantments.FLAME), cannon);
 		int recovery = EnchantmentHelper.getItemEnchantmentLevel(enchantmentRegistry.getHolderOrThrow(AllEnchantments.POTATO_RECOVERY), cannon);
 
+		if (power > 0)
+			additionalDamageMult = 1 + power * .2f;
+		if (punch > 0)
+			additionalKnockback = punch * .5f;
+		if (flame > 0)
+			igniteForSeconds(100);
 		if (recovery > 0)
 			recoveryChance = .125f + recovery * .125f;
 	}

@@ -247,6 +247,14 @@ public class PotatoCannonItem extends ProjectileWeaponItem implements CustomArmP
 			return false;
 		if (enchantment.is(Enchantments.LOOTING))
 			return true;
+		if (enchantment.is(Enchantments.POWER))
+			return true;
+		if (enchantment.is(Enchantments.PUNCH))
+			return true;
+		if (enchantment.is(Enchantments.FLAME))
+			return true;
+		if (enchantment.is(AllEnchantments.POTATO_RECOVERY))
+			return true;
 		return CustomSupportsEnchantItem.super.supportsEnchantment(stack, enchantment);
 	}
 

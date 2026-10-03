@@ -3481,3 +3481,50 @@ zero. Verified all 8 fixes with `compileJava`, a full `build`, and a clean `runS
 new errors).
 
 **Running total: 29 real bugs found and fixed across six reference-diff audit waves.**
+
+## Batch 107 — low-ratio tail: decoration/schematics/processing/foundation/infra/api/impl/compat (fourth wave, continued)
+
+The last of the four parallel audits from the fourth wave reported in. Covered the low-ratio tail of
+`content/decoration`, `content/schematics`, `content/processing`, remaining `foundation/` subdirectories,
+`infrastructure/` outside `fabric/transfer/` (already fully audited), `api/`, `impl/`, and `compat/`. Found 4
+more confirmed bugs (30-33), plus one flagged question that turned out not to be a bug on independent
+verification:
+
+30. `content/schematics/table/SchematicTableMenu.java` (`quickMoveStack`) — `moveItemStackTo(stack, 2,
+    slots.size(), true)` had its reverse-direction flag flipped from `false`. Reversed the slot-fill order when
+    shift-clicking the Schematic Table's input/output slots into the player inventory. Reverted to `false`.
+31. `content/schematics/cannon/SchematicannonMenu.java` (`quickMoveStack`) — identical bug, independently
+    introduced: `moveItemStackTo(stack, 5, slots.size(), true)` reverted to `false`.
+32. `api/connectivity/ConnectivityHandler.java` (multi-block merge loop) — dropped the trailing
+    `be.notifyMultiUpdated();` call after `be.setExtraData(extraData);`. The loop only notifies each *other*
+    merged part (it explicitly skips `be` itself), so without this trailing call the controller block entity
+    itself never got notified after a multi-block merge (e.g. merging fluid tanks/basins into a larger
+    structure) — client resync/visual refresh of the controller would silently not fire. Restored the call.
+33. `foundation/blockEntity/behaviour/ValueBox.java` (`ItemValueBox.renderContents`, filter-icon branch) — the
+    z-translate for the item-count label lost its depth offset: `ms.translate(-5, 8, 7.25f)` became
+    `ms.translate(-5, 8, 0)`, while sibling branches kept their non-zero z offsets. Caused the count number for
+    filter-type value boxes to render at the wrong depth relative to the item icon (z-fighting/clipping).
+    Restored `7.25f`.
+
+One additional question was raised but resolved as NOT a bug after independent verification (same standard
+applied earlier this session to the catnip NBT sign-sanitizer question): `foundation/block/connected/
+CTSpriteShiftEntry.java`'s `getTargetU`/`getTargetV` dropped a `* 16` multiplier the reference had on the
+sheet-tile offset before dividing by `sheetSize`. Decompiled the actual `catnip`/vanilla classes on this
+project's real classpath (`net.createmod.catnip.render.SpriteShiftEntry.getUnInterpolatedU` and vanilla
+`TextureAtlasSprite.getU(float)`) to settle it directly rather than guess: confirmed `getUnInterpolatedU` returns
+a normalized `[0,1]` fraction and `getU(float)` expects that same normalized fraction (`u0 + (u1-u0)*u`), not a
+0-16 pixel-space value, in this MC version's API. The current code (no `*16`) is dimensionally correct for the
+current API; the reference's `*16` was correct for 1.20.1's older `getU` contract, which expected pixel-space
+input. This is a version-dependent API-contract difference that was already correctly adapted, not a dropped
+NeoForge-vs-Fabric behavior.
+
+Everything else in this wave's scope was expected churn (DataComponent/Codec/Transfer-API renames, `use`→
+`useItemOn` signature migrations, registry/attribute renames) — including one upstream Create feature addition
+(`DisplayLinkPeripheral` input validation) and no genuinely dropped files beyond expected relocations
+(porting-lib repackaging).
+
+Verified all 4 fixes with `compileJava`, a full `build`, and a clean `runServer` boot (Done in 2.742s, no new
+errors).
+
+**Running total: 33 real bugs found and fixed across six reference-diff audit waves. The low-ratio-tail and
+packet-handler-logic gaps flagged after wave five are now closed for every subsystem in the codebase.**

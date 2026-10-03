@@ -149,7 +149,7 @@ public class ValueBox extends ChasingAABBOutline {
 			ms.translate(-font.width(count), 0, 0);
 
 			if (isFilter) {
-				ms.translate(-5, 8, 0);
+				ms.translate(-5, 8, 7.25f);
 			} else if (isEmpty) {
 				ms.translate(-15, -1, -2.75);
 				scale = 1.65f;

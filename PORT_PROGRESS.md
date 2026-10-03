@@ -3692,3 +3692,54 @@ logo fix specifically.
 
 **Running total: 42 real bugs found and fixed (41 and 42 above; item 43 is a correction to an earlier count, not
 a new bug, so the running total stays net +2 from this batch's 40).**
+
+## Known, investigated, NOT fixed: most Create GUIs that need extra open-time sync data fail to open at all
+
+User-reported: most Create machine GUIs (first noticed on the Train Station) don't respond to right-click at
+all — no error shown in normal play, just nothing happens. Live-tested extensively this batch (Xvfb + headless
+client). Root cause identified precisely:
+
+`AllMenuTypes.java` registers all 13 of Create's custom menu types uniformly through Registrate's
+`(type, id, inv, buf) -> new XMenu(type, id, inv, (RegistryFriendlyByteBuf) buf)` constructor pattern — every one
+of them expects extra "screen opening data" to be synced from server to client beyond the standard inventory
+slots (a BlockPos, an ItemStack, booleans, etc., read via each Menu's `createOnClient(RegistryFriendlyByteBuf)`).
+Fabric's Screen Handler API requires the server-side `MenuProvider` that calls `player.openMenu(...)` to
+implement `net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<D>` (providing
+`getScreenOpeningData(ServerPlayer)`) to actually supply that data — but only 3 of the ~11 classes that need it
+do (`BlueprintEntity`, `StockTickerBlockEntity`'s `RequestMenuProvider` inner class, `FactoryPanelBehaviour`).
+The rest (`SchematicTableBlockEntity`, `SchematicannonBlockEntity`, `ToolboxBlockEntity`,
+`PackagePortBlockEntity`, `RedstoneRequesterBlockEntity`, `StockTickerBlockEntity`'s separate
+`CategoryMenuProvider` inner class, `FilterItem` (covering all 3 filter item variants), `LinkedControllerItem`,
+`ScheduleItem`) are plain `MenuProvider`s — missing data Fabric's own API requires, so `player.openMenu(...)`
+throws server-side (`[Fabric] Extended screen handler <id> must be opened with an ExtendedScreenHandlerFactory!`,
+caught and suppressed, logged as a server-side error only — nothing visible in normal play, matching the
+reported symptom exactly). The Train Station specifically doesn't hit this exact path (it uses catnip's
+`ScreenOpener.open(new StationScreen(...))`, bypassing vanilla's Menu system entirely) — its failure to open
+without a properly-assembled, track-connected station is confirmed separately as correct, intentional behavior
+(verified byte-identical against real NeoForge's `StationBlock.java`), not this bug.
+
+Implementing `ExtendedScreenHandlerFactory` on the missing 9 classes (mirroring the 3 working examples exactly)
+gets further — `player.openMenu(...)` no longer throws — but trades the silent no-op for an active, confirmed
+WORSE regression: the client disconnects outright with `Connection Lost: ... ClientboundCustomPayloadPacket was
+larger than I expected, found N bytes extra`, where N consistently equals the *entire* byte count of whatever
+`getScreenOpeningData` wrote (8 bytes for a lone `writeBlockPos`; 12 for blockpos+empty-NBT; 47 for
+blockpos+full-state-NBT) — meaning the client-side codec for this data is consuming exactly zero bytes every
+time, regardless of content. Traced into Registrate-Fabric 1.3.77's own `MenuBuilder.createEntry()`
+(decompiled): it constructs `new ExtendedScreenHandlerType<>(factory, null)` — passing a **null packet codec**.
+Fabric's own `ExtendedScreenHandlerType` constructor calls `Objects.requireNonNull(packetCodec, "packet codec
+cannot be null")`, which should throw at mod-init time if truly null; since the mod loads fine, something
+downstream evidently substitutes a no-op/empty codec rather than genuinely honoring a real one — consistent with
+every tested payload reading as entirely unconsumed. This strongly suggests the 3 "working" examples
+(`BlueprintEntity`, `StockTickerBlockEntity`'s request path, `FactoryPanelBehaviour`) are **not actually verified
+working either** — they were implemented following the correct Fabric API contract, but may be silently broken
+by this same Registrate-Fabric plumbing issue, just never live-tested by anyone this session or (apparently)
+since this port was made.
+
+This looks like a real, pre-existing bug in how this project's `Registrate-fabric` dependency (or this port's
+usage of it) wires up Fabric's extended-screen-handler codec — not something fixable by changing the Create-side
+`MenuProvider`/`BlockEntity` code alone. Given fixing it wrong actively crashes the client (worse than the
+original silent failure), **all attempted fixes here were reverted** rather than committed half-working. This
+needs either: a Registrate-fabric version bump/patch, or redesigning Create's own menu-opening path for Fabric to
+not rely on `ExtendedScreenHandlerFactory` for these menus at all (e.g. sending the extra data via a a regular
+follow-up packet after the vanilla menu opens, matching how some other Fabric ports handle this same Registrate
+limitation). Flagged here rather than guessed at further.

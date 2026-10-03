@@ -3743,3 +3743,47 @@ needs either: a Registrate-fabric version bump/patch, or redesigning Create's ow
 not rely on `ExtendedScreenHandlerFactory` for these menus at all (e.g. sending the extra data via a a regular
 follow-up packet after the vanilla menu opens, matching how some other Fabric ports handle this same Registrate
 limitation). Flagged here rather than guessed at further.
+
+## Known, investigated, NOT fixed: catnip ("Simi") custom GUIs don't respond to hover/click at all — tooltips and buttons both dead
+
+User-reported, confirmed live on the real client (not the headless test rig): opening the Train Station screen
+works fine and all its buttons render correctly, but **no tooltip ever appears anywhere in the screen** (not
+just on one button — confirmed across multiple widgets) and **clicking the "Create New Train" button does
+nothing**. Also separately confirmed by the user that the same interaction works correctly on the known-good
+`mc1.20.1/fabric/dev` branch, which rules out this being an inherent Fabric limitation and confirms it's a
+genuine regression introduced somewhere in the 1.21.1 port.
+
+Diffed every file in the direct code path against the `mc1.20.1/fabric/dev` branch (commit `82eb2f7a`, itself a
+fabric-branch commit, not NeoForge — an apples-to-apples comparison against the user's own confirmed-working
+baseline) and found **zero divergence** in any of them:
+- `StationScreen.java` (the `tick()` -> `updateAssemblyTooltip()` -> `newTrainButton.setToolTip()` /
+  `newTrainButton.active = blockEntity.edgePoint.isOrthogonal()` chain) — byte-identical except expected
+  NeoForge-vs-Fabric packet-channel boilerplate (`AllPackets` vs `CatnipServices.NETWORK`).
+- `AbstractStationScreen.java` — byte-identical.
+- `IconButton.java` (`foundation.gui.widget`) — byte-identical.
+- `TrackTargetingBehaviour.java` (the `isOrthogonal()` field computation specifically) — byte-identical (a
+  separate, real-but-unrelated divergence was found in this file's `read()` method, see below).
+
+Since the tooltip failure is screen-wide (not specific to one button's business logic) and none of Create's own
+GUI code has changed, the regression almost certainly lives in the shared base class every Create screen like
+this extends: `net.createmod.catnip.gui.AbstractSimiScreen` (bundled inside the `Ponder-Fabric`/`Ponder-Common`
+dependency, not this repo's own source). That class renders widgets and hover-tooltips through its own loop
+(`renderWindowForeground()` checks `simiWidget.isHovered()` and renders `simiWidget.getToolTip()` via
+`graphics.renderComponentTooltip(...)`), fed by a `getRenderables()` helper that reaches into vanilla `Screen`'s
+private `renderables` field through a Mixin accessor interface
+(`net.createmod.ponder.mixin.client.accessor.ScreenAccessor`). This accessor is the one clearly
+loader/version-sensitive piece of the whole chain (everything else here is plain, unchanged Java), making it the
+prime suspect for why interactivity (hover detection feeding tooltips, and by extension whatever's downstream of
+it for clicks) could be broken on this port's Fabric/Loom/Mixin setup specifically while rendering itself still
+works fine (since the widgets are visibly drawn correctly).
+
+**Not yet confirmed or fixed** — this needs checking `logs/latest.log` / `debug.log` for a Mixin application
+warning/error around this `ScreenAccessor` mixin at game launch (Mixin can log a failure without hard-crashing
+depending on whether the mixin is marked required), which the user is going to check directly via their own
+local session with real client access, since further headless investigation on this end hit a wall: the
+Xvfb/Robot-based test rig built this session turned out to be unreliable for this specific investigation — a
+teleport-aimed "track" placement test was actually landing on the smooth_stone test platform underneath the
+track the whole time (confirmed via the F3 debug overlay's "Targeted Block" line reading
+`minecraft:smooth_stone`, not track), invalidating that attempted repro. The user's own manual, in-game testing
+(real mouse/keyboard) is what actually confirmed the real symptom (dead tooltips + dead click) and ruled out
+business logic as the cause. Flagged here rather than guessed at further.

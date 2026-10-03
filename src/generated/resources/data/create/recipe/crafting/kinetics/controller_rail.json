@@ -19,7 +19,7 @@
   ],
   "result": {
     "count": 6,
-    "item": "create:controller_rail"
+    "id": "create:controller_rail"
   },
   "show_notification": true
 }

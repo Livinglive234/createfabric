@@ -18,7 +18,7 @@
     "SSS"
   ],
   "result": {
-    "item": "create:powered_toggle_latch"
+    "id": "create:powered_toggle_latch"
   },
   "show_notification": true
 }

@@ -17,7 +17,9 @@
   "results": [
     {
       "amount": 250,
-      "id": "create:chocolate"
+      "id": {
+        "fluid": "create:chocolate"
+      }
     }
   ]
 }

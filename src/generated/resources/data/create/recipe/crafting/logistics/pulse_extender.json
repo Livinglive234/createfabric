@@ -21,7 +21,7 @@
     "SSS"
   ],
   "result": {
-    "item": "create:pulse_extender"
+    "id": "create:pulse_extender"
   },
   "show_notification": true
 }

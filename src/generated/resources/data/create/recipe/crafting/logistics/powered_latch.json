@@ -21,7 +21,7 @@
     "SSS"
   ],
   "result": {
-    "item": "create:powered_latch"
+    "id": "create:powered_latch"
   },
   "show_notification": true
 }

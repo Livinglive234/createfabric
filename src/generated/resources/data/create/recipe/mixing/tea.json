@@ -19,7 +19,9 @@
   "results": [
     {
       "amount": 500,
-      "id": "create:tea"
+      "id": {
+        "fluid": "create:tea"
+      }
     }
   ]
 }

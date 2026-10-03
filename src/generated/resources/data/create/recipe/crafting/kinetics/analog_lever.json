@@ -14,7 +14,7 @@
     "S"
   ],
   "result": {
-    "item": "create:analog_lever"
+    "id": "create:analog_lever"
   },
   "show_notification": true
 }

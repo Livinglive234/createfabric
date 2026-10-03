@@ -3042,3 +3042,50 @@ enclosing method for `@Environment(CLIENT)` would catch both patterns in one pas
 broadly later — not done exhaustively this batch, since the 5 found were enough to get a real server boot working
 end-to-end, but more may exist elsewhere in the codebase, only surfacing once something else starts calling into
 them from common code.
+
+## Done this session (batch 99 — the dedicated server now boots 100% clean, zero recipe errors)
+
+Continued straight from batch 98: once the environment-stripping crashes were gone, `./gradlew runServer` (the
+*real* dedicated-server task — distinct from `runGametestServer`, which also runs Create's own bundled `@GameTest`
+suite and hit an unrelated transaction-nesting bug inside that test code specifically, not relevant to normal
+server use) got all the way to `Done (Ns)! For help, type "help"` — the standard Minecraft server ready message —
+but logged a wave of recipe parse errors along the way. All were pre-1.21.2 recipe-result schema leftovers, same
+root cause family as batch 96 (which only fixed 4 known-broken files), just far more of them than previously found:
+
+1. **95 crafting recipes** still had `"result": {"item": "..."}` instead of the 1.21.2+ `"result": {"id": "..."}`
+   shape — including very basic recipes (`andesite_alloy`, `copper_ingot`, `mechanical_saw`, `name_tag`, all 4
+   Mechanical Crafting recipes that batch 96 fixed the `accept_mirrored` key on but missed this separate schema bug
+   in the same files). Fixed with a structural (JSON-parse, not regex) sweep script across every `recipe/**/*.json`
+   under both `src/generated` and `src/main`.
+2. **A second, previously-undiscovered schema bug, specific to *fluid* results** (`mixing`/`emptying` recipes whose
+   output is a fluid, not an item): Create-Fabric's `FluidStack.CODEC`
+   (`infrastructure/fabric/transfer/fluid/FluidStack.java`) defines its `"id"` field as
+   `FluidVariant.CODEC.fieldOf("id")` — and fabric-api's own `FluidVariant.CODEC` (confirmed by extracting and
+   reading `fabric-transfer-api-v1`'s sources jar, `VariantCodecs.FLUID_CODEC`) is itself a *nested* record codec
+   requiring a `"fluid"` sub-key (plus an optional `"components"` one), not a plain fluid-name string. Every fluid
+   RESULT in this project's recipe JSONs used a flat `{"amount": N, "fluid": "..."}` (or, worse, `{"amount": N,
+   "id": "..."}` with a bare string "id") shape — both wrong. Whichever codec Create's own `Codec.either(FluidStack.CODEC,
+   ProcessingOutput.CODEC)` (`ProcessingRecipeParams.java`) tried first on these always failed structurally, and
+   silently fell through to `ProcessingOutput.CODEC`'s lenient "datagen-compat" fallback (`Codec.either(BuiltInRegistries.ITEM.byNameCodec(),
+   ResourceLocation.CODEC)` — if the id isn't a real registered Item, it's accepted anyway as a raw
+   `ResourceLocation` placeholder) — so a fluid result like `create:honey` was silently misparsed as a fake *item*
+   output instead of a fluid one, which is how `emptying/honey_bottle.json` ended up triggering `EmptyingRecipe`'s
+   own validation: "Recipe has more item outputs (2) than supported (1)" (both the real glass-bottle item AND the
+   misparsed honey "item" counted as item outputs). **Verified this diagnosis empirically** by hand-fixing one file
+   (`lava_from_cobble.json`) to the nested shape (`{"amount": 4050, "id": {"fluid": "minecraft:lava"}}`) and
+   re-running `runServer` to confirm that specific error cleared before applying the fix anywhere else. Fixed 10
+   files total: the 5 that were actually erroring in this test pack (`lava_from_cobble`, `chocolate_melting`,
+   `honey`, `emptying/honey_bottle`, `emptying/builders_tea`) plus 5 more found via a proactive sweep for the same
+   broken shape that weren't erroring yet only because their mods/recipes weren't reached in this particular run
+   (`chocolate`, `tea`, and 3 compat `emptying` recipes for alexsmobs/neapolitan/farmersdelight). Also fixed 2
+   remaining `"heatRequirement"` (camelCase) → `"heat_requirement"` (snake_case) leftovers found in the same files
+   while fixing their fluid results.
+
+**Verification**: `./gradlew runServer` (real dedicated server, EULA accepted, `server.properties` present) now
+reaches `Done (Ns)! For help, type "help"` with **zero** `Parsing error loading recipe` lines and no other
+`ERROR`-level log lines besides one pre-existing, non-fatal, unrelated warning
+(`Registry 'porting_lib:global_loot_modifier_serializers' was empty after loading`, not investigated this batch).
+**This is the first time this session (or apparently ever, per the `PORT_PROGRESS.md` history) that a real
+dedicated server has been confirmed to boot 100% clean on this port** — batches 72-96 only ever verified
+`runClient`/a real launcher install, never `runServer` specifically, and batch 98 immediately before this one got
+the dedicated server past its boot-time crashes but didn't yet check for recipe-load correctness along the way.

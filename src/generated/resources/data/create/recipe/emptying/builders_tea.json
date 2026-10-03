@@ -11,7 +11,9 @@
     },
     {
       "amount": 250,
-      "id": "create:tea"
+      "id": {
+        "fluid": "create:tea"
+      }
     }
   ]
 }

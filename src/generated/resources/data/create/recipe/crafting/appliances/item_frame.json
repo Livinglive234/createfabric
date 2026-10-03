@@ -15,7 +15,7 @@
     "SSS"
   ],
   "result": {
-    "item": "minecraft:item_frame"
+    "id": "minecraft:item_frame"
   },
   "show_notification": true
 }

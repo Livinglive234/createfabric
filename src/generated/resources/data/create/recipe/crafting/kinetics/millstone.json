@@ -18,7 +18,7 @@
     "I"
   ],
   "result": {
-    "item": "create:millstone"
+    "id": "create:millstone"
   },
   "show_notification": true
 }

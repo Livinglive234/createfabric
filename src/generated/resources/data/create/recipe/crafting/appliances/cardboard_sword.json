@@ -15,7 +15,7 @@
     "S"
   ],
   "result": {
-    "item": "create:cardboard_sword"
+    "id": "create:cardboard_sword"
   },
   "show_notification": true
 }

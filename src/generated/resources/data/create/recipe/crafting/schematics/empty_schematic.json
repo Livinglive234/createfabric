@@ -10,6 +10,6 @@
     }
   ],
   "result": {
-    "item": "create:empty_schematic"
+    "id": "create:empty_schematic"
   }
 }

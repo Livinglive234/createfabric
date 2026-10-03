@@ -20,7 +20,7 @@
     "SSS"
   ],
   "result": {
-    "item": "create:pulse_repeater"
+    "id": "create:pulse_repeater"
   },
   "show_notification": true
 }

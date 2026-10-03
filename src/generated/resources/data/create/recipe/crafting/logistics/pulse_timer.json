@@ -20,7 +20,7 @@
     "SSS"
   ],
   "result": {
-    "item": "create:pulse_timer"
+    "id": "create:pulse_timer"
   },
   "show_notification": true
 }

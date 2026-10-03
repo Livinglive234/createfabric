@@ -244,13 +244,13 @@ public class StationBlockEntity extends SmartBlockEntity implements Transformabl
 				if (target != currentTarget) {
 					flag.chase(target, 0.1f, Chaser.LINEAR);
 					if (target == 1)
-						AllSoundEvents.CONTRAPTION_DISASSEMBLE.playAt(level, worldPosition, 1, 2, true);
+						AllSoundEvents.CONTRAPTION_ASSEMBLE.playAt(level, worldPosition, 1, 2, true);
 				}
 			}
 			boolean settled = flag.getValue() > .15f;
 			flag.tickChaser();
 			if (currentTarget == 0 && settled != flag.getValue() > .15f)
-				AllSoundEvents.CONTRAPTION_ASSEMBLE.playAt(level, worldPosition, 0.75f, 1.5f, true);
+				AllSoundEvents.CONTRAPTION_DISASSEMBLE.playAt(level, worldPosition, 0.75f, 1.5f, true);
 			return;
 		}
 

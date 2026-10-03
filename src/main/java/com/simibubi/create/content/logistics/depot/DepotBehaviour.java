@@ -356,7 +356,7 @@ public class DepotBehaviour extends BlockEntityBehaviour implements Clearable {
 
 		if (this.isEmpty()) {
 			if (heldItem.insertedFrom.getAxis().isHorizontal())
-				AllSoundEvents.DEPOT_SLIDE.playOnServer(getWorld(), getPos());
+				TransactionSuccessCallback.register(ctx, () -> AllSoundEvents.DEPOT_SLIDE.playOnServer(getWorld(), getPos()));
 			else
 				TransactionSuccessCallback.register(ctx, () -> AllSoundEvents.DEPOT_PLOP.playOnServer(getWorld(), getPos()));
 		}

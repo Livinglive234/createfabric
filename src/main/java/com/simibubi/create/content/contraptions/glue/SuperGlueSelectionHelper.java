@@ -82,7 +82,8 @@ public class SuperGlueSelectionHelper {
 
 			int charges = Math.min(requiredAmount, stack.getMaxDamage() - stack.getDamageValue());
 
-			stack.hurtAndBreak(charges, player, EquipmentSlot.MAINHAND);
+			if (!simulate)
+				stack.hurtAndBreak(charges, player, EquipmentSlot.MAINHAND);
 
 			requiredAmount -= charges;
 			if (requiredAmount <= 0)

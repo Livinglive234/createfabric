@@ -3419,3 +3419,65 @@ was actually dropped there:
 have now been audited at least once: contraptions, trains, kinetics, logistics, redstone [clean], fluids,
 equipment, decoration/schematics/processing, foundation (all subdirectories), infrastructure, api, impl, and
 top-level registration. `compat/` was also audited clean in an earlier wave.
+
+## Batch 106 — low-ratio tail + packet-handler-logic audit wave (fourth wave)
+
+Every prior wave prioritized files by divergence ratio and explicitly skipped files below roughly 0.15-0.20 "for
+time," and all `*Packet.java` files (113 of them) were excluded entirely as expected 1.20.2+ networking-API
+churn. This wave closed both gaps: three parallel audits re-read the skipped low-ratio tail across every
+subsystem, and a fourth specifically audited packet `handle()`/encode/decode body *logic* (not the API shape) for
+all 113 packet files. Found 8 more confirmed bugs (22-29):
+
+22. `content/fluids/OpenEndedPipe.java` (`removeFluidFromSpace`/`provideFluidToSpace`) — both methods called
+    `world.scheduleTick(outputPos, Fluids.WATER, 1)` unconditionally and immediately, outside the Fabric
+    Transfer API's commit gate, while the adjacent `world.setBlock(...)` calls in the same methods were already
+    transaction-aware via `world.updateSnapshots(ctx)`. A simulated/aborted pipe drain or fill could still
+    schedule a water-resume tick that fires later with no matching block change (the reference deferred it with
+    `TransactionCallback.onSuccess`). Same bug shape as `TrainCargoManager`/`ChangeListeningStorageWrapper`.
+    Fixed by wrapping both `scheduleTick` calls in `TransactionSuccessCallback.register(ctx, () -> ...)`.
+23. `content/logistics/depot/DepotBehaviour.java` (`insert`) — kept the deferred `TransactionSuccessCallback` for
+    the vertical-drop (PLOP) sound branch but dropped it for the horizontal (SLIDE) branch, which called
+    `AllSoundEvents.DEPOT_SLIDE.playOnServer(...)` eagerly. A simulated or aborted insert transaction would still
+    play the depot slide sound with no item actually placed. Fixed by deferring it the same way as PLOP.
+24. `content/equipment/toolbox/RadialToolboxMenu.java` (`mouseScrolled`) — after the 4-arg `mouseScrolled`
+    signature migration, both `hoveredX` and `hoveredY` were computed from `pMouseY`; `pMouseX` was never read.
+    Broke the radial toolbox's scroll-to-select hit-testing — the circular hover-distance check and subsequent
+    slot-scroll logic depended only on vertical cursor position. Fixed `hoveredX` to use `pMouseX`.
+25. `content/fluids/particle/BasinFluidParticle.java` (`render`) — an unexplained sign flip on the billboard
+    quaternion (`rotation.set(-1, 0, 0, 1)` vs. the reference's `rotation.set(1, 0, 0, 1)`), causing basin fluid
+    splash particles to render with an incorrect orientation. Purely cosmetic; reverted to match the reference.
+26. `content/contraptions/glue/SuperGlueSelectionHelper.java` (`collectGlueFromInventory`) — the `simulate`
+    parameter became unused; `stack.hurtAndBreak(...)` ran unconditionally instead of being guarded by
+    `if (!simulate)`. Since this method is called with `simulate=true` every render tick just to check
+    affordability while hovering a glue target (and again with `simulate=false` for the real placement), Super
+    Glue tools took real durability damage continuously from merely hovering, and took damage twice per actual
+    placement. Restored the `if (!simulate)` guard.
+27. `content/trains/station/StationBlockEntity.java` (`tick`, client-side branch) — the assemble/disassemble
+    sound cues were swapped: `target == 1` played `CONTRAPTION_DISASSEMBLE` (reference: `CONTRAPTION_ASSEMBLE`),
+    and the settle-down branch played `CONTRAPTION_ASSEMBLE` (reference: `CONTRAPTION_DISASSEMBLE`). A station's
+    assemble/disassemble sound cues played backwards relative to what was actually happening. Swapped back.
+28. `content/contraptions/glue/SuperGlueSelectionPacket.java` (`handle`) — dropped the
+    `if (AdventureUtil.isAdventure(player)) return;` guard present in the reference (and still correctly kept by
+    the sibling `SuperGlueRemovalPacket`), even though `AdventureUtil` remained imported but unused — an
+    accidental drop during the record/StreamCodec rewrite, not an intentional removal. Adventure-mode players
+    could create Super Glue connections, a build action that mode should block. Restored the guard.
+29. `content/logistics/box/PackageDestroyPacket.java` (`handle`) — the reference wraps its particle spawn in
+    `for (int i = 0; i < 20; i++)`; the current port spawned exactly one particle. Purely cosmetic (the
+    "package destroyed" effect was far weaker than intended) — restored the loop.
+
+No other regressions found in the sampled low-ratio tail or packet-logic audit; everything else was either
+byte-identical to the reference, an upstream Create feature addition beyond the 1.20.1 baseline, or a verified
+security *improvement* over the reference (e.g. `ChainPackageInteractionPacket` now reads the inserted item
+server-side instead of trusting a client-supplied field). One self-acknowledged, already-commented limitation
+was noted but not fixed: `ChromaticCompoundItem` dropped its `getItemStackLimit` override (max-stack-size-1 while
+glowing) because 1.21.1 Fabric has no per-instance stack-limit hook — the source already flags this as
+unimplemented.
+
+The packet-logic audit explicitly did not reach full file-by-file coverage (~50 of 113 packet files were read on
+both sides in full; the remainder follow the same verified-clean patterns but weren't individually confirmed) and
+the low-ratio tail audits used a ratio-based heuristic (0.02-0.20) rather than reading every single low-ratio
+file byte-for-byte — both are now much narrower residual gaps than before this wave, but not literally
+zero. Verified all 8 fixes with `compileJava`, a full `build`, and a clean `runServer` boot (Done in 2.776s, no
+new errors).
+
+**Running total: 29 real bugs found and fixed across six reference-diff audit waves.**

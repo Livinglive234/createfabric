@@ -276,7 +276,7 @@ public class RadialToolboxMenu extends AbstractSimiScreen {
 	@Override
 	public boolean mouseScrolled(double pMouseX, double pMouseY, double pScrollX, double pScrollY) {
 		Window window = Minecraft.getInstance().getWindow();
-		double hoveredX = pMouseY - window.getGuiScaledWidth() / 2;
+		double hoveredX = pMouseX - window.getGuiScaledWidth() / 2;
 		double hoveredY = pMouseY - window.getGuiScaledHeight() / 2;
 		double distance = hoveredX * hoveredX + hoveredY * hoveredY;
 		if (distance <= 150) {

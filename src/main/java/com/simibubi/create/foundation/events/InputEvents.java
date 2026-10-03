@@ -104,7 +104,7 @@ public class InputEvents {
 		if (ChainPackageInteractionHandler.onUse())
 			return InteractionResult.SUCCESS;
 
-		return InteractionResult.PASS;
+		return cancel ? InteractionResult.SUCCESS : InteractionResult.PASS;
 	}
 
 	public static InteractionResult onAttack(Minecraft mc, HitResult hit) {

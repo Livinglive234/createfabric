@@ -78,14 +78,9 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.material.PushReaction;
 
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.TorchBlock;
 
 public class BlockMovementChecksImpl {
-	private static final TagKey<Block> RELOCATION_NOT_SUPPORTED =
-		TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("neoforge", "relocation_not_supported"));
 	private static final List<MovementNecessaryCheck> MOVEMENT_NECESSARY_CHECKS = new ArrayList<>();
 	private static final List<MovementAllowedCheck> MOVEMENT_ALLOWED_CHECKS = new ArrayList<>();
 	private static final List<BrittleCheck> BRITTLE_CHECKS = new ArrayList<>();
@@ -187,7 +182,7 @@ public class BlockMovementChecksImpl {
 			return true;
 		if (state.getDestroySpeed(world, pos) == -1)
 			return false;
-		if (state.is(RELOCATION_NOT_SUPPORTED))
+		if (AllBlockTags.RELOCATION_NOT_SUPPORTED.matches(state))
 			return false;
 		if (AllBlockTags.NON_MOVABLE.matches(state))
 			return false;

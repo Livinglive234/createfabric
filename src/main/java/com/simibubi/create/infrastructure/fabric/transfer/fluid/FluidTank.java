@@ -29,6 +29,7 @@ public class FluidTank extends SingleFluidStorage {
 	public void setFluid(FluidStack stack) {
 		this.variant = stack.getVariant();
 		this.amount = stack.getAmount();
+		onContentsChanged();
 	}
 
 	public long getFluidAmount() {
@@ -40,6 +41,11 @@ public class FluidTank extends SingleFluidStorage {
 	}
 
 	protected void onContentsChanged() {
+	}
+
+	@Override
+	protected void onFinalCommit() {
+		onContentsChanged();
 	}
 
 	public void readFromNBT(HolderLookup.Provider registries, CompoundTag nbt) {

@@ -69,6 +69,8 @@ public class ItemStackHandler implements SlottedStackStorage {
 		Iterator<Slot> itr = getInsertableSlotsFor(resource);
 		while (itr.hasNext()) {
 			Slot slot = itr.next();
+			if (!isItemValid(slot.index, resource.toStack()))
+				continue;
 			inserted += slot.insert(resource, maxAmount - inserted, transaction);
 			if (inserted >= maxAmount)
 				break;

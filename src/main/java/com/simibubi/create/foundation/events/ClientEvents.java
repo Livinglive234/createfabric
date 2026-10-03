@@ -203,6 +203,7 @@ public class ClientEvents {
 		// fabric: fix #608, see above
 //		ArmInteractionPointHandler.tick();
 		EjectorTargetHandler.tick();
+		ContraptionRenderInfoManager.tickFor(world);
 		BlueprintOverlayRenderer.tick();
 		ToolboxHandlerClient.clientTick();
 		RadialWrenchHandler.clientTick();

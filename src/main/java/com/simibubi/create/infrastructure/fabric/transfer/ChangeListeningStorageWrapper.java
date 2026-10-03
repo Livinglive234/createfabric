@@ -27,8 +27,10 @@ public class ChangeListeningStorageWrapper<T> implements Storage<T> {
 
 	@Override
 	public long insert(T resource, long maxAmount, TransactionContext transaction) {
-		TransactionSuccessCallback.register(transaction, this.onChange);
-		return this.wrapped.insert(resource, maxAmount, transaction);
+		long inserted = this.wrapped.insert(resource, maxAmount, transaction);
+		if (inserted > 0)
+			TransactionSuccessCallback.register(transaction, this.onChange);
+		return inserted;
 	}
 
 	@Override
@@ -38,8 +40,10 @@ public class ChangeListeningStorageWrapper<T> implements Storage<T> {
 
 	@Override
 	public long extract(T resource, long maxAmount, TransactionContext transaction) {
-		TransactionSuccessCallback.register(transaction, this.onChange);
-		return this.wrapped.extract(resource, maxAmount, transaction);
+		long extracted = this.wrapped.extract(resource, maxAmount, transaction);
+		if (extracted > 0)
+			TransactionSuccessCallback.register(transaction, this.onChange);
+		return extracted;
 	}
 
 	@Override

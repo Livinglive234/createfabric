@@ -69,6 +69,10 @@ public enum CrafterUnpackingHandler implements UnpackingHandler {
 					}
 				}
 			}
+
+			if (!simulate) {
+				t.commit();
+			}
 		}
 
 		// if anything is still non-empty insertion failed

@@ -130,6 +130,8 @@ public class AllTags {
 		CARDBOARD_STORAGE_BLOCKS(COMMON, "storage_blocks/cardboard"),
 		ANDESITE_ALLOY_STORAGE_BLOCKS(COMMON, "storage_blocks/andesite_alloy"),
 
+		RELOCATION_NOT_SUPPORTED(COMMON),
+
 		CORALS,
 
 		SLIMY_LOGS(TIC),

@@ -3325,3 +3325,97 @@ with one finding, but it's the highest-impact single bug found this session:
 audited], `api/`, `impl/`, and the top-level `All*.java`/`Create.java`/`CreateClient.java` registration files —
 three audits (foundation-rest, infrastructure, api/impl/top-level) were interrupted by a session rate limit and
 are queued to resume.
+
+## Batch 103 — infrastructure/fabric/transfer audit: Fabric Transfer API correctness bugs
+
+`infrastructure/` has no reference directory counterpart (Fabric-specific reorganization); most of it traces
+cleanly back to equivalent reference files with only expected churn. The real findings are confined to
+`infrastructure/fabric/transfer/`, a wholly new Fabric-only reimplementation of Forge's capability plumbing with
+no reference counterpart anywhere — audited on its own correctness merits instead. Found 3 confirmed,
+load-bearing bugs, all in live gameplay automation paths:
+
+14. `infrastructure/fabric/transfer/item/ItemStackHandler.java` (`insert`) — never consulted
+    `isItemValid(slot, resource)` before inserting; it only picked slots via `getInsertableSlotsFor()` (any slot
+    already holding the item, or any empty slot). Several subclasses override `isItemValid` to enforce real
+    restrictions — e.g. `SchematicannonInventory` (blueprint-only input slot, output-only slot that rejects
+    insertion) and `ToolboxInventory` — but those overrides were only honored through the GUI path
+    (`StorageWrapperContainer.canPlaceItem`). Any automation using the Fabric Transfer API directly (hoppers,
+    funnels, pipes via `ItemStorage.SIDED`) bypassed the check entirely and could insert disallowed items into
+    restricted slots the GUI would reject. Fixed by skipping slots that fail `isItemValid` in `insert()`.
+15. `infrastructure/fabric/transfer/fluid/FluidTank.java` — never wired `onFinalCommit()` (called by the Fabric
+    Transfer API after every committed transaction) to `onContentsChanged()`, so automated fluid transfer (pumps,
+    pipes, hose pulleys going through `SingleFluidStorage.insert/extract`) never triggered it — only explicit
+    code-level `setFluid(...)` calls did. `FluidTankBlockEntity.onFluidStackChanged()` relies on that callback to
+    update tank lighting, call `setChanged()`, and sync the new fluid level to clients. Net effect: automated
+    fluid transfer into/out of Create's fluid tanks didn't update lighting or sync to clients in real time. Fixed
+    by overriding `onFinalCommit()` to call `onContentsChanged()`, and also calling it from `setFluid(...)`
+    directly (matching `ItemStackHandler.Slot`'s equivalent pattern).
+16. `infrastructure/fabric/transfer/ChangeListeningStorageWrapper.java` (`insert`/`extract`) and
+    `ChangeListeningViewWrapper.java` (`extract`) — both registered `TransactionSuccessCallback` *before*
+    delegating to the wrapped storage and regardless of the returned transfer amount, the same bug shape as the
+    `TrainCargoManager` fix in batch 101. `TrainCargoManager` wraps its item/fluid iterators with
+    `ChangeListeningStorageWrapper.wrapIterator(...)` to detect cargo changes; a 0-amount insert/extract attempt
+    (e.g. a slot that rejects the resource) still fired the change callback, causing spurious train-cargo
+    recomputation every time automation merely probed the storage, not only when cargo actually changed. Fixed
+    by checking the returned amount `> 0` before registering the callback in all three call sites.
+
+Verified with a clean `runServer` boot after `compileJava`/`build` both succeeded.
+
+## Batch 104 — api/impl/top-level registration audit
+
+Audited `api/`, `impl/`, and all ~37 top-level `All*.java`/`Create.java`/`CreateClient.java`/`CreateBuildInfo.java`
+files via numstat ratios plus entry-by-entry diffs of every registration list (fields/enum constants). No missing
+files beyond expected relocations (`api/unpacking` → `api/packager/unpacking`) and additive new files (datagen
+generators, `CreateDataMaps`). Every reference registry entry has a current counterpart. Found 2 confirmed bugs:
+
+17. `impl/unpacking/CrafterUnpackingHandler.java` (`unpack`) — opened `Transaction.openOuter()` but never called
+    `t.commit()`, so the transaction always auto-aborted on scope exit regardless of the `simulate` flag (compare
+    sibling `DefaultUnpackingHandler.java`, which correctly calls `t.commit()` inside `if (!simulate)`). The
+    source `ItemStack`s were still shrunk directly (plain Java mutation, outside the transaction) and the method
+    returned `true`, but the items were never actually inserted into the Mechanical Crafter's input slots — they
+    were silently voided. Using the Packager → Crafter automatic-crafting pipeline destroyed items instead of
+    placing them. Fixed by adding `if (!simulate) t.commit();` before the transaction block closes.
+18. `impl/contraption/BlockMovementChecksImpl.java` + `AllTags.java` — the `RELOCATION_NOT_SUPPORTED` block tag
+    check was reimplemented with a hardcoded, wrong namespace: `TagKey.create(Registries.BLOCK,
+    ResourceLocation.fromNamespaceAndPath("neoforge", "relocation_not_supported"))`. The reference defined this
+    tag as an `AllBlockTags` enum constant under the Forge→Common (`c:`) namespace, and the current `AllTags.java`
+    had dropped that enum constant entirely. The actual generated tag data lives at
+    `data/c/tags/block/relocation_not_supported.json` (namespace `c`, containing `create:track`), but the code
+    looked up `neoforge:relocation_not_supported` — a namespace with no corresponding tag data in this Fabric
+    mod, so `state.is(RELOCATION_NOT_SUPPORTED)` always evaluated to `false`, silently disabling the safety check
+    in `isMovementAllowedFallback()` meant to stop contraptions (pistons, bearings, etc.) from illegally
+    relocating `create:track` blocks. Fixed by restoring `RELOCATION_NOT_SUPPORTED(COMMON)` as a proper
+    `AllBlockTags` entry and switching `BlockMovementChecksImpl` to `AllBlockTags.RELOCATION_NOT_SUPPORTED.matches(state)`.
+
+## Batch 105 — foundation/ remaining-subdirectories audit
+
+Audited every `foundation/` subdirectory except `block/`, `blockEntity/`, `data/` (covered in batch 102). Most
+high-ratio files were expected churn or legitimate upstream redesigns (`ContinuousOBBCollider`/`Matrix3d`/
+`OrientedBB` were wholesale rewritten for a batched collision algorithm — verified the new math is consistent,
+not a regression). Found 3 confirmed bugs; one false-positive candidate (missing sign NBT sanitizer) was
+independently checked against the actual `catnip` library dependency (decompiled the real `Ponder-Fabric-1.21.1-
+1.0.50.jar` bytecode) and ruled out — sign sanitization now lives inside `catnip`'s shared `NBTProcessors.process()`
+dispatcher, triggered generically by the `minecraft:signs` block tag rather than per-mod registration, so nothing
+was actually dropped there:
+
+19. `foundation/events/InputEvents.java` (`onUse`) — computed `boolean cancel = TrainRelocator.onClicked();` but
+    the final `return` was rewritten to always return `InteractionResult.PASS`, discarding `cancel`'s value.
+    Right-clicking to place/confirm a train relocation no longer consumed the click, so normal interaction
+    processing continued on the same click (e.g. could also trigger block/item use), causing unintended
+    double-interactions during train relocation. Fixed by restoring `return cancel ? InteractionResult.SUCCESS :
+    InteractionResult.PASS;`.
+20. `foundation/CreateNBTProcessors.java` (`register`) — missing the `AllBlockEntityTypes.PLACARD.get()` item
+    sanitizer (`NBTProcessors.itemProcessor("Item")`) that strips unsafe item components from untrusted
+    schematic/structure data. Placards loaded from schematics were not being sanitized. Fixed by registering it,
+    matching the pattern already used for `CREATIVE_CRATE`.
+21. `foundation/events/ClientEvents.java` (`onTick`) — dropped the `ContraptionRenderInfoManager.tickFor(world)`
+    call entirely during the Fabric event-API migration; `tickFor` is what increments `removalTimer` and
+    periodically purges dead `ContraptionRenderInfo` entries from its per-level map, and nothing else in the
+    current tree calls it. Net effect: a slow client-side memory leak — render-info cache entries for
+    contraptions accumulated for the lifetime of the client level, only ever cleared on a level-renderer reload
+    instead of during normal play. Restored the call.
+
+**Running total: 21 real bugs found and fixed across five reference-diff audit waves.** All planned subsystems
+have now been audited at least once: contraptions, trains, kinetics, logistics, redstone [clean], fluids,
+equipment, decoration/schematics/processing, foundation (all subdirectories), infrastructure, api, impl, and
+top-level registration. `compat/` was also audited clean in an earlier wave.

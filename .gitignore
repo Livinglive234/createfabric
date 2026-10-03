@@ -57,3 +57,6 @@ local.properties
 .gitmodules
 Ponder
 Ponder/
+
+# Claude Code agent worktrees/scratch state
+.claude/

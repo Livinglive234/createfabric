@@ -13,9 +13,9 @@
       "item": "minecraft:glass_bottle"
     },
     {
-      "type": "neoforge:tag",
+      "type": "fluid_tag",
       "amount": 250,
-      "tag": "c:milk"
+      "fluid_tag": "c:milk"
     }
   ],
   "results": [

@@ -24,7 +24,7 @@ Baseline compile counts (full clean `./gradlew compileJava`, not incremental):
   open issue" near the end of this file. Development also moved from a throwaway session branch onto `main`
   directly partway through (see "Branch consolidation" note below) — all commits from batch 56 onward are on `main`.
 
-## Workflow note: batch fixes before recompiling (user preference, established batch 64)
+## Workflow note: batch fixes before recompiling (user preference, established batch 64, expanded batch 97)
 Fix several small files per round (a handful to a dozen, depending on how independent/low-risk they are) and run
 **one** verification compile for the whole batch, rather than editing a single file and recompiling immediately
 after each one. Full clean-ish compiles take ~30s-1.5min each, so one-file-at-a-time wastes a compile cycle per
@@ -34,6 +34,17 @@ need a solo compile to sanity-check before batching. Still compile between batch
 10-20 files without re-verifying), and still do a solo/small-batch compile for anything non-trivial or uncertain
 (new classes, API-shape guesses not already confirmed via `javap`, anything touching shared/base classes many
 files depend on).
+
+**After at least every 10 file changes (not just compile-error fixes — JSON/data/recipe edits count too), verify
+with all three: a compile, a datagen run, and a full build** (`compileJava`, `runDatagen`, `build` — in increasing
+order of thoroughness/cost), not just `compileJava` alone. Now that the project is past the compile-error-sweep
+stage and into runtime/data correctness (batch 71 onward reached zero compile errors; batches 72-96 were all
+runtime bugs `compileJava` can't see at all), a clean compile no longer means the change is actually correct —
+recipe JSON schema mismatches, datagen ordering bugs, and real launch crashes have all been found this session by
+`runDatagen`/`runGametestServer`/real launches, not by `compileJava`. Pick the right one for what changed: a pure
+Java fix only needs `compileJava`; anything touching recipe JSON, datagen, or registration needs at least
+`runDatagen`; anything where "does this actually work at runtime" matters (mixins, registries, new runtime
+behavior) needs a real launch verification (`runGametestServer` or `runClient`) before trusting it.
 
 ## Bulk import-restoration technique (big win — use again if a similar wave of import loss shows up)
 The "merge picked wrong side and dropped imports" bug (see session summary) turned out to affect
@@ -2835,9 +2846,9 @@ only; everything from batch 72 onward has been runtime verification against a re
 environment (`./gradlew runClient` alone has repeatedly missed bugs — see batches 86/93 — because Loom's dev
 classpath and a packaged jar's bundled dependencies aren't the same thing).
 
-## Known open issue: ~35 core recipes still carry NeoForge's `FluidIngredient`/`Ingredient` type strings (not yet fixed)
+## Known open issue (FluidIngredient half fixed in batch 97, block_tag half still open): ~35 core recipes carried NeoForge's `FluidIngredient`/`Ingredient` type strings
 
-Found while chasing `latest.log` crashes in batches 95-96; still open as of batch 96. **Root cause:** these JSON
+Found while chasing `latest.log` crashes in batches 95-96. **Root cause:** these JSON
 recipe files were carried over from `Createforge` during the original NeoForge→Fabric merge and were never
 regenerated through this project's own Fabric-native datagen, so they still contain NeoForge's `FluidIngredient`
 dispatch-codec type strings (and, in one file, a NeoForge-only item `Ingredient` type) instead of this project's
@@ -2887,3 +2898,41 @@ equivalent concept exists anywhere in this codebase yet.
 test: hand-edit `chocolate.json` to the proposed `fluid_tag` shape, reload recipes, confirm `create:chocolate`
 mixing recipe appears/works) before writing a bulk-rewrite script across all 33 files — and treat
 `mud_by_mixing.json`'s `block_tag` ingredient as a separate follow-up, not part of the same fix.
+
+## Done this session (batch 97 — applied the FluidIngredient JSON-rewrite theory from the open issue above)
+
+Applied the 3-pattern rewrite described above to all 33 affected files via a small structural (JSON-parse, not
+text-replace) Python script, leaving `mud_by_mixing.json`'s unrelated `neoforge:block_tag` item-`Ingredient` entry
+untouched (still fully open, no code exists for it anywhere in this project):
+- `"type": "neoforge:single"` → `"type": "fluid_stack"` (fields unchanged)
+- `"type": "neoforge:tag"` → `"type": "fluid_tag"`, field `"tag"` → `"fluid_tag"`
+- `"type": "neoforge:components"` → `"type": "fluid_stack"`, field `"fluids"` → `"fluid"`
+
+**Verification, and its limits — be honest about what this does and doesn't prove:**
+- `./gradlew compileJava` — clean (irrelevant to JSON correctness, but confirms nothing else regressed).
+- `./gradlew build` — `BUILD SUCCESSFUL`.
+- `./gradlew runDatagen` — **failed**, but on a pre-existing, unrelated bug: the same Registrate-Fabric block loot
+  provider validation gap flagged as a known issue in batch 95 (`Missing loottable 'create:blocks/schematicannon'`
+  there; this run hit `Missing loottable 'milk-lib:blocks/milk_cauldron'` instead — same bug class, different
+  missing loot table, nothing to do with this change). `runDatagen` still cannot complete in this project at all
+  right now, independent of anything in this batch.
+- **`./gradlew runGametestServer` was attempted first** (the most direct way to verify these recipes actually
+  decode, since that task boots a real server and loads the real datapack through `RecipeManager`) **but crashed
+  before reaching recipe loading at all**, on an unrelated pre-existing bug: `Create.<clinit>` triggers a class
+  load of `net.minecraft.client.resources.model.BakedModel` (a client-only class) somewhere in its static
+  initialization chain, which is fatal specifically in a `SERVER`-only environment
+  (`net.fabricmc.loader.impl.FormattedException: ... Cannot load class ... BakedModel in environment type SERVER`).
+  This is a real, separate bug worth someone's attention (it would also break an actual dedicated-server install,
+  not just this sandbox's gametest task) — but chasing it was out of scope for this batch.
+- **No `runClient` or real launch was attempted** — this sandboxed environment has no display/GL context, and
+  batches 72-96's "real PrismLauncher install" verification was done outside this environment (the user's own
+  machine, feeding crash logs back), not something this session can reproduce.
+
+**Bottom line: the JSON rewrite is structurally applied and the project still builds, but the actual
+"does `create:chocolate` now decode and show up as a recipe" question from the open issue above is still
+NOT verified** — nothing in this sandbox can currently load the real `RecipeManager`/`FluidIngredient.CODEC` path
+end-to-end. The `FluidStackIngredient`/`FluidTagIngredient` codec reading that justified this rewrite (see the
+open issue above) is believed correct from direct source inspection but remains unconfirmed against a real decode.
+**If this gets tested on a real install and any of these 33 recipes still fail to load, that's the first place to
+look** — and the `runGametestServer`/`BakedModel`-on-`SERVER` crash above is unrelated prior art worth fixing
+separately, since it currently blocks the most direct in-sandbox verification path for any future recipe/data work.

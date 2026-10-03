@@ -19,7 +19,7 @@
       "tag": "c:gems/quartz"
     },
     {
-      "type": "neoforge:single",
+      "type": "fluid_stack",
       "amount": 250,
       "fluid": "minecraft:water"
     }

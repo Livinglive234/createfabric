@@ -3787,3 +3787,45 @@ track the whole time (confirmed via the F3 debug overlay's "Targeted Block" line
 `minecraft:smooth_stone`, not track), invalidating that attempted repro. The user's own manual, in-game testing
 (real mouse/keyboard) is what actually confirmed the real symptom (dead tooltips + dead click) and ruled out
 business logic as the cause. Flagged here rather than guessed at further.
+
+**Update:** checked `logs/latest.log` from a real client session as planned above — there is no Mixin
+application warning/error anywhere for `ScreenAccessor` (or any Ponder/catnip mixin). That rules out "the mixin
+silently failed to apply" as the cause; whatever's actually broken here isn't logged anywhere, so this is still
+unresolved and still needs live debugging to chase further.
+
+## Known, investigated, NOT fixed: Station assembly's `markAndNotifyBlock`/`updateSnapshots` crash (FIXED separately, see commit) surfaced two further known-but-unfixed cosmetic issues during live testing
+
+While confirming that fix on a real previously-played world, two separate, purely cosmetic (non-crashing) issues
+were found and investigated but not resolved:
+
+**Train Controls lever/cover rendering:** once a train carriage with a Train Controls block is assembled, the
+lever handles correctly animate/pop out when a player takes control, but the solid "closed" panel is visibly
+rendered in front of/behind the moving levers (confirmed live by the user: "the solid panel is behind the moving
+levers"). Traced the entire state pipeline end to end and found it byte-identical to NeoForge: `Contraption`'s
+block-capture code correctly sets `ControlsBlock.OPEN=true` for carriage contraptions (gated by the
+`opens_controls` contraption-type tag, which is correctly generated and includes `create:carriage`), the
+generated blockstate JSON correctly maps `open=true` to the recessed `block_open` model (not `block_closed`),
+and both `ClientContraption`'s `VirtualRenderWorld` population and `ContraptionVisual`'s Flywheel model-building
+path (`RenderedBlocks.lookup()`) read the captured (already-open) state directly with nothing stripping or
+resetting it. Since every layer of Java-level state handling checks out, the remaining suspect is a GPU-level
+depth/render-order mismatch between two separate rendering systems that both draw near-coincident geometry in
+this exact spot: the static "open" block model (baked once into Flywheel's GPU-instanced structure buffer) and
+the dynamic cover+lever pieces (`ControlsRenderer`, redrawn every frame through a regular `PoseStack`/
+vertex-buffer path that Flywheel's instancing never touches). This needs actual visual A/B testing (not just
+static code reading) to pin down further - flagged here rather than guessed at with a blind geometry/depth-offset
+patch.
+
+**Main menu panorama + cogwheels render black:** opening the Create main menu (goggles icon) shows the logo
+correctly (fixed earlier, see the `RenderSystem.disableDepthTest()` entry above) but the custom rotating skybox
+panorama behind it and the two spinning cogwheel block icons next to the logo show solid black instead. Ruled out
+asset corruption - diffed the 6 panorama cubemap face textures byte-for-byte against real NeoForge Create and
+they're identical (including a tiny 126-byte placeholder face that's the same on both sides, so not a Fabric-side
+asset issue). `CreateMainMenuScreen.java`'s render code is also functionally identical to NeoForge's aside from
+the already-fixed logo depth-test wrapping. Since the panorama (a textured 3D skybox), the cogwheels (3D
+block-icon renders via `GuiGameElement`), and the logo (a 2D blit) are three genuinely different rendering code
+paths and only the logo was broken by a Create-Fabric-specific bug, the prime remaining suspect is **Iris**
+(active in this modpack even with no shaderpack selected, since Iris replaces vanilla's whole rendering pipeline
+regardless) - a very common source of exactly this kind of breakage for mods with custom/manual GL rendering
+code. Not yet confirmed: asked the user to test with Iris temporarily removed to isolate whether this is an Iris
+compatibility gap (not fixable from Create's side) versus a genuine bug here. Low priority - purely cosmetic, and
+the user has explicitly said it's fine to leave broken for now.

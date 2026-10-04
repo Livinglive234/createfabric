@@ -623,7 +623,9 @@ public class AllArmInteractionPointTypes {
 			ItemStack record = jukeboxBE.getTheItem();
 			if (record.isEmpty())
 				return ItemStack.EMPTY;
-			level.updateSnapshots(ctx);
+			// fabric: porting_lib's LevelExtensions#updateSnapshots only exists under this
+			// port_lib$-prefixed name in the version actually mixed onto Level
+			level.port_lib$updateSnapshots(ctx);
 			level.setBlock(pos, cachedState.setValue(JukeboxBlock.HAS_RECORD, false), 2);
 			TransactionSuccessCallback.register(ctx, () -> {
 				level.levelEvent(1010, pos, 0);

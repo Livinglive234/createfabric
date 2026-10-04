@@ -277,7 +277,12 @@ public class BlockHelper {
 		BlockState old = chunksection.setBlockState(SectionPos.sectionRelative(target.getX()),
 			SectionPos.sectionRelative(target.getY()), SectionPos.sectionRelative(target.getZ()), state);
 		chunk.setUnsaved(true);
-		world.markAndNotifyBlock(target, chunk, old, state, 82, 512);
+		// fabric: porting_lib's LevelExtensions#markAndNotifyBlock only exists under this
+		// port_lib$-prefixed name in the version actually mixed onto Level (base module) - the
+		// unprefixed name resolves at compile time against a different, stale copy of the same
+		// interface (extensions module) that nothing ever mixes onto Level, causing a runtime
+		// NoSuchMethodError
+		world.port_lib$markAndNotifyBlock(target, chunk, old, state, 82, 512);
 
 		world.setBlock(target, state, Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE | Block.UPDATE_MOVE_BY_PISTON);
 		world.neighborChanged(target, world.getBlockState(target.below())

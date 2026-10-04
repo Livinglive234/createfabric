@@ -204,7 +204,7 @@ public class FluidDrainingBehaviour extends FluidManipulationBehaviour {
 			});
 
 			if (!blockEntity.isVirtual()) {
-				world.updateSnapshots(ctx);
+				world.port_lib$updateSnapshots(ctx);
 				world.setBlock(currentPos, emptied, 2 | 16);
 
 				BlockState stateAbove = world.getBlockState(currentPos.above());

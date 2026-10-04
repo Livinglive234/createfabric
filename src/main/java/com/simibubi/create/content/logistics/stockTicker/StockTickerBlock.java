@@ -98,7 +98,8 @@ public class StockTickerBlock extends HorizontalDirectionalBlock implements IBE<
 
 			if (player instanceof ServerPlayer sp) {
 				if (stbe.isKeeperPresent())
-					sp.openMenu(stbe.new CategoryMenuProvider());
+					com.simibubi.create.foundation.gui.menu.MenuOpeningHelper.openWithData(
+						sp, stbe.new CategoryMenuProvider(), buf -> buf.writeBlockPos(stbe.getBlockPos()));
 				else
 					CreateLang.translate("stock_ticker.keeper_missing")
 						.sendStatus(player);

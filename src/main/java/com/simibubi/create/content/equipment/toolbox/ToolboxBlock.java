@@ -161,7 +161,11 @@ public class ToolboxBlock extends HorizontalDirectionalBlock implements SimpleWa
 			return ItemInteractionResult.SUCCESS;
 
 		withBlockEntityDo(level, pos,
-			toolbox -> player.openMenu(toolbox));
+			toolbox -> com.simibubi.create.foundation.gui.menu.MenuOpeningHelper.openWithData(
+				(net.minecraft.server.level.ServerPlayer) player, toolbox, buf -> {
+					buf.writeBlockPos(toolbox.getBlockPos());
+					buf.writeNbt(toolbox.writeClient(new net.minecraft.nbt.CompoundTag(), player.registryAccess()));
+				}));
 		return ItemInteractionResult.SUCCESS;
 	}
 

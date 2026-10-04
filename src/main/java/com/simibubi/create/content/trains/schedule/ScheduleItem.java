@@ -59,8 +59,9 @@ public class ScheduleItem extends Item implements MenuProvider, SupportsItemCopy
 		ItemStack heldItem = player.getItemInHand(hand);
 
 		if (!player.isShiftKeyDown() && hand == InteractionHand.MAIN_HAND) {
-			if (!world.isClientSide && player instanceof ServerPlayer)
-				player.openMenu(this);
+			if (!world.isClientSide && player instanceof ServerPlayer sp)
+				com.simibubi.create.foundation.gui.menu.MenuOpeningHelper.openWithData(sp, this,
+					buf -> net.minecraft.world.item.ItemStack.STREAM_CODEC.encode(buf, heldItem));
 			return InteractionResultHolder.success(heldItem);
 		}
 		return InteractionResultHolder.pass(heldItem);

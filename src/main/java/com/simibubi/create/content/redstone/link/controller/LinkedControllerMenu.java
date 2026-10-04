@@ -22,6 +22,10 @@ public class LinkedControllerMenu extends HeldItemGhostItemMenu {
 		super(type, id, inv, extraData);
 	}
 
+	public LinkedControllerMenu(MenuType<?> type, int id, Inventory inv) {
+		super(type, id, inv);
+	}
+
 	public LinkedControllerMenu(MenuType<?> type, int id, Inventory inv, ItemStack filterItem) {
 		super(type, id, inv, filterItem);
 	}

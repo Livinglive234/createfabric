@@ -18,6 +18,10 @@ public abstract class AbstractFilterMenu extends HeldItemGhostItemMenu {
 		super(type, id, inv, extraData);
 	}
 
+	protected AbstractFilterMenu(MenuType<?> type, int id, Inventory inv) {
+		super(type, id, inv);
+	}
+
 	protected AbstractFilterMenu(MenuType<?> type, int id, Inventory inv, ItemStack contentHolder) {
 		super(type, id, inv, contentHolder);
 	}

@@ -92,8 +92,9 @@ public class LinkedControllerItem extends Item implements MenuProvider, UseFirst
 		ItemStack heldItem = player.getItemInHand(hand);
 
 		if (player.isShiftKeyDown() && hand == InteractionHand.MAIN_HAND) {
-			if (!world.isClientSide && player instanceof ServerPlayer && player.mayBuild())
-				player.openMenu(this);
+			if (!world.isClientSide && player instanceof ServerPlayer sp && player.mayBuild())
+				com.simibubi.create.foundation.gui.menu.MenuOpeningHelper.openWithData(sp, this,
+					buf -> net.minecraft.world.item.ItemStack.STREAM_CODEC.encode(buf, heldItem));
 			return InteractionResultHolder.success(heldItem);
 		}
 

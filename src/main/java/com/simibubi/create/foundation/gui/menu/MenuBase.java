@@ -23,6 +23,18 @@ public abstract class MenuBase<T> extends AbstractContainerMenu {
 		init(inv, createOnClient(extraData));
 	}
 
+	/**
+	 * fabric: client-side constructor used by plain (non-extended) menu types - see
+	 * {@link PendingMenuData} for why this exists instead of the {@code RegistryFriendlyByteBuf}
+	 * constructor above. The opening data is expected to already be waiting here, sent via
+	 * {@link MenuOpeningHelper} just before the server told the client to open this menu.
+	 */
+	protected MenuBase(MenuType<?> type, int id, Inventory inv) {
+		super(type, id);
+		RegistryFriendlyByteBuf extraData = PendingMenuData.consume();
+		init(inv, extraData != null ? createOnClient(extraData) : null);
+	}
+
 	protected MenuBase(MenuType<?> type, int id, Inventory inv, T contentHolder) {
 		super(type, id);
 		init(inv, contentHolder);

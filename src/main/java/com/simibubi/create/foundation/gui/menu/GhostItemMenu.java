@@ -20,6 +20,10 @@ public abstract class GhostItemMenu<T> extends MenuBase<T> implements IClearable
 		super(type, id, inv, extraData);
 	}
 
+	protected GhostItemMenu(MenuType<?> type, int id, Inventory inv) {
+		super(type, id, inv);
+	}
+
 	protected GhostItemMenu(MenuType<?> type, int id, Inventory inv, T contentHolder) {
 		super(type, id, inv, contentHolder);
 	}

@@ -38,6 +38,10 @@ public class RedstoneRequesterMenu extends GhostItemMenu<RedstoneRequesterBlockE
 		super(type, id, inv, extraData);
 	}
 
+	public RedstoneRequesterMenu(MenuType<?> type, int id, Inventory inv) {
+		super(type, id, inv);
+	}
+
 	public static RedstoneRequesterMenu create(int id, Inventory inv, RedstoneRequesterBlockEntity be) {
 		return new RedstoneRequesterMenu(AllMenuTypes.REDSTONE_REQUESTER.get(), id, inv, be);
 	}

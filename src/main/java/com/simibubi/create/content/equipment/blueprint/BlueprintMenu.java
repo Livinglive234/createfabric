@@ -35,6 +35,10 @@ public class BlueprintMenu extends GhostItemMenu<BlueprintSection> {
 		super(type, id, inv, extraData);
 	}
 
+	public BlueprintMenu(MenuType<?> type, int id, Inventory inv) {
+		super(type, id, inv);
+	}
+
 	public BlueprintMenu(MenuType<?> type, int id, Inventory inv, BlueprintSection section) {
 		super(type, id, inv, section);
 	}

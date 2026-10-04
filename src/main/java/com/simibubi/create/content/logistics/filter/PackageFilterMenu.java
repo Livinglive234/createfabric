@@ -21,6 +21,10 @@ public class PackageFilterMenu extends AbstractFilterMenu {
 		super(type, id, inv, extraData);
 	}
 
+	public PackageFilterMenu(MenuType<?> type, int id, Inventory inv) {
+		super(type, id, inv);
+	}
+
 	public PackageFilterMenu(MenuType<?> type, int id, Inventory inv, ItemStack stack) {
 		super(type, id, inv, stack);
 	}

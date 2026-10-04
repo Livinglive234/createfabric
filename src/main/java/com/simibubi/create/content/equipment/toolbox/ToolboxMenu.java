@@ -28,6 +28,10 @@ public class ToolboxMenu extends MenuBase<ToolboxBlockEntity> {
 		super(type, id, inv, extraData);
 	}
 
+	public ToolboxMenu(MenuType<?> type, int id, Inventory inv) {
+		super(type, id, inv);
+	}
+
 	public ToolboxMenu(MenuType<?> type, int id, Inventory inv, ToolboxBlockEntity be) {
 		super(type, id, inv, be);
 		BlockEntityBehaviour.get(be, AnimatedContainerBehaviour.TYPE)

@@ -434,8 +434,11 @@ public class BlueprintEntity extends HangingEntity
 			return InteractionResult.SUCCESS;
 		}
 
-		if (!level().isClientSide && player instanceof ServerPlayer) {
-			player.openMenu(section);
+		if (!level().isClientSide && player instanceof ServerPlayer sp) {
+			com.simibubi.create.foundation.gui.menu.MenuOpeningHelper.openWithData(sp, section, buf -> {
+				buf.writeVarInt(getId());
+				buf.writeVarInt(section.index);
+			});
 		}
 
 		return InteractionResult.SUCCESS;

@@ -34,6 +34,10 @@ public class StockKeeperCategoryMenu extends MenuBase<StockTickerBlockEntity> {
 		super(type, id, inv, extraData);
 	}
 
+	public StockKeeperCategoryMenu(MenuType<?> type, int id, Inventory inv) {
+		super(type, id, inv);
+	}
+
 	public static AbstractContainerMenu create(int pContainerId, Inventory pPlayerInventory,
 		StockTickerBlockEntity stockTickerBlockEntity) {
 		return new StockKeeperCategoryMenu(AllMenuTypes.STOCK_KEEPER_CATEGORY.get(), pContainerId, pPlayerInventory,

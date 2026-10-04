@@ -50,7 +50,11 @@ public class SchematicannonBlock extends Block implements IBE<SchematicannonBloc
 		if (level.isClientSide)
 			return InteractionResult.SUCCESS;
 		withBlockEntityDo(level, pos,
-				be -> player.openMenu(be));
+				be -> com.simibubi.create.foundation.gui.menu.MenuOpeningHelper.openWithData(
+					(net.minecraft.server.level.ServerPlayer) player, be, buf -> {
+						buf.writeBlockPos(be.getBlockPos());
+						buf.writeNbt(be.writeClient(new net.minecraft.nbt.CompoundTag(), player.registryAccess()));
+					}));
 		return InteractionResult.SUCCESS;
 	}
 

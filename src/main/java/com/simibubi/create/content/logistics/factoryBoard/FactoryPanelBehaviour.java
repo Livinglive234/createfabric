@@ -639,7 +639,8 @@ public class FactoryPanelBehaviour extends FilteringBehaviour
 			// Open screen for setting an item through JEI
 			if (heldItem.isEmpty()) {
 				if (!isClientSide && player instanceof ServerPlayer sp)
-					sp.openMenu(this);
+					com.simibubi.create.foundation.gui.menu.MenuOpeningHelper.openWithData(sp, this,
+						buf -> FactoryPanelPosition.STREAM_CODEC.encode(buf, getPanelPosition()));
 				return;
 			}
 

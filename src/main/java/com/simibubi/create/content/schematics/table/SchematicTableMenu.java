@@ -26,6 +26,10 @@ public class SchematicTableMenu extends MenuBase<SchematicTableBlockEntity> {
 		super(type, id, inv, extraData);
 	}
 
+	public SchematicTableMenu(MenuType<?> type, int id, Inventory inv) {
+		super(type, id, inv);
+	}
+
 	public SchematicTableMenu(MenuType<?> type, int id, Inventory inv, SchematicTableBlockEntity be) {
 		super(type, id, inv, be);
 	}

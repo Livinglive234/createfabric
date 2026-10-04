@@ -28,6 +28,10 @@ public class FactoryPanelSetItemMenu extends GhostItemMenu<FactoryPanelBehaviour
 		super(type, id, inv, extraData);
 	}
 
+	public FactoryPanelSetItemMenu(MenuType<?> type, int id, Inventory inv) {
+		super(type, id, inv);
+	}
+
 	public static FactoryPanelSetItemMenu create(int id, Inventory inv, FactoryPanelBehaviour be) {
 		return new FactoryPanelSetItemMenu(AllMenuTypes.FACTORY_PANEL_SET_ITEM.get(), id, inv, be);
 	}

@@ -157,7 +157,8 @@ public abstract class PackagePortBlockEntity extends SmartBlockEntity implements
 			return ItemInteractionResult.SUCCESS;
 		}
 
-		player.openMenu(this);
+		com.simibubi.create.foundation.gui.menu.MenuOpeningHelper.openWithData(
+			(net.minecraft.server.level.ServerPlayer) player, this, buf -> buf.writeBlockPos(getBlockPos()));
 		return ItemInteractionResult.SUCCESS;
 	}
 

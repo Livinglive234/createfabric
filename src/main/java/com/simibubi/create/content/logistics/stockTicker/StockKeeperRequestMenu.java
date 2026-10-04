@@ -24,13 +24,20 @@ public class StockKeeperRequestMenu extends MenuBase<StockTickerBlockEntity> {
 		super(type, id, inv, extraData);
 	}
 
+	public StockKeeperRequestMenu(MenuType<?> type, int id, Inventory inv) {
+		super(type, id, inv);
+	}
+
 	public StockKeeperRequestMenu(MenuType<?> type, int id, Inventory inv, StockTickerBlockEntity contentHolder) {
 		super(type, id, inv, contentHolder);
 	}
 
 	public static AbstractContainerMenu create(int pContainerId, Inventory pPlayerInventory,
 		StockTickerBlockEntity stockTickerBlockEntity) {
-		return new StockKeeperCategoryMenu(AllMenuTypes.STOCK_KEEPER_REQUEST.get(), pContainerId, pPlayerInventory,
+		// fabric: this previously constructed a StockKeeperCategoryMenu under the
+		// STOCK_KEEPER_REQUEST menu type - a pre-existing mismatch between the registered type's
+		// client-side factory (StockKeeperRequestMenu) and what the server actually opened
+		return new StockKeeperRequestMenu(AllMenuTypes.STOCK_KEEPER_REQUEST.get(), pContainerId, pPlayerInventory,
 			stockTickerBlockEntity);
 	}
 

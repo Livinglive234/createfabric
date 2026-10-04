@@ -25,6 +25,10 @@ public class PackagePortMenu extends MenuBase<PackagePortBlockEntity> {
 		super(type, id, inv, extraData);
 	}
 
+	public PackagePortMenu(MenuType<?> type, int id, Inventory inv) {
+		super(type, id, inv);
+	}
+
 	public PackagePortMenu(MenuType<?> type, int id, Inventory inv, PackagePortBlockEntity be) {
 		super(type, id, inv, be);
 		BlockEntityBehaviour.get(be, AnimatedContainerBehaviour.TYPE)

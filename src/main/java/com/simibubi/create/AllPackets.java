@@ -106,6 +106,7 @@ import com.simibubi.create.foundation.blockEntity.RemoveBlockEntityPacket;
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueSettingsPacket;
 import com.simibubi.create.foundation.gui.menu.ClearMenuPacket;
 import com.simibubi.create.foundation.gui.menu.GhostItemSubmitPacket;
+import com.simibubi.create.foundation.gui.menu.MenuOpeningDataPacket;
 import com.simibubi.create.foundation.networking.ISyncPersistentData;
 import com.simibubi.create.foundation.networking.LeftClickPacket;
 import com.simibubi.create.foundation.utility.ServerSpeedProvider;
@@ -241,7 +242,9 @@ public enum AllPackets implements BasePacketPayload.PacketTypeProvider {
 	KNOCKBACK(KnockbackPacket.class, KnockbackPacket.STREAM_CODEC),
 	TRAIN_MAP_SYNC(TrainMapSyncPacket.class, TrainMapSyncPacket.STREAM_CODEC),
 	CLIENTBOUND_CHAIN_CONVEYOR(ClientboundChainConveyorRidingPacket.class, ClientboundChainConveyorRidingPacket.STREAM_CODEC),
-	SHOP_UPDATE(ShopUpdatePacket.class, ShopUpdatePacket.STREAM_CODEC);;
+	SHOP_UPDATE(ShopUpdatePacket.class, ShopUpdatePacket.STREAM_CODEC),
+	// fabric: see PendingMenuData
+	MENU_OPENING_DATA(MenuOpeningDataPacket.class, MenuOpeningDataPacket.STREAM_CODEC);
 
 	private final CatnipPacketRegistry.PacketType<?> type;
 

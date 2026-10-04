@@ -22,6 +22,10 @@ public class SchematicannonMenu extends MenuBase<SchematicannonBlockEntity> {
 		super(type, id, inv, buffer);
 	}
 
+	public SchematicannonMenu(MenuType<?> type, int id, Inventory inv) {
+		super(type, id, inv);
+	}
+
 	public SchematicannonMenu(MenuType<?> type, int id, Inventory inv, SchematicannonBlockEntity be) {
 		super(type, id, inv, be);
 	}

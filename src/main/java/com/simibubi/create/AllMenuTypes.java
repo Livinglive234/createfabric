@@ -53,6 +53,10 @@ import net.minecraft.world.inventory.MenuType;
 // See PendingMenuData for the full explanation.
 public class AllMenuTypes {
 
+	// fabric: must be declared before any of the menu fields below - Java initializes static fields
+	// in textual order, and register() (called by every field below) appends to this list
+	private static final List<Runnable> PENDING_SCREEN_REGISTRATIONS = new ArrayList<>();
+
 	public static final RegistryEntry<MenuType<?>, MenuType<SchematicTableMenu>> SCHEMATIC_TABLE =
 		register("schematic_table", SchematicTableMenu::new, () -> SchematicTableScreen::new);
 
@@ -94,13 +98,6 @@ public class AllMenuTypes {
 
 	public static final RegistryEntry<MenuType<?>, MenuType<FactoryPanelSetItemMenu>> FACTORY_PANEL_SET_ITEM =
 		register("factory_panel_set_item", FactoryPanelSetItemMenu::new, () -> FactoryPanelSetItemScreen::new);
-
-	// fabric: deferred to run from CreateClient#onInitializeClient() instead of inline during this
-	// class's own static init - at that point in startup, registration of these menu types (via
-	// Registrate's own deferred registry machinery) hasn't actually completed yet, so entry.get()
-	// would throw "Trying to access unbound value". A real client mod entrypoint runs safely after
-	// all registries are populated.
-	private static final List<Runnable> PENDING_SCREEN_REGISTRATIONS = new ArrayList<>();
 
 	@SuppressWarnings("unchecked")
 	private static <C extends AbstractContainerMenu, S extends Screen & MenuAccess<C>> RegistryEntry<MenuType<?>, MenuType<C>> register(

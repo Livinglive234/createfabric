@@ -28,12 +28,13 @@ import com.simibubi.create.content.schematics.table.SchematicTableMenu;
 import com.simibubi.create.content.schematics.table.SchematicTableScreen;
 import com.simibubi.create.content.trains.schedule.ScheduleMenu;
 import com.simibubi.create.content.trains.schedule.ScheduleScreen;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.tterrag.registrate.builders.MenuBuilder;
-import com.tterrag.registrate.fabric.EnvExecutor;
 import com.tterrag.registrate.util.entry.RegistryEntry;
 import com.tterrag.registrate.util.nullness.NonNullSupplier;
 
-import net.fabricmc.api.EnvType;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.gui.screens.inventory.MenuAccess;
@@ -94,6 +95,13 @@ public class AllMenuTypes {
 	public static final RegistryEntry<MenuType<?>, MenuType<FactoryPanelSetItemMenu>> FACTORY_PANEL_SET_ITEM =
 		register("factory_panel_set_item", FactoryPanelSetItemMenu::new, () -> FactoryPanelSetItemScreen::new);
 
+	// fabric: deferred to run from CreateClient#onInitializeClient() instead of inline during this
+	// class's own static init - at that point in startup, registration of these menu types (via
+	// Registrate's own deferred registry machinery) hasn't actually completed yet, so entry.get()
+	// would throw "Trying to access unbound value". A real client mod entrypoint runs safely after
+	// all registries are populated.
+	private static final List<Runnable> PENDING_SCREEN_REGISTRATIONS = new ArrayList<>();
+
 	@SuppressWarnings("unchecked")
 	private static <C extends AbstractContainerMenu, S extends Screen & MenuAccess<C>> RegistryEntry<MenuType<?>, MenuType<C>> register(
 			String name, MenuBuilder.MenuFactory<C> factory, NonNullSupplier<MenuScreens.ScreenConstructor<C, S>> screenFactory) {
@@ -107,11 +115,19 @@ public class AllMenuTypes {
 				return self[0];
 			})
 			.register();
-		EnvExecutor.runWhenOn(EnvType.CLIENT, () -> () -> MenuScreens.register(entry.get(), screenFactory.get()));
+		PENDING_SCREEN_REGISTRATIONS.add(() -> MenuScreens.register(entry.get(), screenFactory.get()));
 		return entry;
 	}
 
 	public static void register() {
+	}
+
+	/**
+	 * Call only from client code, after registration has completed (e.g. a ClientModInitializer).
+	 */
+	public static void registerScreens() {
+		PENDING_SCREEN_REGISTRATIONS.forEach(Runnable::run);
+		PENDING_SCREEN_REGISTRATIONS.clear();
 	}
 
 }

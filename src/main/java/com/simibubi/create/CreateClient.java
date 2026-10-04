@@ -80,6 +80,8 @@ public class CreateClient implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
+		AllMenuTypes.registerScreens();
+
 		AllInstanceTypes.init();
 
 		MODEL_SWAPPER.registerListeners();

@@ -499,7 +499,12 @@ public class BlueprintEntity extends HangingEntity
 		return sectionCache.computeIfAbsent(index, i -> new BlueprintSection(i));
 	}
 
-	class BlueprintSection implements net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<RegistryFriendlyByteBuf>, IInteractionChecker {
+	// fabric: was ExtendedScreenHandlerFactory<RegistryFriendlyByteBuf> - no longer needed now that
+	// CRAFTING_BLUEPRINT is a plain MenuType (see MenuOpeningHelper/PendingMenuData). Keeping the old
+	// interface here was actively harmful: Fabric's own ServerPlayerEntityMixin checks
+	// "provider instanceof ExtendedScreenHandlerFactory" independently of the menu type and sends a
+	// malformed packet through its own broken codec path when the two disagree.
+	class BlueprintSection implements MenuProvider, IInteractionChecker {
 		int index;
 		Couple<ItemStack> cachedDisplayItems;
 		public boolean inferredIcon = false;
@@ -545,15 +550,6 @@ public class BlueprintEntity extends HangingEntity
 		@Override
 		public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
 			return BlueprintMenu.create(id, inv, this);
-		}
-
-		@Override
-		public RegistryFriendlyByteBuf getScreenOpeningData(ServerPlayer player) {
-			RegistryFriendlyByteBuf buf =
-				new RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(), player.registryAccess());
-			buf.writeVarInt(getId());
-			buf.writeVarInt(index);
-			return buf;
 		}
 
 		@Override

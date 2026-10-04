@@ -86,8 +86,10 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import com.simibubi.create.AllTags.AllItemTags;
 
+// fabric: was ExtendedScreenHandlerFactory<FactoryPanelPosition> - see BlueprintEntity's
+// BlueprintSection for why that's actively harmful now that FACTORY_PANEL_SET_ITEM is a plain MenuType
 public class FactoryPanelBehaviour extends FilteringBehaviour
-	implements net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<FactoryPanelPosition> {
+	implements MenuProvider {
 
 	public static final BehaviourType<FactoryPanelBehaviour> TOP_LEFT = new BehaviourType<>();
 	public static final BehaviourType<FactoryPanelBehaviour> TOP_RIGHT = new BehaviourType<>();
@@ -1100,11 +1102,6 @@ public class FactoryPanelBehaviour extends FilteringBehaviour
 	@Override
 	public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
 		return FactoryPanelSetItemMenu.create(containerId, playerInventory, this);
-	}
-
-	@Override
-	public FactoryPanelPosition getScreenOpeningData(net.minecraft.server.level.ServerPlayer player) {
-		return getPanelPosition();
 	}
 
 	@Override

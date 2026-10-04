@@ -289,7 +289,9 @@ public class StockTickerBlockEntity extends StockCheckingBlockEntity implements 
 		}
 	}
 
-	public class RequestMenuProvider implements net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<net.minecraft.network.RegistryFriendlyByteBuf> {
+	// fabric: was ExtendedScreenHandlerFactory<RegistryFriendlyByteBuf> - see BlueprintEntity's
+	// BlueprintSection for why that's actively harmful now that STOCK_KEEPER_REQUEST is a plain MenuType
+	public class RequestMenuProvider implements MenuProvider {
 		private final boolean showLockOption;
 		private final boolean isCurrentlyLocked;
 		private final BlockPos targetPos;
@@ -298,16 +300,6 @@ public class StockTickerBlockEntity extends StockCheckingBlockEntity implements 
 			this.showLockOption = showLockOption;
 			this.isCurrentlyLocked = isCurrentlyLocked;
 			this.targetPos = targetPos;
-		}
-
-		@Override
-		public net.minecraft.network.RegistryFriendlyByteBuf getScreenOpeningData(net.minecraft.server.level.ServerPlayer player) {
-			net.minecraft.network.RegistryFriendlyByteBuf buf =
-				new net.minecraft.network.RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(), player.registryAccess());
-			buf.writeBoolean(showLockOption);
-			buf.writeBoolean(isCurrentlyLocked);
-			buf.writeBlockPos(targetPos);
-			return buf;
 		}
 
 		@Override

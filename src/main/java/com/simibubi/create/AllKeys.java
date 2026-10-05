@@ -83,7 +83,7 @@ public enum AllKeys {
 	public boolean isPressed() {
 		if (!modifiable)
 			return isKeyDown(key);
-		return keybind.isDown();
+		return conflictSafe ? isKeyDown(getBoundCode()) : keybind.isDown();
 	}
 
 	public String getBoundKey() {

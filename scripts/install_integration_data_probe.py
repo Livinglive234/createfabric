@@ -16,3 +16,6 @@ write("probe_high", "data/create/data_maps/item/regular_blaze_burner_fuels.json"
 write("probe_high", "data/neoforge/data_maps/item/furnace_fuels.json", {"values": {"minecraft:stick": {"burn_time": 1234}}})
 write("probe_low", "data/neoforge/data_maps/block/oxidizables.json", {"values": {"minecraft:stone": {"next_oxidation_stage": "minecraft:cobblestone"}}})
 write("probe_high", "data/neoforge/data_maps/block/oxidizables.json", {"values": {}, "remove": ["minecraft:stone"]})
+
+build = Path("build.gradle.kts")
+build.write_text(build.read_text() + '\ndependencies { modLocalRuntime("maven.modrinth:farmers-delight-refabricated:$farmersDelightVersion") }\n')

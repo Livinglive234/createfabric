@@ -5,7 +5,7 @@ import com.mojang.math.Axis;
 import com.simibubi.create.AllBlocks;
 
 import net.createmod.catnip.gui.UIRenderHelper;
-import net.createmod.catnip.render.BasicFluidRenderer;
+import com.simibubi.create.foundation.fluid.FluidRenderer;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -40,7 +40,7 @@ public class AnimatedItemDrain extends AnimatedKinetics {
 		matrixStack.scale(scale, scale, scale);
 		float from = 2/16f;
 		float to = 1f - from;
-		BasicFluidRenderer.renderFluidBox(fluid.getFluid(), fluid.getAmount(), from, from, from, to, 3/4f, to, buffer, matrixStack, LightTexture.FULL_BRIGHT, false, true, fluid.getComponentsPatch());
+		FluidRenderer.renderFluidBox(fluid, from, from, from, to, 3/4f, to, buffer, matrixStack, LightTexture.FULL_BRIGHT, false, true);
 		buffer.endBatch();
 
 		matrixStack.popPose();

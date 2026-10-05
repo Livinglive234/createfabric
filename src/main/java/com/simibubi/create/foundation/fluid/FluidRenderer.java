@@ -18,14 +18,23 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributes;
 
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
-import net.createmod.catnip.render.BasicFluidRenderer;
+import net.createmod.catnip.render.FluidRenderHelper;
 
 @Environment(EnvType.CLIENT)
-public class FluidRenderer extends BasicFluidRenderer {
+public class FluidRenderer {
+
+	private static final FluidRenderHelper<FluidVariant> FLUID_RENDERER = new FluidRenderHelper<>();
+
+	public static void renderFluidBox(FluidStack fluidStack, float xMin, float yMin, float zMin,
+		float xMax, float yMax, float zMax, MultiBufferSource buffer, PoseStack ms,
+		int light, boolean renderBottom, boolean invertGasses) {
+		FLUID_RENDERER.renderFluidBox(fluidStack.getVariant(), xMin, yMin, zMin, xMax, yMax, zMax,
+			buffer, ms, light, renderBottom, invertGasses);
+	}
 
 	public static void renderFluidStream(FluidStack fluidStack, Direction direction, float radius, float progress,
 		boolean inbound, MultiBufferSource buffer, PoseStack ms, int light) {
-		renderFluidStream(fluidStack, direction, radius, progress, inbound, BasicFluidRenderer.getFluidBuilder(buffer), ms, light);
+		renderFluidStream(fluidStack, direction, radius, progress, inbound, FluidRenderHelper.getFluidBuilder(buffer), ms, light);
 	}
 
 	public static void renderFluidStream(FluidStack fluidStack, Direction direction, float radius, float progress,
@@ -69,14 +78,14 @@ public class FluidRenderer extends BasicFluidRenderer {
 		}
 
 		if (progress != 1)
-			BasicFluidRenderer.renderStillTiledFace(Direction.DOWN, hMin, hMin, hMax, hMax, yMin, builder, ms, light, color, stillTexture);
+			FluidRenderHelper.renderStillTiledFace(Direction.DOWN, hMin, hMin, hMax, hMax, yMin, builder, ms, light, color, stillTexture);
 
 		ms.popPose();
 	}
 
 	public static void renderFlowingTiledFace(Direction dir, float left, float down, float right, float up,
 		float depth, VertexConsumer builder, PoseStack ms, int light, int color, TextureAtlasSprite texture) {
-		BasicFluidRenderer.renderTiledFace(dir, left, down, right, up, depth, builder, ms, light, color, texture, 0.5f);
+		FluidRenderHelper.renderTiledFace(dir, left, down, right, up, depth, builder, ms, light, color, texture, 0.5f);
 	}
 
 }

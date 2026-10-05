@@ -403,7 +403,7 @@ public class CreateJEI implements IModPlugin {
 			// Potion fluid without this tag wouldn't be recognized by other mods
 
 //			for (PotionFluid.BottleType bottleType : PotionFluid.BottleType.values()) {
-//				FluidStack potionFluid = PotionFluid.of(1000, new PotionContents(potion), bottleType);
+//				FluidStack potionFluid = PotionFluid.of(FluidConstants.BUCKET, new PotionContents(potion), bottleType);
 //				potionFluids.add(potionFluid);
 //			}
 

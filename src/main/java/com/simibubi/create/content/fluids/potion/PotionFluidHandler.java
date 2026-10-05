@@ -61,7 +61,7 @@ public class PotionFluidHandler {
 		return Pair.of(fluid, new ItemStack(Items.GLASS_BOTTLE));
 	}
 
-	public static FluidIngredient potionIngredient(Holder<Potion> potion, int amount) {
+	public static FluidIngredient potionIngredient(Holder<Potion> potion, long amount) {
 		FluidStack stack = FluidHelper.copyStackWithAmount(PotionFluidHandler
 			.getFluidFromPotionItem(PotionContents.createItemStack(Items.POTION, potion)), amount);
 		return FluidIngredient.fromFluidStack(stack);
@@ -71,14 +71,14 @@ public class PotionFluidHandler {
 		PotionContents potion = stack.getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
 		BottleType bottleTypeFromItem = bottleTypeFromItem(stack.getItem());
 		if (potion.is(Potions.WATER) && potion.customEffects().isEmpty() && bottleTypeFromItem == BottleType.REGULAR)
-			return new FluidStack(Fluids.WATER, 250);
-		FluidStack fluid = getFluidFromPotion(potion, bottleTypeFromItem, 250);
+			return new FluidStack(Fluids.WATER, FluidConstants.BOTTLE);
+		FluidStack fluid = getFluidFromPotion(potion, bottleTypeFromItem, FluidConstants.BOTTLE);
 		FluidVariant withBottleType = fluid.getVariant().withComponentChanges(
 			DataComponentPatch.builder().set(AllDataComponents.POTION_FLUID_BOTTLE_TYPE, bottleTypeFromItem).build());
 		return new FluidStack(withBottleType, fluid.getAmount());
 	}
 
-	public static FluidStack getFluidFromPotion(PotionContents potionContents, BottleType bottleType, int amount) {
+	public static FluidStack getFluidFromPotion(PotionContents potionContents, BottleType bottleType, long amount) {
 		if (potionContents.is(Potions.WATER) && bottleType == BottleType.REGULAR)
 			return new FluidStack(Fluids.WATER, amount);
 		return PotionFluid.of(amount, potionContents, bottleType);

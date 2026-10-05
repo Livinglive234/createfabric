@@ -38,3 +38,6 @@ assert ready.is_set(), "Dedicated server did not reach ready state"
 assert process.returncode == 0, f"Server exited with {process.returncode}"
 errors = [line for line in lines if "Parsing error loading recipe" in line or "Failed to parse recipe" in line]
 assert not errors, "".join(errors)
+
+if Path("src/main/java/com/simibubi/create/infrastructure/fabric/PotionRecipeProbe.java").exists():
+    assert any("POTION_PROBE passed:" in line for line in lines), "Potion runtime checks did not pass"

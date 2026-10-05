@@ -1,5 +1,12 @@
 # Fabric port compile-error sweep
 
+## Current verified status (2026-10-04, stable-based repair branch)
+
+Branch: codex/fix-datagen-stable, based on 0efa2c4. Datagen (including Trinkets/CCA), repeated output stability, full builds, and dedicated-server startup/recipe loading pass. The Create menu panorama and floating cogwheels now render in direct title-screen and Mod Menu screenshot tests. In-world cogwheels were already working; the user's report concerned only the menu. Custom GUI buttons and machine menus were user-confirmed working. The earlier Iris suspicion was ruled out by the user's removal test.
+
+Remaining reported visual issue: train-controls cover/lever overlap from older testing, requiring re-testing on this branch. Porting Lib's empty loot-modifier registry message remains nonblocking. Historical notes below include issues that have since been repaired; the current status and latest repair entries supersede them.
+
+
 Tracking file for getting `Createfabric` (mc1.21.1/fabric/dev) to compile, ported from
 `Createforge` (NeoForge). Methodology: fix leftover/dangling NeoForge imports and broken
 merge artifacts first; genuinely-unported NeoForge-only features get a `// TODO fabric`
@@ -3858,3 +3865,11 @@ AllMenuTypes now registers only shared MenuTypes. All 14 screen constructors are
 Once that crash was removed, a real server boot exposed two datagen gaps: GeneratedEntriesProvider was never added to the pack, leaving registry JSON absent after generation; standard cooking recipes used Porting Lib conditions that FabricRecipeProvider did not emit. The provider is now registered, and standard recipes attach Fabric resource conditions to their emitted recipe (including the cooking output shim). Generated projectile entries and conditioned cooking recipes/advancements are checked in. Datagen canonicalizes only the unordered porting_lib:cures arrays in registry output so repeat runs remain byte-identical.
 
 Verified source at 539afa3c8f251411833902a1c70bfd003edefec9 in Actions run 37252866383: compilation, datagen with Trinkets/CCA enabled, semantic checks (1884 recipes, 7219 resources), repeat-run byte stability, full build, and real dedicated-server startup all passed. Server reached Done (23.617s), accepted stop, saved, and exited cleanly; there were no recipe parsing failures. The server check is required again (continue-on-error removed). Porting Lib still logs its empty global_loot_modifier_serializers registry; this did not prevent startup. GUI behavior was preserved in source and compilation, but no live graphical client session was exercised here. Panorama/cogwheel rendering remains deferred.
+
+## Create menu panorama and floating cogwheels repaired (2026-10-04)
+
+History comparison found the main-menu rendering loop essentially unchanged before the deep port work. The cogwheel regression follows the Ponder upgrade in d236778551d5be78e46ef4af04af6f3a87e075a8 from 1.0.44 to 1.0.50: GuiGameElement switched from EmptyVirtualBlockGetter to SinglePosVirtualBlockGetter. BracketedKineticBlockModel emitted its wrapped kinetic model only for the old empty view, and otherwise emitted attachment geometry only. It now recognizes both virtual views, restoring the wheels in GUI previews without changing normal world attachment behavior.
+
+The inherited vanilla menu background occluded the custom cubemap with its depth. A baseline screenshot probe showed that clearing depth or skipping that background restored the panorama. CreateMainMenuScreen now skips the default menu background outside a world, retaining it for the pause-menu path. It also renders the custom panorama for both title and Mod Menu parents; previously that was restricted to TitleScreen even though fromTitleOrMods already treated both as out-of-world menus.
+
+Verified at 7e0b034c6a3f81b4c3e0d32814d80b640b477f5e: direct client screenshot run 37254756744 captured and was visually inspected for both title.png and modmenu.png, showing the panorama and floating cogwheels. No diagnostic render overrides were used in this final probe. The probe initializer is generated only inside its separate CI job and is never included in a normal distributed build. Build run 37254756724 passed; run 37254756751 passed compile, datagen/semantics (1884 recipes, 7219 resources), repeated byte-identical generation, build, and dedicated server ready/clean stop with no recipe decoding errors. The screenshot environment used Mesa software rendering; hardware-specific behavior was not tested.

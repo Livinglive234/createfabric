@@ -1,7 +1,7 @@
 <p align="center"><img src="./.idea/icon.png" alt="Logo" width="200"></p>
 <h1 align="center">Create  <br>
 	<a href="https://www.patreon.com/simibubi"><img src="https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dsimibubi%26type%3Dpatrons&style=flat&label=Supporters&color=ff5733" alt="Patreon"></a>
-	<a href="https://www.curseforge.com/minecraft/mc-mods/create-fabric/files"><img src="https://cf.way2muchnoise.eu/versions/624165(c70039).svg" alt="Supported Versions"></a>
+	<a href="https://github.com/Livinglive234/createfabric/actions/workflows/build.yml"><img src="https://img.shields.io/badge/Minecraft-1.21.1-c70039" alt="Minecraft 1.21.1"></a>
 	<a href="https://github.com/Creators-of-Create/Create/blob/master/LICENSE"><img src="https://img.shields.io/github/license/Creators-of-Create/Create?style=flat&color=900c3f" alt="License"></a>
 	<a href="https://discord.gg/hmaD7Se"><img src="https://img.shields.io/discord/620934202875183104?color=5865f2&label=Discord&style=flat" alt="Discord"></a>
 	<a href="https://www.curseforge.com/minecraft/mc-mods/create-fabric"><img src="http://cf.way2muchnoise.eu/624165.svg" alt="CF"></a>
@@ -18,6 +18,14 @@
         width="200"
     ></a>
 </h1>
+
+## Minecraft 1.21.1 Fabric port
+
+This fork ports Create 6 to **Minecraft 1.21.1 on Fabric**. The supported target is 1.21.1; other Minecraft 1.21 versions have not been verified.
+
+Download builds from [GitHub Actions](https://github.com/Livinglive234/createfabric/actions/workflows/build.yml), or build locally with Java 21 and `./gradlew build`. Built jars are written to `build/libs/`.
+
+The CurseForge and Modrinth links below refer to the upstream Create Fabric project.
 
 <p>Welcome to Create, a mod offering a variety of tools and blocks for Building, Decoration, and Aesthetic Automation.</p>
 <p>The added elements of tech are designed to leave as many design choices to the player as possible. With Create, the game isn't played inside a bunch of UIs, it challenges you to set up contraptions of animated components working together in many possible arrangements.</p>

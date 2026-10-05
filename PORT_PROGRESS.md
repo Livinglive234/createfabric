@@ -3842,3 +3842,10 @@ Registrate loot generation invokes Create's output-dependent provider callbacks 
 Validation at 207b72ee6393727cc1c93074b45db6da2245eccb: compileJava, runDatagen, semantic verification, a second forced run with byte-identical output, and build passed in Actions run 37250388703. Verification reported 1884 recipes and 7177 resources. The additional dedicated-server probe failed before recipe loading because baseline AllMenuTypes loads client-only MenuScreens.ScreenConstructor. That probe is diagnostic and nonblocking; server recipe loading remains unverified until the separate menu startup problem is repaired.
 
 User-confirmed current state: custom GUI buttons and machine menus work on the client. Removing Iris did not resolve missing cogwheels. Panorama and rendering remain deferred; this branch focuses on datagen and starts at 0efa2c4.
+
+
+## Trinkets hook repaired (2026-10-05)
+
+The optional-runtime exclusion above is superseded: Trinkets 3.10.0 and Cardinal Components 6.1.2 are again loaded for runDatagen. An optional, mod-gated mixin into LivingEntityTrinketComponent.update defers slot initialization while the entity has no level. Ponder creates such temporary entities during scene language compilation, and Trinkets previously dereferenced their null world. The component's initially empty maps remain valid; entities with a level continue through the original update method. The mixin is skipped when Trinkets is absent.
+
+Verified at cee0377e1b6dcf66de3b88286b38994a9126ffc3 in Actions run 37251500654: compilation, datagen with Trinkets/CCA loaded, semantic checks (1884 recipes, 7177 resources), a second byte-identical forced generation, and build all passed. The separate Build workflow run 37251500657 also passed. The nonblocking server diagnostic still fails on AllMenuTypes loading MenuScreens.ScreenConstructor in SERVER; its displayed successful step conclusion comes from continue-on-error, not a passing server startup.

@@ -25,7 +25,10 @@ jobs:
       - name: Install temporary screenshot probe
         run: python3 scripts/install_menu_render_probe.py
       - name: Capture menu variants
-        run: timeout 360 xvfb-run -a -s "-screen 0 1280x720x24" env LIBGL_ALWAYS_SOFTWARE=1 ./gradlew runClient --console=plain
+        run: |
+          timeout 360 xvfb-run -a -s "-screen 0 1280x720x24" env LIBGL_ALWAYS_SOFTWARE=1 ./gradlew runClient --console=plain
+          test -s build/menu-smoke/title.png
+          test -s build/menu-smoke/modmenu.png
       - name: Upload screenshots and client logs
         if: always()
         uses: actions/upload-artifact@v4

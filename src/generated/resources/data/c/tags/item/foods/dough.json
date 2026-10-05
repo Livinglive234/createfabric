@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    "create:dough",
+    "#c:foods/dough/wheat"
+  ]
+}

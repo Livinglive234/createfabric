@@ -18,10 +18,13 @@ assert any(i.get("fabric:type") == "create:block_tag_ingredient" and
            i.get("tag") == "minecraft:convertable_to_mud" for i in mud["ingredients"]), mud
 for path in recipes.rglob("*.json"):
     value = json.loads(path.read_text())
-    if "/compat/" in path.as_posix():
+    if "/compat/" in path.as_posix() or "_compat_" in path.name:
         assert value.get("fabric:load_conditions"), f"Missing compat condition: {path}"
     assert "processingTime" not in value and "heatRequirement" not in value, path
 assert (root / "data/create/loot_table/blocks/schematicannon.json").is_file()
+assert (root / "data/create/worldgen/placed_feature/striated_ores_overworld.json").is_file()
+assert (root / "data/create/damage_type/crush.json").is_file()
+assert (root / "data/create/enchantment/capacity.json").is_file()
 assert (root / "data/create/tags/block/wrench_pickup.json").is_file()
 files = {p.relative_to(root).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
          for p in root.rglob("*") if p.is_file() and ".cache" not in p.parts}

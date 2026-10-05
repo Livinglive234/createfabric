@@ -19,6 +19,16 @@ jobs:
         run: python3 scripts/install_potion_recipe_probe.py
       - name: Install temporary integration checks
         run: python3 scripts/install_integration_data_probe.py
+      - name: Exercise client startup without optional Mod Menu
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          build = Path("build.gradle.kts")
+          line = '    modLocalRuntime("com.terraformersmc:modmenu:$modmenuVersion")'
+          source = build.read_text()
+          assert line in source, "Mod Menu dev-runtime declaration changed"
+          build.write_text(source.replace(line, "    // CI: exercise missing optional Mod Menu"))
+          PY
       - name: Compile
         run: ./gradlew compileJava
       - name: Generate data

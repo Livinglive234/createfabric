@@ -28,6 +28,9 @@ public class CreateMixinPlugin implements IMixinConfigPlugin {
 		if (mixinClassName.startsWith("com.simibubi.create.foundation.mixin.compat.trinkets")
 			&& !FabricLoader.getInstance().isModLoaded("trinkets"))
 			return false;
+		if (mixinClassName.equals("com.simibubi.create.foundation.mixin.fabric.infra.ModMenuMixin")
+			&& !FabricLoader.getInstance().isModLoaded("modmenu"))
+			return false;
 		return true;
 	}
 

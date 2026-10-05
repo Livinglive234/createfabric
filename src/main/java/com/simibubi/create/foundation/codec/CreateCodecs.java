@@ -1,6 +1,11 @@
 package com.simibubi.create.foundation.codec;
 
 import java.util.function.Function;
+import com.mojang.datafixers.util.Either;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.tags.TagKey;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
@@ -45,5 +50,17 @@ public class CreateCodecs {
 		);
 	}
 
-	public static final Codec<FluidIngredient> SIZED_FLUID_INGREDIENT = FluidIngredient.CODEC;
+	// Older integrations encode sized fluid tags with NeoForge's millibucket schema.
+	private static final Codec<FluidIngredient> LEGACY_FLUID_TAG = RecordCodecBuilder.create(instance -> instance.group(
+		Codec.STRING.validate(type -> type.equals("neoforge:tag") || type.equals("forge:tag")
+			? DataResult.success(type) : DataResult.error(() -> "Not a legacy fluid tag"))
+			.fieldOf("type").forGetter(ingredient -> "neoforge:tag"),
+		TagKey.codec(Registries.FLUID).fieldOf("tag").forGetter(ingredient -> { throw new UnsupportedOperationException(); }),
+		NON_NEGATIVE_LONG.fieldOf("amount").forGetter(FluidIngredient::getRequiredAmount)
+	).apply(instance, (type, tag, amount) ->
+		FluidIngredient.fromTag(tag, Math.multiplyExact(amount, FluidConstants.BUCKET / 1000))));
+
+	public static final Codec<FluidIngredient> SIZED_FLUID_INGREDIENT =
+		Codec.either(FluidIngredient.CODEC, LEGACY_FLUID_TAG)
+			.xmap(value -> value.map(Function.identity(), Function.identity()), Either::left);
 }

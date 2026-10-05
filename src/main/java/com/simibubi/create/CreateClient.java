@@ -80,7 +80,7 @@ public class CreateClient implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
-		AllMenuTypes.registerScreens();
+		AllMenuScreens.register();
 
 		AllInstanceTypes.init();
 

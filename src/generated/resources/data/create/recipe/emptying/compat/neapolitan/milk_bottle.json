@@ -18,9 +18,9 @@
       "id": "minecraft:glass_bottle"
     },
     {
-      "amount": 250,
+      "amount": 20250,
       "id": {
-        "fluid": "minecraft:milk"
+        "fluid": "milk-lib:still_milk"
       }
     }
   ]

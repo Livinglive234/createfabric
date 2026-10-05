@@ -12,7 +12,7 @@
     "###"
   ],
   "result": {
+    "count": 1,
     "id": "create:zinc_ingot"
-  },
-  "show_notification": true
+  }
 }

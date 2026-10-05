@@ -14,7 +14,7 @@
     "AB"
   ],
   "result": {
+    "count": 1,
     "id": "create:andesite_alloy"
-  },
-  "show_notification": true
+  }
 }

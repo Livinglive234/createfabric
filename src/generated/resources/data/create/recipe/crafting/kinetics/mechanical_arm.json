@@ -21,7 +21,7 @@
     "IC "
   ],
   "result": {
+    "count": 1,
     "id": "create:mechanical_arm"
-  },
-  "show_notification": true
+  }
 }

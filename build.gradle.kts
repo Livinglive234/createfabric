@@ -210,7 +210,6 @@ dependencies {
     // dev env
     modLocalRuntime("com.terraformersmc:modmenu:$modmenuVersion")
     modLocalRuntime("dev.emi:trinkets:$trinketsVersion") { isTransitive = false }
-    // for Trinkets
     modLocalRuntime("dev.onyxstudios.cardinal-components-api:cardinal-components-base:$ccaVersion")
     modLocalRuntime("dev.onyxstudios.cardinal-components-api:cardinal-components-entity:$ccaVersion")
     if (ccRuntime) {

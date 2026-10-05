@@ -9,6 +9,8 @@ import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
 import com.simibubi.create.compat.Mods;
 
+import net.fabricmc.loader.api.FabricLoader;
+
 public class CreateMixinPlugin implements IMixinConfigPlugin {
 	@Override
 	public void onLoad(String mixinPackage) {
@@ -22,6 +24,12 @@ public class CreateMixinPlugin implements IMixinConfigPlugin {
 	@Override
 	public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
 		if (mixinClassName.startsWith("com.simibubi.create.foundation.mixin.compat.xaeros") && !Mods.XAEROWORLDMAP.isLoaded())
+			return false;
+		if (mixinClassName.startsWith("com.simibubi.create.foundation.mixin.compat.trinkets")
+			&& !FabricLoader.getInstance().isModLoaded("trinkets"))
+			return false;
+		if (mixinClassName.equals("com.simibubi.create.foundation.mixin.fabric.infra.ModMenuMixin")
+			&& !FabricLoader.getInstance().isModLoaded("modmenu"))
 			return false;
 		return true;
 	}

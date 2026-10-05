@@ -17,7 +17,7 @@
         },
         {
           "type": "fluid_stack",
-          "amount": 500,
+          "amount": 40500,
           "fluid": "minecraft:lava"
         }
       ],

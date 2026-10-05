@@ -13,7 +13,7 @@
     "ASA"
   ],
   "result": {
+    "count": 1,
     "id": "create:package_filter"
-  },
-  "show_notification": true
+  }
 }

@@ -24,18 +24,20 @@ import net.createmod.catnip.theme.Color;
 import net.createmod.ponder.foundation.ui.PonderTagIndexScreen;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.ConfirmLinkScreen;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.renderer.CubeMap;
 import net.minecraft.client.renderer.PanoramaRenderer;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+
+import org.lwjgl.opengl.GL11;
 
 import io.github.fabricators_of_create.porting_lib.mixin.accessors.client.accessor.ScreenAccessor;
 
@@ -67,7 +69,6 @@ public class CreateMainMenuScreen extends AbstractSimiScreen {
 	protected final Screen parent;
 	protected boolean returnOnClose;
 
-	private PanoramaRenderer vanillaPanorama;
 	private long firstRenderTime;
 	private Button gettingStarted;
 
@@ -79,10 +80,6 @@ public class CreateMainMenuScreen extends AbstractSimiScreen {
 		// fabric: true when opened from the title screen (OpenCreateMenuButton) or ModMenu's mod list
 		// (CreateModMenuIntegration), false when opened from the in-game pause menu.
 		this.fromTitleOrMods = !(parent instanceof net.minecraft.client.gui.screens.PauseScreen);
-		if (parent instanceof TitleScreen)
-			vanillaPanorama = Screen.PANORAMA;
-		else
-			vanillaPanorama = new PanoramaRenderer(TitleScreen.CUBE_MAP);
 	}
 
 	@Override
@@ -93,21 +90,31 @@ public class CreateMainMenuScreen extends AbstractSimiScreen {
 	}
 
 	@Override
+	protected void renderWindowBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+		// renderWindow draws the Create panorama for every menu entry point.
+	}
+
+	@Override
 	protected void renderWindow(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 		float f = (float) (Util.getMillis() - this.firstRenderTime) / 1000.0F;
 		float alpha = Mth.clamp(f, 0.0F, 1.0F);
 		float elapsedPartials = minecraft.getTimer().getGameTimeDeltaPartialTick(false);
 
-		if (parent instanceof TitleScreen) {
-			if (alpha < 1)
-				vanillaPanorama.render(graphics, this.width, this.height, 1, elapsedPartials);
-			PANORAMA.render(graphics, this.width, this.height, 1, elapsedPartials);
+		// Finish queued GUI draws before changing the cubemap's projection and depth state.
+		graphics.flush();
+		RenderSystem.depthMask(true);
+		RenderSystem.clear(GL11.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
+		// CubeMap restores depth testing, but does not disable it on entry.
+		RenderSystem.disableDepthTest();
+		RenderSystem.setShaderColor(1, 1, 1, 1);
+		RenderSystem.defaultBlendFunc();
+		PANORAMA.render(graphics, this.width, this.height, 1, elapsedPartials);
 
-			RenderSystem.enableBlend();
-			RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA,
-				GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-			graphics.blit(PANORAMA_OVERLAY_TEXTURES, 0, 0, this.width, this.height, 0.0F, 0.0F, 16, 128, 16, 128);
-		}
+		RenderSystem.enableBlend();
+		RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA,
+			GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+		graphics.blit(PANORAMA_OVERLAY_TEXTURES, 0, 0, this.width, this.height, 0.0F, 0.0F, 16, 128, 16, 128);
+		graphics.flush();
 
 		RenderSystem.enableDepthTest();
 

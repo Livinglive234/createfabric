@@ -1,5 +1,12 @@
 # Fabric port compile-error sweep
 
+## Current verified status (2026-10-05, stable-based repair branch)
+
+Branch: codex/fix-datagen-stable, based on 0efa2c4. Datagen (including Trinkets/CCA), repeated output stability, full builds, and dedicated-server startup/recipe loading pass. The user confirmed menu cogwheels work, but reported the panorama remained black at all three entry points after the earlier repair. Commit 15513fef now explicitly flushes GUI draws, clears inherited depth, disables depth testing for the cubemap, and renders the Create background from the pause menu too. CI screenshots show the panorama and cogs from title, Mod Menu, and a pause-parent test that deliberately obstructs depth. The user subsequently confirmed the menu is working correctly on their client. In-world cogwheels were already working; the user's report concerned only the menu. Custom GUI buttons and machine menus were user-confirmed working. Runtime potion drain/refill and brewing quantity/component checks now pass after the fluid-unit repair. The earlier Iris suspicion was ruled out by the user's removal test.
+
+The user confirmed the train-controls cover works again; that issue is resolved from their retest. Immersive Portals compatibility is outside the agreed scope. Porting Lib's empty loot-modifier registry message remains nonblocking. Historical notes below include issues that have since been repaired; the current status and latest repair entries supersede them.
+
+
 Tracking file for getting `Createfabric` (mc1.21.1/fabric/dev) to compile, ported from
 `Createforge` (NeoForge). Methodology: fix leftover/dangling NeoForge imports and broken
 merge artifacts first; genuinely-unported NeoForge-only features get a `// TODO fabric`
@@ -3829,3 +3836,79 @@ regardless) - a very common source of exactly this kind of breakage for mods wit
 code. Not yet confirmed: asked the user to test with Iris temporarily removed to isolate whether this is an Iris
 compatibility gap (not fixable from Create's side) versus a genuine bug here. Low priority - purely cosmetic, and
 the user has explicitly said it's fine to leave broken for now.
+
+
+## Datagen repair from stable 0efa2c4 (2026-10-05)
+
+Datagen now compiles and completes with optional Trinkets/CCA development-runtime mods excluded only for the explicit runDatagen task. Normal development runs keep those dependencies. Ponder's dummy entities otherwise hit Trinkets hooks during language generation.
+
+Recipe generation uses FabricRecipeProvider and retains original namespaces and Fabric load conditions. Processing recipes attach their mod conditions to the built recipe. Numeric upstream millibucket inputs/outputs convert to Fabric transfer units; chocolate uses 20250 units for 250mB. Potion ingredients explicitly convert their 25mB amount. Mud mixing uses the convertable_to_mud custom ingredient through its vanilla adapter.
+
+Registrate loot generation invokes Create's output-dependent provider callbacks and validates only Create's registered blocks, retaining missing/extra table checks. Regenerated recipe, advancement, language and tag changes are checked in; existing resources that datagen did not emit are retained.
+
+Validation at 207b72ee6393727cc1c93074b45db6da2245eccb: compileJava, runDatagen, semantic verification, a second forced run with byte-identical output, and build passed in Actions run 37250388703. Verification reported 1884 recipes and 7177 resources. The additional dedicated-server probe failed before recipe loading because baseline AllMenuTypes loads client-only MenuScreens.ScreenConstructor. That probe is diagnostic and nonblocking; server recipe loading remains unverified until the separate menu startup problem is repaired.
+
+User-confirmed current state: custom GUI buttons and machine menus work on the client. Removing Iris did not resolve missing cogwheels. Panorama and rendering remain deferred; this branch focuses on datagen and starts at 0efa2c4.
+
+
+## Trinkets hook repaired (2026-10-05)
+
+The optional-runtime exclusion above is superseded: Trinkets 3.10.0 and Cardinal Components 6.1.2 are again loaded for runDatagen. An optional, mod-gated mixin into LivingEntityTrinketComponent.update defers slot initialization while the entity has no level. Ponder creates such temporary entities during scene language compilation, and Trinkets previously dereferenced their null world. The component's initially empty maps remain valid; entities with a level continue through the original update method. The mixin is skipped when Trinkets is absent.
+
+Verified at cee0377e1b6dcf66de3b88286b38994a9126ffc3 in Actions run 37251500654: compilation, datagen with Trinkets/CCA loaded, semantic checks (1884 recipes, 7177 resources), a second byte-identical forced generation, and build all passed. The separate Build workflow run 37251500657 also passed. The nonblocking server diagnostic still fails on AllMenuTypes loading MenuScreens.ScreenConstructor in SERVER; its displayed successful step conclusion comes from continue-on-error, not a passing server startup.
+
+
+## Dedicated-server startup repaired (2026-10-05)
+
+AllMenuTypes now registers only shared MenuTypes. All 14 screen constructors are bound by client-only AllMenuScreens.register, called from the existing CreateClient initialization point. This removes the client-only MenuScreens.ScreenConstructor lambdas from shared static initialization and preserves the plain MenuType/network behavior used by the working client menus.
+
+Once that crash was removed, a real server boot exposed two datagen gaps: GeneratedEntriesProvider was never added to the pack, leaving registry JSON absent after generation; standard cooking recipes used Porting Lib conditions that FabricRecipeProvider did not emit. The provider is now registered, and standard recipes attach Fabric resource conditions to their emitted recipe (including the cooking output shim). Generated projectile entries and conditioned cooking recipes/advancements are checked in. Datagen canonicalizes only the unordered porting_lib:cures arrays in registry output so repeat runs remain byte-identical.
+
+Verified source at 539afa3c8f251411833902a1c70bfd003edefec9 in Actions run 37252866383: compilation, datagen with Trinkets/CCA enabled, semantic checks (1884 recipes, 7219 resources), repeat-run byte stability, full build, and real dedicated-server startup all passed. Server reached Done (23.617s), accepted stop, saved, and exited cleanly; there were no recipe parsing failures. The server check is required again (continue-on-error removed). Porting Lib still logs its empty global_loot_modifier_serializers registry; this did not prevent startup. GUI behavior was preserved in source and compilation, but no live graphical client session was exercised here. Panorama/cogwheel rendering remains deferred.
+
+## Create menu panorama and floating cogwheels repaired (2026-10-04)
+
+History comparison found the main-menu rendering loop essentially unchanged before the deep port work. The cogwheel regression follows the Ponder upgrade in d236778551d5be78e46ef4af04af6f3a87e075a8 from 1.0.44 to 1.0.50: GuiGameElement switched from EmptyVirtualBlockGetter to SinglePosVirtualBlockGetter. BracketedKineticBlockModel emitted its wrapped kinetic model only for the old empty view, and otherwise emitted attachment geometry only. It now recognizes both virtual views, restoring the wheels in GUI previews without changing normal world attachment behavior.
+
+The inherited vanilla menu background occluded the custom cubemap with its depth. A baseline screenshot probe showed that clearing depth or skipping that background restored the panorama. CreateMainMenuScreen now skips the default menu background outside a world, retaining it for the pause-menu path. It also renders the custom panorama for both title and Mod Menu parents; previously that was restricted to TitleScreen even though fromTitleOrMods already treated both as out-of-world menus.
+
+Verified at 7e0b034c6a3f81b4c3e0d32814d80b640b477f5e: direct client screenshot run 37254756744 captured and was visually inspected for both title.png and modmenu.png, showing the panorama and floating cogwheels. No diagnostic render overrides were used in this final probe. The probe initializer is generated only inside its separate CI job and is never included in a normal distributed build. Build run 37254756724 passed; run 37254756751 passed compile, datagen/semantics (1884 recipes, 7219 resources), repeated byte-identical generation, build, and dedicated server ready/clean stop with no recipe decoding errors. The screenshot environment used Mesa software rendering; hardware-specific behavior was not tested.
+
+
+## Panorama follow-up (2026-10-05)
+
+User confirmed decorative cogwheels render, but the background remained black from title, Mod Menu, and pause. The previous screenshots proved only the tested software-renderer conditions, not the user's runtime.
+
+Commit 15513fef764dd74d040e7b1704adc6e98962f7a2 removes reliance on inherited depth state: flush queued GUI draws, reset the depth buffer with writes enabled, disable depth testing for CubeMap (which does not do this itself), reset shader color/blend state, and flush the overlay before rendering the cogs. It also renders the panorama from the pause-parent path, which previously skipped it. Entry-point behavior for Ponder availability is retained.
+
+Visual workflow https://github.com/Livinglive234/createfabric/actions/runs/37256022807 passed. Inspected title.png, modmenu.png, and pause-depth.png: all show the Create panorama and floating cogs. The last probe uses a PauseScreen parent and clears depth to zero before menu drawing; it does not load a world. Build workflow https://github.com/Livinglive234/createfabric/actions/runs/37256022833 passed. Real modpack/GPU confirmation remains pending.
+
+
+## Runtime potion fluid repair (2026-10-04 America/Chicago; CI 2026-10-05 UTC)
+
+The user confirmed the panorama/menu now works correctly. Their build.116 log showed 168 warnings about create:potions amount 250. The JEI spout category constructs those recipes through PotionFluidHandler.getFluidFromPotionItem, which returned raw 250-unit stacks while GenericItemFilling required FluidConstants.BOTTLE (27,000). This affected actual item draining as well as the recipe display.
+
+Source commit 4287f1ea1c4f59daec67fa273d22bbbdfd926166:
+- Use FluidConstants.BOTTLE for regular water, regular potion, splash, and lingering potion item draining so refill/drain agrees with Fabric's existing bottle convention.
+- Use FluidConstants.BUCKET for runtime vanilla/modded brewing fluid stacks and JEI extra potion ingredients.
+- Build runtime brewing inputs with FluidIngredient.fromFluidStack instead of the millibucket numeric shortcut. This avoids unit conversion twice and preserves potion contents and bottle type; outputs remain in native Fabric units.
+- Widen potion helper amount parameters to long.
+- Add a CI-only dedicated-server probe, installed temporarily by scripts/install_potion_recipe_probe.py. It is not a normal mod entrypoint or shipped source file. Server verification requires its success marker when installed, and still supports running without the probe locally.
+
+Validation at the source commit:
+- Build: https://github.com/Livinglive234/createfabric/actions/runs/37257501591 succeeded.
+- Datagen and server: https://github.com/Livinglive234/createfabric/actions/runs/37257501515 succeeded; 1,884 recipes and 7,219 resources validated, forced repeat output stable, real server recipe loading and clean shutdown passed.
+- Server log: POTION_PROBE passed: 12 bottle round trips, 281 brewing quantities, 265 potion/bottle identity checks.
+- Round trips cover water, awkward, healing, and poison across regular/splash/lingering bottles using GenericItemEmptying and GenericItemFilling, including drain simulation not consuming items.
+- Brewing checks cover native input/output quantity equality and reject substituted potion contents or bottle types. The clean CI environment does not exercise every external mod's custom brewing recipe.
+
+The user's BetterEnd recipe failures, Farmer's Delight chocolate-pie integration, other missing serializers/loot data, Macaw's models, and Doctor Who/EMF messages are separate remaining modpack issues; this repair does not address them. Actual user-client retest of potion quantities and warning removal remains pending.
+
+
+## Farmer’s Delight and registry data maps (2026-10-05)
+
+- Decode legacy `neoforge:tag` / `forge:tag` fluid ingredients while retaining native Fabric encoding. Farmer’s Delight 3.3.6 chocolate pie loads with one crust and 500 mB chocolate (40,500 Fabric units).
+- Register Porting Lib maps for regular/superheated burner fuels, furnace fuels, oxidation and waxing. Rebuild burner compatibility views on reload/sync; apply furnace values through Fabric FuelRegistry and copper mappings through vanilla lookup hooks. Furnace durations respect the vanilla signed-short limit.
+- Preserve the four built-in map JSON files in `src/main/resources`: they have no registered datagen provider, so leaving them under generated resources caused datagen to prune them. Pack overrides, tag expansion and removal now survive runtime verification.
+- Verified build, datagen, stable repeat generation, rebuilt resources and dedicated-server startup: https://github.com/Livinglive234/createfabric/actions/runs/37269518395 . Runtime checks passed for chocolate pie, stacked/tagged/removed fuel maps, furnace fuel, 18 oxidation and 24 waxing pairs, with vanilla copper retained. Potion regression checks also passed (12 bottle round trips, 281 quantities, 265 identity checks).
+- Test limitation: CI uses Farmer’s Delight 3.2.5 code/items with the exact SHA-verified chocolate-pie recipe from 3.3.6. The full 3.3.6 binary fails development remapping in this Loom/Loader setup; it was not runtime-verified here. These changes still need a user test in the actual modpack. Neither Immersive Portals nor other mods’ recipe/model errors were changed.

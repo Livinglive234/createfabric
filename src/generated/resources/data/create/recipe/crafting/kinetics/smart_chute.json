@@ -18,7 +18,7 @@
     "P"
   ],
   "result": {
+    "count": 1,
     "id": "create:smart_chute"
-  },
-  "show_notification": true
+  }
 }

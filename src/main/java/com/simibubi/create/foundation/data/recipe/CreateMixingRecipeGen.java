@@ -6,6 +6,7 @@ import com.simibubi.create.AllFluids;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.AllTags.AllItemTags;
 import com.simibubi.create.Create;
+import com.simibubi.create.foundation.recipe.BlockTagIngredient;
 import com.simibubi.create.api.data.recipe.MixingRecipeGen;
 import com.simibubi.create.content.processing.recipe.HeatCondition;
 
@@ -69,10 +70,7 @@ public final class CreateMixingRecipeGen extends MixingRecipeGen {
 		.require(CreateRecipeProvider.I.zincNugget())
 		.output(CreateRecipeProvider.I.andesiteAlloy(), 1)),
 
-	// TODO fabric: NeoForge's BlockTagIngredient (matches an item if its corresponding block is in a
-	// block tag) has no fabric port; BlockTags.CONVERTABLE_TO_MUD is vanilla dirt only by default, so
-	// hardcoding the one vanilla entry is faithful but won't pick up datapack/mod additions to that tag.
-	MUD = create("mud_by_mixing", b -> b.require(Blocks.DIRT)
+	MUD = create("mud_by_mixing", b -> b.require(BlockTagIngredient.create(BlockTags.CONVERTABLE_TO_MUD).toVanilla())
 		.require(Fluids.WATER, 250)
 		.output(Blocks.MUD, 1)),
 

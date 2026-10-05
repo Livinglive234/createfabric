@@ -3,13 +3,13 @@
   "category": "misc",
   "key": {
     "A": {
-      "tag": "c:gold_ingots"
+      "tag": "c:ingots/gold"
     },
     "E": {
       "item": "create:electron_tube"
     },
     "S": {
-      "tag": "c:wooden_rods"
+      "tag": "c:rods/wooden"
     }
   },
   "pattern": [
@@ -20,6 +20,5 @@
   "result": {
     "count": 6,
     "id": "create:controller_rail"
-  },
-  "show_notification": true
+  }
 }

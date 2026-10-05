@@ -6,10 +6,10 @@
       "item": "create:andesite_alloy"
     },
     "P": {
-      "tag": "c:iron_ingots"
+      "tag": "c:ingots/iron"
     },
     "S": {
-      "tag": "c:iron_nuggets"
+      "tag": "c:nuggets/iron"
     }
   },
   "pattern": [
@@ -19,6 +19,5 @@
   "result": {
     "count": 4,
     "id": "create:metal_bracket"
-  },
-  "show_notification": true
+  }
 }

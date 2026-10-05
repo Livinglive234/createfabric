@@ -3,7 +3,7 @@
   "category": "misc",
   "key": {
     "A": {
-      "tag": "c:netherrack"
+      "tag": "c:netherracks"
     },
     "I": {
       "tag": "c:iron_plates"
@@ -15,7 +15,7 @@
     " I "
   ],
   "result": {
+    "count": 1,
     "id": "create:empty_blaze_burner"
-  },
-  "show_notification": true
+  }
 }

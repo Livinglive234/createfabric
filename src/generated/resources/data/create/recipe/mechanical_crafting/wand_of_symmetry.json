@@ -1,6 +1,7 @@
 {
   "type": "create:mechanical_crafting",
   "accept_mirrored": true,
+  "category": "misc",
   "key": {
     "B": {
       "tag": "c:brass_ingots"
@@ -12,7 +13,7 @@
       "tag": "c:glass_blocks"
     },
     "O": {
-      "tag": "c:obsidian"
+      "tag": "c:obsidians"
     },
     "P": {
       "item": "create:precision_mechanism"
@@ -26,6 +27,7 @@
     " O "
   ],
   "result": {
+    "count": 1,
     "id": "create:wand_of_symmetry"
   }
 }

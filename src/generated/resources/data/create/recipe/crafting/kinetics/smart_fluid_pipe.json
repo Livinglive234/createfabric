@@ -18,7 +18,7 @@
     "P"
   ],
   "result": {
+    "count": 1,
     "id": "create:smart_fluid_pipe"
-  },
-  "show_notification": true
+  }
 }

@@ -15,7 +15,7 @@
     "E  "
   ],
   "result": {
+    "count": 1,
     "id": "create:minecart_coupling"
-  },
-  "show_notification": true
+  }
 }

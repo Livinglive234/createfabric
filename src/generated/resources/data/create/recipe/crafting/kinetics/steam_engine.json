@@ -6,7 +6,7 @@
       "item": "create:andesite_alloy"
     },
     "C": {
-      "tag": "c:copper_blocks"
+      "tag": "c:storage_blocks/copper"
     },
     "P": {
       "tag": "c:gold_plates"
@@ -18,7 +18,7 @@
     "C"
   ],
   "result": {
+    "count": 1,
     "id": "create:steam_engine"
-  },
-  "show_notification": true
+  }
 }

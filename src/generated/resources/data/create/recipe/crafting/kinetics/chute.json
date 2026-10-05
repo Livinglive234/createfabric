@@ -6,7 +6,7 @@
       "tag": "c:iron_plates"
     },
     "I": {
-      "tag": "c:iron_ingots"
+      "tag": "c:ingots/iron"
     }
   },
   "pattern": [
@@ -17,6 +17,5 @@
   "result": {
     "count": 4,
     "id": "create:chute"
-  },
-  "show_notification": true
+  }
 }

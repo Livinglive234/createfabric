@@ -3829,3 +3829,16 @@ regardless) - a very common source of exactly this kind of breakage for mods wit
 code. Not yet confirmed: asked the user to test with Iris temporarily removed to isolate whether this is an Iris
 compatibility gap (not fixable from Create's side) versus a genuine bug here. Low priority - purely cosmetic, and
 the user has explicitly said it's fine to leave broken for now.
+
+
+## Datagen repair from stable 0efa2c4 (2026-10-05)
+
+Datagen now compiles and completes with optional Trinkets/CCA development-runtime mods excluded only for the explicit runDatagen task. Normal development runs keep those dependencies. Ponder's dummy entities otherwise hit Trinkets hooks during language generation.
+
+Recipe generation uses FabricRecipeProvider and retains original namespaces and Fabric load conditions. Processing recipes attach their mod conditions to the built recipe. Numeric upstream millibucket inputs/outputs convert to Fabric transfer units; chocolate uses 20250 units for 250mB. Potion ingredients explicitly convert their 25mB amount. Mud mixing uses the convertable_to_mud custom ingredient through its vanilla adapter.
+
+Registrate loot generation invokes Create's output-dependent provider callbacks and validates only Create's registered blocks, retaining missing/extra table checks. Regenerated recipe, advancement, language and tag changes are checked in; existing resources that datagen did not emit are retained.
+
+Validation at 207b72ee6393727cc1c93074b45db6da2245eccb: compileJava, runDatagen, semantic verification, a second forced run with byte-identical output, and build passed in Actions run 37250388703. Verification reported 1884 recipes and 7177 resources. The additional dedicated-server probe failed before recipe loading because baseline AllMenuTypes loads client-only MenuScreens.ScreenConstructor. That probe is diagnostic and nonblocking; server recipe loading remains unverified until the separate menu startup problem is repaired.
+
+User-confirmed current state: custom GUI buttons and machine menus work on the client. Removing Iris did not resolve missing cogwheels. Panorama and rendering remain deferred; this branch focuses on datagen and starts at 0efa2c4.

@@ -3,7 +3,7 @@
   "category": "misc",
   "ingredients": [
     {
-      "tag": "c:storage_blocks/zinc"
+      "tag": "c:zinc_blocks"
     }
   ],
   "result": {

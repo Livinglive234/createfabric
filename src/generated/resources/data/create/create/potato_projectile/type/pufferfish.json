@@ -11,10 +11,10 @@
             "amplifier": 1,
             "duration": 1200,
             "id": "minecraft:poison",
-            "neoforge:cures": [
+            "porting_lib:cures": [
               "honey",
-              "protected_by_totem",
-              "milk"
+              "milk",
+              "protected_by_totem"
             ],
             "show_icon": true
           }
@@ -24,7 +24,7 @@
             "amplifier": 2,
             "duration": 300,
             "id": "minecraft:hunger",
-            "neoforge:cures": [
+            "porting_lib:cures": [
               "milk",
               "protected_by_totem"
             ],
@@ -35,7 +35,7 @@
           "effect": {
             "duration": 300,
             "id": "minecraft:nausea",
-            "neoforge:cures": [
+            "porting_lib:cures": [
               "milk",
               "protected_by_totem"
             ],

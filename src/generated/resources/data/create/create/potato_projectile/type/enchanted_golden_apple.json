@@ -11,7 +11,7 @@
             "amplifier": 1,
             "duration": 400,
             "id": "minecraft:regeneration",
-            "neoforge:cures": [
+            "porting_lib:cures": [
               "milk",
               "protected_by_totem"
             ],
@@ -22,7 +22,7 @@
           "effect": {
             "duration": 6000,
             "id": "minecraft:resistance",
-            "neoforge:cures": [
+            "porting_lib:cures": [
               "milk",
               "protected_by_totem"
             ],
@@ -33,7 +33,7 @@
           "effect": {
             "duration": 6000,
             "id": "minecraft:fire_resistance",
-            "neoforge:cures": [
+            "porting_lib:cures": [
               "milk",
               "protected_by_totem"
             ],
@@ -45,7 +45,7 @@
             "amplifier": 3,
             "duration": 2400,
             "id": "minecraft:absorption",
-            "neoforge:cures": [
+            "porting_lib:cures": [
               "milk",
               "protected_by_totem"
             ],

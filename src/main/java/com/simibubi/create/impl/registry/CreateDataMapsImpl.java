@@ -59,6 +59,7 @@ public class CreateDataMapsImpl {
         PortingLibDataMaps.registerDataMap(OXIDIZABLES);
         PortingLibDataMaps.registerDataMap(WAXABLES);
         DataMapsUpdatedEvent.EVENT.register(event -> {
+            Create.LOGGER.info("Updating Create data maps for {} ({})", event.getRegistryKey().location(), event.getCause());
             event.ifRegistry(Registries.ITEM, registry -> {
                 CreateDataMaps.REGULAR_BLAZE_BURNER_FUELS.clear();
                 CreateDataMaps.SUPERHEATED_BLAZE_BURNER_FUELS.clear();

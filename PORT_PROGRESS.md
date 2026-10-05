@@ -1,10 +1,10 @@
 # Fabric port compile-error sweep
 
-## Current verified status (2026-10-04, stable-based repair branch)
+## Current verified status (2026-10-05, stable-based repair branch)
 
-Branch: codex/fix-datagen-stable, based on 0efa2c4. Datagen (including Trinkets/CCA), repeated output stability, full builds, and dedicated-server startup/recipe loading pass. The Create menu panorama and floating cogwheels now render in direct title-screen and Mod Menu screenshot tests. In-world cogwheels were already working; the user's report concerned only the menu. Custom GUI buttons and machine menus were user-confirmed working. The earlier Iris suspicion was ruled out by the user's removal test.
+Branch: codex/fix-datagen-stable, based on 0efa2c4. Datagen (including Trinkets/CCA), repeated output stability, full builds, and dedicated-server startup/recipe loading pass. The user confirmed menu cogwheels work, but reported the panorama remained black at all three entry points after the earlier repair. Commit 15513fef now explicitly flushes GUI draws, clears inherited depth, disables depth testing for the cubemap, and renders the Create background from the pause menu too. CI screenshots show the panorama and cogs from title, Mod Menu, and a pause-parent test that deliberately obstructs depth. This is software-renderer verification; the user's client retest is still pending. In-world cogwheels were already working; the user's report concerned only the menu. Custom GUI buttons and machine menus were user-confirmed working. The earlier Iris suspicion was ruled out by the user's removal test.
 
-Remaining reported visual issue: train-controls cover/lever overlap from older testing, requiring re-testing on this branch. Porting Lib's empty loot-modifier registry message remains nonblocking. Historical notes below include issues that have since been repaired; the current status and latest repair entries supersede them.
+Remaining reported visual issues: confirmation of the latest panorama repair on the user's client, plus train-controls cover/lever overlap from older testing, requiring re-testing on this branch. Porting Lib's empty loot-modifier registry message remains nonblocking. Historical notes below include issues that have since been repaired; the current status and latest repair entries supersede them.
 
 
 Tracking file for getting `Createfabric` (mc1.21.1/fabric/dev) to compile, ported from
@@ -3873,3 +3873,12 @@ History comparison found the main-menu rendering loop essentially unchanged befo
 The inherited vanilla menu background occluded the custom cubemap with its depth. A baseline screenshot probe showed that clearing depth or skipping that background restored the panorama. CreateMainMenuScreen now skips the default menu background outside a world, retaining it for the pause-menu path. It also renders the custom panorama for both title and Mod Menu parents; previously that was restricted to TitleScreen even though fromTitleOrMods already treated both as out-of-world menus.
 
 Verified at 7e0b034c6a3f81b4c3e0d32814d80b640b477f5e: direct client screenshot run 37254756744 captured and was visually inspected for both title.png and modmenu.png, showing the panorama and floating cogwheels. No diagnostic render overrides were used in this final probe. The probe initializer is generated only inside its separate CI job and is never included in a normal distributed build. Build run 37254756724 passed; run 37254756751 passed compile, datagen/semantics (1884 recipes, 7219 resources), repeated byte-identical generation, build, and dedicated server ready/clean stop with no recipe decoding errors. The screenshot environment used Mesa software rendering; hardware-specific behavior was not tested.
+
+
+## Panorama follow-up (2026-10-05)
+
+User confirmed decorative cogwheels render, but the background remained black from title, Mod Menu, and pause. The previous screenshots proved only the tested software-renderer conditions, not the user's runtime.
+
+Commit 15513fef764dd74d040e7b1704adc6e98962f7a2 removes reliance on inherited depth state: flush queued GUI draws, reset the depth buffer with writes enabled, disable depth testing for CubeMap (which does not do this itself), reset shader color/blend state, and flush the overlay before rendering the cogs. It also renders the panorama from the pause-parent path, which previously skipped it. Entry-point behavior for Ponder availability is retained.
+
+Visual workflow https://github.com/Livinglive234/createfabric/actions/runs/37256022807 passed. Inspected title.png, modmenu.png, and pause-depth.png: all show the Create panorama and floating cogs. The last probe uses a PauseScreen parent and clears depth to zero before menu drawing; it does not load a world. Build workflow https://github.com/Livinglive234/createfabric/actions/runs/37256022833 passed. Real modpack/GPU confirmation remains pending.

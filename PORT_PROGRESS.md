@@ -1,11 +1,27 @@
 # Fabric port compile-error sweep
 
-## Current verified status (2026-10-05, stable-based repair branch)
+## Current status (2026-10-05, merged to main)
 
-Branch: codex/fix-datagen-stable, based on 0efa2c4. Datagen (including Trinkets/CCA), repeated output stability, full builds, and dedicated-server startup/recipe loading pass. The user confirmed menu cogwheels work, but reported the panorama remained black at all three entry points after the earlier repair. Commit 15513fef now explicitly flushes GUI draws, clears inherited depth, disables depth testing for the cubemap, and renders the Create background from the pause menu too. CI screenshots show the panorama and cogs from title, Mod Menu, and a pause-parent test that deliberately obstructs depth. The user subsequently confirmed the menu is working correctly on their client. In-world cogwheels were already working; the user's report concerned only the menu. Custom GUI buttons and machine menus were user-confirmed working. Runtime potion drain/refill and brewing quantity/component checks now pass after the fluid-unit repair. The earlier Iris suspicion was ruled out by the user's removal test.
+The stable-based repairs from `codex/fix-datagen-stable` were merged into `main` in PR #1 (merge commit `96f35f80c62638aa951bc8d4e894c0f0d5180fc4`). The supported target is Minecraft 1.21.1 on Fabric. The README now documents that target and build downloads.
 
-The user confirmed the train-controls cover works again; that issue is resolved from their retest. Immersive Portals compatibility is outside the agreed scope. Porting Lib's empty loot-modifier registry message remains nonblocking. Historical notes below include issues that have since been repaired; the current status and latest repair entries supersede them.
+Verified repairs include datagen recipe/resource semantics and repeat stability, Trinkets/CCA initialization, dedicated-server menu registration, menu panorama/floating cogwheels, potion fluid quantities/components, Farmer’s Delight fluid-tag recipe decoding, and fuel/copper registry data maps. The user confirmed the menu, GUI buttons, machine menus and train-controls cover work. Do not interpret these confirmations as exhaustive full-modpack validation.
 
+Optional Mod Menu startup is repaired: CreateMixinPlugin skips ModMenuMixin when Mod Menu is not loaded. Source `0f822947ecd9a667b7cf96075c57097d02274411` passed Build and client datagen without Mod Menu, repeat generation, and dedicated-server regression checks:
+- Build: https://github.com/Livinglive234/createfabric/actions/runs/37271594736
+- Historical verification: https://github.com/Livinglive234/createfabric/actions/runs/37271594714
+
+At the user's request, the datagen and menu-render workflows, temporary verification/probe scripts, and existing localization/label-actions workflows were removed. **Only the Build workflow remains.** Earlier test results and links below are historical evidence, not checks that still run. The latest documented main build (README commit `7cea9cbfd5291efe64e1a6b73038d2974a0a963d`) passed: https://github.com/Livinglive234/createfabric/actions/runs/37341365575 .
+
+### Known issues and validation limits
+
+- Shader-enabled train rendering remains unresolved. The user's log shows Flywheel falling back to `off`, then Sodium's vertex-writing path calling unsupported methods on Ponder's ShadedBlockSbbBuilder while Iris/BSL renders a carriage shadow. The exception is `ShadedBlockSbbBuilder only supports putBulkData!`. No rendering compatibility fix has been committed.
+- Intermittent world visibility outside spectator mode recovered after restarting without configuration changes. The user has seen it before; its cause is unconfirmed. Enabling shaders subsequently caused the separate crash above.
+- Immersive Portals compatibility remains outside scope. Its appearance in a render stack does not establish it as the cause.
+- Farmer’s Delight CI used compatible 3.2.5 code/items with the exact 3.3.6 chocolate-pie recipe, rather than the full 3.3.6 binary. Specific full-modpack recipe/fuel/copper/potion retests were not separately confirmed.
+- Other mods' reported recipe/model errors were not repaired here. Porting Lib's empty loot-modifier registry message did not prevent the tested server startup.
+- The user chose to publish a prerelease manually; publication has not been verified here.
+
+Historical notes below describe the porting sequence. This current status supersedes older statements about pending fixes, branch location, and active verification workflows.
 
 Tracking file for getting `Createfabric` (mc1.21.1/fabric/dev) to compile, ported from
 `Createforge` (NeoForge). Methodology: fix leftover/dangling NeoForge imports and broken
@@ -3912,3 +3928,10 @@ The user's BetterEnd recipe failures, Farmer's Delight chocolate-pie integration
 - Preserve the four built-in map JSON files in `src/main/resources`: they have no registered datagen provider, so leaving them under generated resources caused datagen to prune them. Pack overrides, tag expansion and removal now survive runtime verification.
 - Verified build, datagen, stable repeat generation, rebuilt resources and dedicated-server startup: https://github.com/Livinglive234/createfabric/actions/runs/37269518395 . Runtime checks passed for chocolate pie, stacked/tagged/removed fuel maps, furnace fuel, 18 oxidation and 24 waxing pairs, with vanilla copper retained. Potion regression checks also passed (12 bottle round trips, 281 quantities, 265 identity checks).
 - Test limitation: CI uses Farmer’s Delight 3.2.5 code/items with the exact SHA-verified chocolate-pie recipe from 3.3.6. The full 3.3.6 binary fails development remapping in this Loom/Loader setup; it was not runtime-verified here. These changes still need a user test in the actual modpack. Neither Immersive Portals nor other mods’ recipe/model errors were changed.
+
+
+## Merge, optional Mod Menu and CI cleanup (2026-10-05)
+
+Create's optional Mod Menu mixin previously caused startup to fail when its target class was absent. The FabricLoader mod-presence guard fixes that failure; Capes/MixinExtras errors in the supplied log were consequences of the same mixin preparation failure. Verification without Mod Menu passed, including both client datagen runs and server regression checks (chocolate pie, stacked/tagged/removed fuels, furnace fuel, 18 oxidation and 24 waxing pairs, plus 12 potion bottle round trips, 281 brewing quantities and 265 identity checks).
+
+PR #1 merged the repairs to main. All workflows other than Build and the added temporary verification scripts were subsequently removed at the user's request. Historical probe descriptions above no longer describe files present in the current tree. The rendering crash and intermittent terrain issue in the current status remain unresolved; neither was fixed by the merge.

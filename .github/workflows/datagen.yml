@@ -17,6 +17,8 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Install temporary potion runtime checks
         run: python3 scripts/install_potion_recipe_probe.py
+      - name: Install temporary integration checks
+        run: python3 scripts/install_integration_data_probe.py
       - name: Compile
         run: ./gradlew compileJava
       - name: Generate data
@@ -30,6 +32,11 @@ jobs:
           python3 scripts/verify_datagen.py --compare /tmp/datagen-snapshot.json
       - name: Build regenerated resources
         run: ./gradlew build
+      - name: Install user's Farmer's Delight build for runtime compatibility checks
+        run: |
+          mkdir -p run/server/mods
+          curl --fail --location --max-time 60 'https://cdn.modrinth.com/data/7vxePowz/versions/wbVXT4Ua/FarmersDelight-1.21.1-3.3.6%2Brefabricated.jar' -o run/server/mods/farmersdelight.jar
+          echo '6d75a472d56c7cf0e9abc7e654861076e8eff389  run/server/mods/farmersdelight.jar' | sha1sum --check
       - name: Verify dedicated server startup and recipe loading
         run: python3 scripts/verify_datagen_server.py
       - name: Capture generated resources and logs

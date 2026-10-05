@@ -41,3 +41,6 @@ assert not errors, "".join(errors)
 
 if Path("src/main/java/com/simibubi/create/infrastructure/fabric/PotionRecipeProbe.java").exists():
     assert any("POTION_PROBE passed:" in line for line in lines), "Potion runtime checks did not pass"
+
+if Path("src/main/java/com/simibubi/create/infrastructure/fabric/IntegrationDataProbe.java").exists():
+    assert any("INTEGRATION_PROBE passed:" in line for line in lines), "Integration data-map checks did not pass"

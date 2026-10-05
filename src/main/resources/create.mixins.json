@@ -70,7 +70,9 @@
     "accessor.LootTableProviderAccessor",
     "fabric.RegistrateLootTableProviderMixin",
     "fabric.RegistrateBlockLootTablesMixin",
-    "compat.trinkets.LivingEntityTrinketComponentMixin"
+    "compat.trinkets.LivingEntityTrinketComponentMixin",
+    "fabric.HoneycombDataMapAccessor",
+    "fabric.WeatheringCopperDataMapAccessor"
   ],
   "client": [
     "accessor.AgeableListModelAccessor",

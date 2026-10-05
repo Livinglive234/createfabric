@@ -164,7 +164,7 @@ public class Create implements ModInitializer {
 		FabricStructureProcessing.init();
 		AllBiomeModifiers.bootstrap(); // moved out of datagen
 		CreateRegistriesImpl.registerDatapackRegistries();
-		ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new CreateDataMapsImpl());
+		CreateDataMapsImpl.register();
 	}
 
 	public static void init() {

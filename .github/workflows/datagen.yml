@@ -28,8 +28,7 @@ jobs:
           python3 scripts/verify_datagen.py --compare /tmp/datagen-snapshot.json
       - name: Build regenerated resources
         run: ./gradlew build
-      - name: Diagnose dedicated server recipe loading (baseline menu crash tracked separately)
-        continue-on-error: true
+      - name: Verify dedicated server startup and recipe loading
         run: python3 scripts/verify_datagen_server.py
       - name: Capture generated resources and logs
         if: always()

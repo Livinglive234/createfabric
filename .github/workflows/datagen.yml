@@ -39,4 +39,3 @@ jobs:
             src/generated/resources/
             run/logs/
             run/server/logs/
-            build/libs/

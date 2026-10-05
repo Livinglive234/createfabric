@@ -2,9 +2,9 @@
 
 ## Current verified status (2026-10-05, stable-based repair branch)
 
-Branch: codex/fix-datagen-stable, based on 0efa2c4. Datagen (including Trinkets/CCA), repeated output stability, full builds, and dedicated-server startup/recipe loading pass. The user confirmed menu cogwheels work, but reported the panorama remained black at all three entry points after the earlier repair. Commit 15513fef now explicitly flushes GUI draws, clears inherited depth, disables depth testing for the cubemap, and renders the Create background from the pause menu too. CI screenshots show the panorama and cogs from title, Mod Menu, and a pause-parent test that deliberately obstructs depth. This is software-renderer verification; the user's client retest is still pending. In-world cogwheels were already working; the user's report concerned only the menu. Custom GUI buttons and machine menus were user-confirmed working. The earlier Iris suspicion was ruled out by the user's removal test.
+Branch: codex/fix-datagen-stable, based on 0efa2c4. Datagen (including Trinkets/CCA), repeated output stability, full builds, and dedicated-server startup/recipe loading pass. The user confirmed menu cogwheels work, but reported the panorama remained black at all three entry points after the earlier repair. Commit 15513fef now explicitly flushes GUI draws, clears inherited depth, disables depth testing for the cubemap, and renders the Create background from the pause menu too. CI screenshots show the panorama and cogs from title, Mod Menu, and a pause-parent test that deliberately obstructs depth. The user subsequently confirmed the menu is working correctly on their client. In-world cogwheels were already working; the user's report concerned only the menu. Custom GUI buttons and machine menus were user-confirmed working. Runtime potion drain/refill and brewing quantity/component checks now pass after the fluid-unit repair. The earlier Iris suspicion was ruled out by the user's removal test.
 
-Remaining reported visual issues: confirmation of the latest panorama repair on the user's client, plus train-controls cover/lever overlap from older testing, requiring re-testing on this branch. Porting Lib's empty loot-modifier registry message remains nonblocking. Historical notes below include issues that have since been repaired; the current status and latest repair entries supersede them.
+Remaining reported visual issue: train-controls cover/lever overlap from older testing, requiring re-testing on this branch. Porting Lib's empty loot-modifier registry message remains nonblocking. Historical notes below include issues that have since been repaired; the current status and latest repair entries supersede them.
 
 
 Tracking file for getting `Createfabric` (mc1.21.1/fabric/dev) to compile, ported from
@@ -3882,3 +3882,24 @@ User confirmed decorative cogwheels render, but the background remained black fr
 Commit 15513fef764dd74d040e7b1704adc6e98962f7a2 removes reliance on inherited depth state: flush queued GUI draws, reset the depth buffer with writes enabled, disable depth testing for CubeMap (which does not do this itself), reset shader color/blend state, and flush the overlay before rendering the cogs. It also renders the panorama from the pause-parent path, which previously skipped it. Entry-point behavior for Ponder availability is retained.
 
 Visual workflow https://github.com/Livinglive234/createfabric/actions/runs/37256022807 passed. Inspected title.png, modmenu.png, and pause-depth.png: all show the Create panorama and floating cogs. The last probe uses a PauseScreen parent and clears depth to zero before menu drawing; it does not load a world. Build workflow https://github.com/Livinglive234/createfabric/actions/runs/37256022833 passed. Real modpack/GPU confirmation remains pending.
+
+
+## Runtime potion fluid repair (2026-10-04 America/Chicago; CI 2026-10-05 UTC)
+
+The user confirmed the panorama/menu now works correctly. Their build.116 log showed 168 warnings about create:potions amount 250. The JEI spout category constructs those recipes through PotionFluidHandler.getFluidFromPotionItem, which returned raw 250-unit stacks while GenericItemFilling required FluidConstants.BOTTLE (27,000). This affected actual item draining as well as the recipe display.
+
+Source commit 4287f1ea1c4f59daec67fa273d22bbbdfd926166:
+- Use FluidConstants.BOTTLE for regular water, regular potion, splash, and lingering potion item draining so refill/drain agrees with Fabric's existing bottle convention.
+- Use FluidConstants.BUCKET for runtime vanilla/modded brewing fluid stacks and JEI extra potion ingredients.
+- Build runtime brewing inputs with FluidIngredient.fromFluidStack instead of the millibucket numeric shortcut. This avoids unit conversion twice and preserves potion contents and bottle type; outputs remain in native Fabric units.
+- Widen potion helper amount parameters to long.
+- Add a CI-only dedicated-server probe, installed temporarily by scripts/install_potion_recipe_probe.py. It is not a normal mod entrypoint or shipped source file. Server verification requires its success marker when installed, and still supports running without the probe locally.
+
+Validation at the source commit:
+- Build: https://github.com/Livinglive234/createfabric/actions/runs/37257501591 succeeded.
+- Datagen and server: https://github.com/Livinglive234/createfabric/actions/runs/37257501515 succeeded; 1,884 recipes and 7,219 resources validated, forced repeat output stable, real server recipe loading and clean shutdown passed.
+- Server log: POTION_PROBE passed: 12 bottle round trips, 281 brewing quantities, 265 potion/bottle identity checks.
+- Round trips cover water, awkward, healing, and poison across regular/splash/lingering bottles using GenericItemEmptying and GenericItemFilling, including drain simulation not consuming items.
+- Brewing checks cover native input/output quantity equality and reject substituted potion contents or bottle types. The clean CI environment does not exercise every external mod's custom brewing recipe.
+
+The user's BetterEnd recipe failures, Farmer's Delight chocolate-pie integration, other missing serializers/loot data, Macaw's models, and Doctor Who/EMF messages are separate remaining modpack issues; this repair does not address them. Actual user-client retest of potion quantities and warning removal remains pending.

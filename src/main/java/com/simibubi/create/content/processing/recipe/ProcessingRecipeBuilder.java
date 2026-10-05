@@ -15,6 +15,8 @@ import com.simibubi.create.foundation.recipe.IRecipeTypeInfo;
 import net.createmod.catnip.data.Pair;
 
 import net.fabricmc.fabric.api.resource.conditions.v1.ResourceCondition;
+import net.fabricmc.fabric.impl.datagen.FabricDataGenHelper;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions;
 
 import net.minecraft.core.NonNullList;
@@ -117,8 +119,8 @@ public abstract class ProcessingRecipeBuilder<P extends ProcessingRecipeParams, 
 			errors.add(recipe.getClass().getSimpleName() + "with id " + id + " failed validation:");
 			Create.LOGGER.warn(Joiner.on('\n').join(errors));
 		}
-		// TODO fabric: recipeConditions aren't currently attached to the generated recipe JSON,
-		//  since fabric's ResourceCondition writing is only exposed via FabricRecipeProvider#withConditions
+		if (!recipeConditions.isEmpty())
+			FabricDataGenHelper.addConditions(recipe, recipeConditions.toArray(ResourceCondition[]::new));
 		consumer.accept(id, recipe, null);
 	}
 
@@ -154,12 +156,17 @@ public abstract class ProcessingRecipeBuilder<P extends ProcessingRecipeParams, 
 		return self();
 	}
 
+	/** Numeric fluid shortcuts use millibuckets, matching upstream recipe definitions. */
+	private static long millibuckets(long amount) {
+		return Math.multiplyExact(amount, FluidConstants.BUCKET / 1000);
+	}
+
 	public S require(Fluid fluid, long amount) {
-		return require(FluidIngredient.fromFluid(fluid, amount));
+		return require(FluidIngredient.fromFluid(fluid, millibuckets(amount)));
 	}
 
 	public S require(TagKey<Fluid> fluidTag, long amount) {
-		return require(FluidIngredient.fromTag(fluidTag, amount));
+		return require(FluidIngredient.fromTag(fluidTag, millibuckets(amount)));
 	}
 
 	public S require(FluidIngredient ingredient) {
@@ -214,7 +221,7 @@ public abstract class ProcessingRecipeBuilder<P extends ProcessingRecipeParams, 
 
 	public S output(Fluid fluid, int amount) {
 		fluid = FluidHelper.convertToStill(fluid);
-		return output(new FluidStack(fluid, amount));
+		return output(new FluidStack(fluid, millibuckets(amount)));
 	}
 
 	public S output(FluidStack fluidStack) {

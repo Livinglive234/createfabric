@@ -10,6 +10,7 @@ import com.simibubi.create.api.data.recipe.FillingRecipeGen;
 import com.simibubi.create.content.fluids.potion.PotionFluidHandler;
 
 import net.minecraft.core.HolderLookup;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.minecraft.data.PackOutput;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.alchemy.Potions;
@@ -59,15 +60,15 @@ public final class CreateFillingRecipeGen extends FillingRecipeGen {
 		.require(Items.DIRT)
 		.output(Items.GRASS_BLOCK)),
 
-	GUNPOWDER = create("gunpowder", b -> b.require(PotionFluidHandler.potionIngredient(Potions.HARMING, 25))
+	GUNPOWDER = create("gunpowder", b -> b.require(PotionFluidHandler.potionIngredient(Potions.HARMING, (int) (25 * FluidConstants.BUCKET / 1000)))
 		.require(AllItems.CINDER_FLOUR.get())
 		.output(Items.GUNPOWDER)),
 
-	REDSTONE = create("redstone", b -> b.require(PotionFluidHandler.potionIngredient(Potions.STRENGTH, 25))
+	REDSTONE = create("redstone", b -> b.require(PotionFluidHandler.potionIngredient(Potions.STRENGTH, (int) (25 * FluidConstants.BUCKET / 1000)))
 		.require(AllItems.CINDER_FLOUR.get())
 		.output(Items.REDSTONE)),
 
-	GLOWSTONE = create("glowstone", b -> b.require(PotionFluidHandler.potionIngredient(Potions.NIGHT_VISION, 25))
+	GLOWSTONE = create("glowstone", b -> b.require(PotionFluidHandler.potionIngredient(Potions.NIGHT_VISION, (int) (25 * FluidConstants.BUCKET / 1000)))
 		.require(AllItems.CINDER_FLOUR.get())
 		.output(Items.GLOWSTONE_DUST)),
 

@@ -9,7 +9,8 @@ import com.simibubi.create.Create;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.RecipeOutput;
-import net.minecraft.data.recipes.RecipeProvider;
+import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider;
 import net.minecraft.resources.ResourceLocation;
 
 /**
@@ -18,12 +19,12 @@ import net.minecraft.resources.ResourceLocation;
  * a processing recipe type and want to use Create's helpers.
  * For processing recipes extend {@link StandardProcessingRecipeGen}.
  */
-public abstract class BaseRecipeProvider extends RecipeProvider {
+public abstract class BaseRecipeProvider extends FabricRecipeProvider {
 	protected final String modid;
 	protected final List<GeneratedRecipe> all = new ArrayList<>();
 
 	public BaseRecipeProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> registries, String defaultNamespace) {
-		super(output, registries);
+		super((FabricDataOutput) output, registries);
 		this.modid = defaultNamespace;
 	}
 
@@ -40,6 +41,11 @@ public abstract class BaseRecipeProvider extends RecipeProvider {
 	public void buildRecipes(RecipeOutput recipeOutput) {
 		all.forEach(c -> c.register(recipeOutput));
 		Create.LOGGER.info("{} registered {} recipe{}", getName(), all.size(), all.size() == 1 ? "" : "s");
+	}
+
+	@Override
+	protected ResourceLocation getRecipeIdentifier(ResourceLocation id) {
+		return id;
 	}
 
 	@FunctionalInterface

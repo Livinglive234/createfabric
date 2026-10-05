@@ -66,7 +66,10 @@
     "fabric.gametest.StructureUtilsMixin",
     "fabric.infra.BlockStateExtensionsMixin",
     "fabric.infra.ServerPlayerGameModeMixin",
-    "fabric.infra.block.SignalGetterMixin"
+    "fabric.infra.block.SignalGetterMixin",
+    "accessor.LootTableProviderAccessor",
+    "fabric.RegistrateLootTableProviderMixin",
+    "fabric.RegistrateBlockLootTablesMixin"
   ],
   "client": [
     "accessor.AgeableListModelAccessor",

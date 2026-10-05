@@ -1,0 +1,42 @@
+name: Verify datagen
+on:
+  push:
+    branches: [codex/fix-datagen-stable]
+  workflow_dispatch:
+
+jobs:
+  datagen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Compile
+        run: ./gradlew compileJava
+      - name: Generate data
+        run: ./gradlew runDatagen
+      - name: Verify generated recipe semantics
+        run: python3 scripts/verify_datagen.py
+      - name: Verify repeat generation is stable
+        run: |
+          python3 scripts/verify_datagen.py --snapshot /tmp/datagen-snapshot.json
+          ./gradlew runDatagen --rerun-tasks
+          python3 scripts/verify_datagen.py --compare /tmp/datagen-snapshot.json
+      - name: Build regenerated resources
+        run: ./gradlew build
+      - name: Verify dedicated server recipe loading
+        run: python3 scripts/verify_datagen_server.py
+      - name: Capture generated resources and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: datagen-results
+          path: |
+            src/generated/resources/
+            run/logs/
+            run/server/logs/
+            build/libs/

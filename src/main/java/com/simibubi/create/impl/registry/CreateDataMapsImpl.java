@@ -32,7 +32,7 @@ public class CreateDataMapsImpl {
     public static final DataMapType<Block, Block> WAXABLES = blockMap("waxables", "waxed");
     private static final Map<Item, Integer> previousFuel = new HashMap<>();
     private static BiMap<Block, Block> baseOxidation, baseWaxing;
-    private static BiMap<Block, Block> oxidation, waxing;
+    private static volatile BiMap<Block, Block> oxidation, waxing;
 
     private static DataMapType<Item, BlazeBurnerFuel> fuel(String namespace, String path) {
         return DataMapType.builder(ResourceLocation.fromNamespaceAndPath(namespace, path), Registries.ITEM,
@@ -74,14 +74,12 @@ public class CreateDataMapsImpl {
                 });
             });
             event.ifRegistry(Registries.BLOCK, registry -> {
-                if (baseOxidation == null) {
+                boolean install = baseOxidation == null;
+                if (install) {
                     // Capture the completed vanilla/Fabric registrations on the first data load.
-                    baseOxidation = HashBiMap.create(WeatheringCopperDataMapAccessor.create$getNext());
-                    baseWaxing = HashBiMap.create(HoneycombDataMapAccessor.create$getWaxables());
-                    WeatheringCopperDataMapAccessor.create$setNext(() -> oxidation);
-                    WeatheringCopperDataMapAccessor.create$setPrevious(() -> oxidation.inverse());
-                    HoneycombDataMapAccessor.create$setWaxables(() -> waxing);
-                    HoneycombDataMapAccessor.create$setWaxOff(() -> waxing.inverse());
+                    baseOxidation = HashBiMap.create(WeatheringCopperDataMapAccessor.create$getNextSupplier().get());
+                    baseWaxing = HashBiMap.create(HoneycombDataMapAccessor.create$getWaxablesSupplier().get());
+
                 }
                 BiMap<Block, Block> next = HashBiMap.create(baseOxidation);
                 values(registry, OXIDIZABLES).forEach((key, value) -> next.forcePut(registry.get(key), value));
@@ -89,6 +87,12 @@ public class CreateDataMapsImpl {
                 values(registry, WAXABLES).forEach((key, value) -> waxed.forcePut(registry.get(key), value));
                 oxidation = next;
                 waxing = waxed;
+                if (install) {
+                    WeatheringCopperDataMapAccessor.create$setNext(() -> oxidation);
+                    WeatheringCopperDataMapAccessor.create$setPrevious(() -> oxidation.inverse());
+                    HoneycombDataMapAccessor.create$setWaxables(() -> waxing);
+                    HoneycombDataMapAccessor.create$setWaxOff(() -> waxing.inverse());
+                }
             });
         });
     }

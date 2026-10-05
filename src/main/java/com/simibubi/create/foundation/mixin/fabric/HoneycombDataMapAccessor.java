@@ -11,7 +11,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface HoneycombDataMapAccessor {
     @Accessor("WAXABLES")
     static Supplier<BiMap<Block, Block>> create$getWaxablesSupplier() { throw new AssertionError(); }
-    static BiMap<Block, Block> create$getWaxables() { return create$getWaxablesSupplier().get(); }
     @Mutable
     @Accessor("WAXABLES")
     static void create$setWaxables(Supplier<BiMap<Block, Block>> value) { throw new AssertionError(); }

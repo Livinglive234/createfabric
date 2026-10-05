@@ -7,7 +7,7 @@ import time
 directory = Path("run/server")
 directory.mkdir(parents=True, exist_ok=True)
 (directory / "eula.txt").write_text("eula=true\n")
-(directory / "server.properties").write_text("online-mode=false\nserver-port=0\n")
+(directory / "server.properties").write_text("online-mode=false\nserver-port=0\ninitial-enabled-packs=vanilla,fabric,file/probe_low,file/probe_high\n")
 process = subprocess.Popen(["./gradlew", "runServer", "--console=plain"],
                            stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                            stderr=subprocess.STDOUT, text=True, bufsize=1)

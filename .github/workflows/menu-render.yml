@@ -7,6 +7,7 @@ on:
       - 'scripts/install_menu_render_probe.py'
       - 'src/main/java/com/simibubi/create/infrastructure/gui/CreateMainMenuScreen.java'
       - 'src/main/java/com/simibubi/create/foundation/mixin/fabric/RenderTargetMixin.java'
+      - 'src/main/java/com/simibubi/create/content/kinetics/simpleRelays/BracketedKineticBlockModel.java'
   workflow_dispatch:
 jobs:
   screenshot:
@@ -20,7 +21,7 @@ jobs:
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
       - name: Install software renderer
-        run: sudo apt-get update && sudo apt-get install -y xvfb libgl1-mesa-dri libasound2t64
+        run: sudo apt-get update && sudo apt-get install -y xvfb libgl1-mesa-dri libasound2t64 libflite1
       - name: Install temporary screenshot probe
         run: python3 scripts/install_menu_render_probe.py
       - name: Capture menu variants

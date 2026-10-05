@@ -93,12 +93,20 @@ public class CreateMainMenuScreen extends AbstractSimiScreen {
 	}
 
 	@Override
+	protected void renderWindowBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+		// The vanilla menu background writes depth before our custom cubemap renders.
+		// Keep the normal world background for the pause-menu entry point only.
+		if (!fromTitleOrMods)
+			super.renderWindowBackground(graphics, mouseX, mouseY, partialTicks);
+	}
+
+	@Override
 	protected void renderWindow(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 		float f = (float) (Util.getMillis() - this.firstRenderTime) / 1000.0F;
 		float alpha = Mth.clamp(f, 0.0F, 1.0F);
 		float elapsedPartials = minecraft.getTimer().getGameTimeDeltaPartialTick(false);
 
-		if (parent instanceof TitleScreen) {
+		if (fromTitleOrMods) {
 			if (alpha < 1)
 				vanillaPanorama.render(graphics, this.width, this.height, 1, elapsedPartials);
 			PANORAMA.render(graphics, this.width, this.height, 1, elapsedPartials);

@@ -6,6 +6,7 @@ import com.simibubi.create.content.decoration.bracket.BracketedBlockEntityBehavi
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 
 import dev.engine_room.flywheel.lib.model.baked.EmptyVirtualBlockGetter;
+import dev.engine_room.flywheel.lib.model.baked.SinglePosVirtualBlockGetter;
 
 import net.fabricmc.fabric.api.renderer.v1.model.ForwardingBakedModel;
 
@@ -18,8 +19,6 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
 
-import net.fabricmc.fabric.api.renderer.v1.model.ForwardingBakedModel;
-import net.fabricmc.fabric.api.renderer.v1.render.RenderContext;
 
 public class BracketedKineticBlockModel extends ForwardingBakedModel {
 
@@ -34,7 +33,9 @@ public class BracketedKineticBlockModel extends ForwardingBakedModel {
 
 	@Override
 	public void emitBlockQuads(BlockAndTintGetter blockView, BlockState state, BlockPos pos, Supplier<RandomSource> randomSupplier, RenderContext context) {
-		if (blockView instanceof EmptyVirtualBlockGetter) {
+		// Ponder 1.0.50 uses a populated single-position view for GUI block models.
+		// Both virtual views need the kinetic geometry, rather than only attachments.
+		if (blockView instanceof EmptyVirtualBlockGetter || blockView instanceof SinglePosVirtualBlockGetter) {
 			super.emitBlockQuads(blockView, state, pos, randomSupplier, context);
 			return;
 		}

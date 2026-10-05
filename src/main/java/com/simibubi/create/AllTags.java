@@ -244,6 +244,7 @@ public class AllTags {
 		FLOURS(COMMON),
 		WHEAT_FLOURS(COMMON, "flours/wheat"),
 
+		FOODS_DOUGH(COMMON, "foods/dough"),
 		FOODS_DOUGH_WHEAT(COMMON, "foods/dough/wheat"),
 
 		UA_CORAL(MOD, "upgrade_aquatic/coral"),

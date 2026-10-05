@@ -120,6 +120,9 @@ public class FluidTankBlock extends Block implements IWrenchable, IBE<FluidTankB
 				? FluidTankBlockEntity::queueConnectivityUpdate
 				: FluidTankBlockEntity::updateConnectivity;
 		withBlockEntityDo(world, pos, consumer);
+		BlockState newState = world.getBlockState(pos);
+		if (state != newState && newState.getBlock() == this)
+			world.sendBlockUpdated(pos, oldState, newState, UPDATE_ALL_IMMEDIATE);
 	}
 
 	@Override

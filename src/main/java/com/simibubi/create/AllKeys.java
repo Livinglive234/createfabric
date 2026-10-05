@@ -6,6 +6,7 @@ import org.lwjgl.glfw.GLFW;
 
 import com.mojang.blaze3d.platform.InputConstants;
 
+import net.createmod.catnip.client.ConflictSafeKeyMapping;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 
@@ -57,7 +58,9 @@ public enum AllKeys {
 		for (AllKeys key : values()) {
 			if (!key.modifiable)
 				continue;
-			key.keybind = new KeyMapping(key.description, key.key, Create.NAME);
+			key.keybind = key.conflictSafe
+				? new ConflictSafeKeyMapping(key.description, key.key, Create.NAME)
+				: new KeyMapping(key.description, key.key, Create.NAME);
 			KeyBindingHelper.registerKeyBinding(key.keybind);
 		}
 	}

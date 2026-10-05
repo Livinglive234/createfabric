@@ -7,8 +7,8 @@ val loaderVersion = "0.19.5"
 val fapiVersion = "0.115.1+1.21.1"
 
 // in-house dependencies
-val flywheelVersion = "1.0.1-11"
-val ponderVersion = "1.0.50"
+val flywheelVersion = "1.0.6-44"
+val ponderVersion = "1.0.69"
 val registrateVersion = "1.3.77-MC1.21.1"
 val milkLibVersion = "1.1.0-patch+1.21.1"
 // https://mvn.devos.one/#/snapshots/io/github/fabricators_of_create/Porting-Lib
@@ -95,7 +95,8 @@ val buildNum = providers.environmentVariable("GITHUB_RUN_NUMBER")
     .orElse("-local")
     .getOrElse("")
 
-version = "6.0.0.0+mc$minecraftVersion$buildNum"
+// Source target: upstream Create mc1.21.1-6.0.10 (ac0c444d).
+version = "6.0.10+mc$minecraftVersion$buildNum"
 
 group = "com.simibubi.create"
 base.archivesName = "create-fabric"

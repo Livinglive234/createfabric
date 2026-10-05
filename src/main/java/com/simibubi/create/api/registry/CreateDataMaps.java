@@ -8,10 +8,9 @@ import com.simibubi.create.api.data.datamaps.BlazeBurnerFuel;
 import net.minecraft.world.item.Item;
 
 /**
- * fabric: NeoForge's generic {@code DataMapType} system isn't available on Fabric. These are populated by
- * {@link com.simibubi.create.impl.registry.CreateDataMapsImpl}, which loads the same
- * {@code data/<namespace>/data_maps/item/*.json} files NeoForge's data maps read, plus any values registered
- * directly in code via {@link #REGULAR_BLAZE_BURNER_FUELS} / {@link #SUPERHEATED_BLAZE_BURNER_FUELS}.
+ * Compatibility views of Porting Lib registry data maps, rebuilt on server reload and client sync by
+ * {@link com.simibubi.create.impl.registry.CreateDataMapsImpl}. Files under
+ * {@code data/create/data_maps/item/} support pack priority, tags, conditions, replacement and removal.
  */
 public class CreateDataMaps {
 	/**

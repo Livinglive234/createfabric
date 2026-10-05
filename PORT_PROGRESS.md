@@ -4,7 +4,7 @@
 
 Branch: codex/fix-datagen-stable, based on 0efa2c4. Datagen (including Trinkets/CCA), repeated output stability, full builds, and dedicated-server startup/recipe loading pass. The user confirmed menu cogwheels work, but reported the panorama remained black at all three entry points after the earlier repair. Commit 15513fef now explicitly flushes GUI draws, clears inherited depth, disables depth testing for the cubemap, and renders the Create background from the pause menu too. CI screenshots show the panorama and cogs from title, Mod Menu, and a pause-parent test that deliberately obstructs depth. The user subsequently confirmed the menu is working correctly on their client. In-world cogwheels were already working; the user's report concerned only the menu. Custom GUI buttons and machine menus were user-confirmed working. Runtime potion drain/refill and brewing quantity/component checks now pass after the fluid-unit repair. The earlier Iris suspicion was ruled out by the user's removal test.
 
-Remaining reported visual issue: train-controls cover/lever overlap from older testing, requiring re-testing on this branch. Porting Lib's empty loot-modifier registry message remains nonblocking. Historical notes below include issues that have since been repaired; the current status and latest repair entries supersede them.
+The user confirmed the train-controls cover works again; that issue is resolved from their retest. Immersive Portals compatibility is outside the agreed scope. Porting Lib's empty loot-modifier registry message remains nonblocking. Historical notes below include issues that have since been repaired; the current status and latest repair entries supersede them.
 
 
 Tracking file for getting `Createfabric` (mc1.21.1/fabric/dev) to compile, ported from
@@ -3903,3 +3903,12 @@ Validation at the source commit:
 - Brewing checks cover native input/output quantity equality and reject substituted potion contents or bottle types. The clean CI environment does not exercise every external mod's custom brewing recipe.
 
 The user's BetterEnd recipe failures, Farmer's Delight chocolate-pie integration, other missing serializers/loot data, Macaw's models, and Doctor Who/EMF messages are separate remaining modpack issues; this repair does not address them. Actual user-client retest of potion quantities and warning removal remains pending.
+
+
+## Farmer’s Delight and registry data maps (2026-10-05)
+
+- Decode legacy `neoforge:tag` / `forge:tag` fluid ingredients while retaining native Fabric encoding. Farmer’s Delight 3.3.6 chocolate pie loads with one crust and 500 mB chocolate (40,500 Fabric units).
+- Register Porting Lib maps for regular/superheated burner fuels, furnace fuels, oxidation and waxing. Rebuild burner compatibility views on reload/sync; apply furnace values through Fabric FuelRegistry and copper mappings through vanilla lookup hooks. Furnace durations respect the vanilla signed-short limit.
+- Preserve the four built-in map JSON files in `src/main/resources`: they have no registered datagen provider, so leaving them under generated resources caused datagen to prune them. Pack overrides, tag expansion and removal now survive runtime verification.
+- Verified build, datagen, stable repeat generation, rebuilt resources and dedicated-server startup: https://github.com/Livinglive234/createfabric/actions/runs/37269518395 . Runtime checks passed for chocolate pie, stacked/tagged/removed fuel maps, furnace fuel, 18 oxidation and 24 waxing pairs, with vanilla copper retained. Potion regression checks also passed (12 bottle round trips, 281 quantities, 265 identity checks).
+- Test limitation: CI uses Farmer’s Delight 3.2.5 code/items with the exact SHA-verified chocolate-pie recipe from 3.3.6. The full 3.3.6 binary fails development remapping in this Loom/Loader setup; it was not runtime-verified here. These changes still need a user test in the actual modpack. Neither Immersive Portals nor other mods’ recipe/model errors were changed.

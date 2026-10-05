@@ -30,6 +30,9 @@ public abstract class RegistrateBlockLootTablesMixin extends VanillaBlockLoot {
 		super(registries);
 	}
 
+	@Shadow
+	public abstract void generate();
+
 	@Override
 	public void generate(BiConsumer<ResourceKey<LootTable>, LootTable.Builder> output) {
 		generate();

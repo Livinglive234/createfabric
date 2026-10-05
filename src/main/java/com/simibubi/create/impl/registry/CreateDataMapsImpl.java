@@ -50,6 +50,8 @@ public class CreateDataMapsImpl {
         return ((RegistryInjection<T>) (Object) registry).getDataMap(type);
     }
 
+    public static BiMap<Block, Block> getOxidationMap() { return oxidation; }
+
     public static void register() {
         PortingLibDataMaps.registerDataMap(REGULAR);
         PortingLibDataMaps.registerDataMap(SUPERHEATED);
@@ -70,7 +72,7 @@ public class CreateDataMapsImpl {
                 values(registry, FURNACE).forEach((key, value) -> {
                     Item item = registry.get(key);
                     previousFuel.put(item, FuelRegistry.INSTANCE.get(item));
-                    FuelRegistry.INSTANCE.add(item, value.burnTime());
+                    FuelRegistry.INSTANCE.add(item, Math.min(value.burnTime(), Short.MAX_VALUE));
                 });
             });
             event.ifRegistry(Registries.BLOCK, registry -> {
@@ -88,8 +90,6 @@ public class CreateDataMapsImpl {
                 oxidation = next;
                 waxing = waxed;
                 if (install) {
-                    WeatheringCopperDataMapAccessor.create$setNext(() -> oxidation);
-                    WeatheringCopperDataMapAccessor.create$setPrevious(() -> oxidation.inverse());
                     HoneycombDataMapAccessor.create$setWaxables(() -> waxing);
                     HoneycombDataMapAccessor.create$setWaxOff(() -> waxing.inverse());
                 }

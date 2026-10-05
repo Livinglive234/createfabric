@@ -72,7 +72,8 @@
     "fabric.RegistrateBlockLootTablesMixin",
     "compat.trinkets.LivingEntityTrinketComponentMixin",
     "fabric.HoneycombDataMapAccessor",
-    "fabric.WeatheringCopperDataMapAccessor"
+    "fabric.WeatheringCopperDataMapAccessor",
+    "fabric.WeatheringCopperDataMapMixin"
   ],
   "client": [
     "accessor.AgeableListModelAccessor",

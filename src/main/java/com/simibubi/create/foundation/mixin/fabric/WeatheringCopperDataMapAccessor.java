@@ -11,10 +11,4 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface WeatheringCopperDataMapAccessor {
     @Accessor("NEXT_BY_BLOCK")
     static Supplier<BiMap<Block, Block>> create$getNextSupplier() { throw new AssertionError(); }
-    @Mutable
-    @Accessor("NEXT_BY_BLOCK")
-    static void create$setNext(Supplier<BiMap<Block, Block>> value) { throw new AssertionError(); }
-    @Mutable
-    @Accessor("PREVIOUS_BY_BLOCK")
-    static void create$setPrevious(Supplier<BiMap<Block, Block>> value) { throw new AssertionError(); }
 }

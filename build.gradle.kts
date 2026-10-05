@@ -209,14 +209,9 @@ dependencies {
 
     // dev env
     modLocalRuntime("com.terraformersmc:modmenu:$modmenuVersion")
-    // Ponder's language generation constructs dummy entities with a null level. Trinkets/CCA's
-    // optional dev-runtime entity components require a real world and crash on those entities.
-    // Keep the compile-only APIs, but do not load these optional mods for data generation.
-    if (gradle.startParameter.taskNames.none { it.substringAfterLast(':') == "runDatagen" }) {
-        modLocalRuntime("dev.emi:trinkets:$trinketsVersion") { isTransitive = false }
-        modLocalRuntime("dev.onyxstudios.cardinal-components-api:cardinal-components-base:$ccaVersion")
-        modLocalRuntime("dev.onyxstudios.cardinal-components-api:cardinal-components-entity:$ccaVersion")
-    }
+    modLocalRuntime("dev.emi:trinkets:$trinketsVersion") { isTransitive = false }
+    modLocalRuntime("dev.onyxstudios.cardinal-components-api:cardinal-components-base:$ccaVersion")
+    modLocalRuntime("dev.onyxstudios.cardinal-components-api:cardinal-components-entity:$ccaVersion")
     if (ccRuntime) {
         modLocalRuntime("cc.tweaked:cc-tweaked-$minecraftVersion-fabric:$ccVersion")
         modLocalRuntime("maven.modrinth:cloth-config:$clothVersion")

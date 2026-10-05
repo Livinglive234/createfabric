@@ -69,7 +69,8 @@
     "fabric.infra.block.SignalGetterMixin",
     "accessor.LootTableProviderAccessor",
     "fabric.RegistrateLootTableProviderMixin",
-    "fabric.RegistrateBlockLootTablesMixin"
+    "fabric.RegistrateBlockLootTablesMixin",
+    "compat.trinkets.LivingEntityTrinketComponentMixin"
   ],
   "client": [
     "accessor.AgeableListModelAccessor",

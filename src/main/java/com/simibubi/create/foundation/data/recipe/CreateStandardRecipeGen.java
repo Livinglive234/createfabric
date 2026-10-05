@@ -86,8 +86,9 @@ import net.minecraft.world.level.block.Blocks;
 
 import io.github.fabricators_of_create.porting_lib.tags.Tags;
 import io.github.fabricators_of_create.porting_lib.resources.conditions.ICondition;
-import io.github.fabricators_of_create.porting_lib.resources.conditions.ModLoadedCondition;
-import io.github.fabricators_of_create.porting_lib.resources.conditions.NotCondition;
+import net.fabricmc.fabric.api.resource.conditions.v1.ResourceCondition;
+import net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions;
+import net.fabricmc.fabric.impl.datagen.FabricDataGenHelper;
 
 /**
  * Create's own Data Generation for all vanilla recipe types.
@@ -1510,7 +1511,7 @@ public final class CreateStandardRecipeGen extends BaseRecipeProvider {
 		private String suffix;
 		private Supplier<? extends ItemLike> result;
 		private ResourceLocation compatDatagenOutput;
-		List<ICondition> recipeConditions;
+		List<ResourceCondition> recipeConditions;
 
 		private Supplier<ItemPredicate> unlockedBy;
 		private int amount;
@@ -1552,14 +1553,14 @@ public final class CreateStandardRecipeGen extends BaseRecipeProvider {
 		}
 
 		GeneratedRecipeBuilder whenModLoaded(String modid) {
-			return withCondition(new ModLoadedCondition(modid));
+			return withCondition(ResourceConditions.allModsLoaded(modid));
 		}
 
 		GeneratedRecipeBuilder whenModMissing(String modid) {
-			return withCondition(new NotCondition(new ModLoadedCondition(modid)));
+			return withCondition(ResourceConditions.not(ResourceConditions.allModsLoaded(modid)));
 		}
 
-		GeneratedRecipeBuilder withCondition(ICondition condition) {
+		GeneratedRecipeBuilder withCondition(ResourceCondition condition) {
 			recipeConditions.add(condition);
 			return this;
 		}
@@ -1576,7 +1577,7 @@ public final class CreateStandardRecipeGen extends BaseRecipeProvider {
 					builder.apply(ShapedRecipeBuilder.shaped(RecipeCategory.MISC, result.get(), amount));
 				if (unlockedBy != null)
 					b.unlockedBy("has_item", inventoryTrigger(unlockedBy.get()));
-				b.save(consumer, createLocation("crafting"));
+				b.save(withFabricConditions(consumer, recipeConditions), createLocation("crafting"));
 			});
 		}
 
@@ -1587,7 +1588,7 @@ public final class CreateStandardRecipeGen extends BaseRecipeProvider {
 				if (unlockedBy != null)
 					b.unlockedBy("has_item", inventoryTrigger(unlockedBy.get()));
 
-				RecipeOutput conditionalOutput = recipeOutput.withConditions(recipeConditions.toArray(new ICondition[0]));
+				RecipeOutput conditionalOutput = withFabricConditions(recipeOutput, recipeConditions);
 
 				b.save(conditionalOutput, createLocation("crafting"));
 			});
@@ -1691,7 +1692,7 @@ public final class CreateStandardRecipeGen extends BaseRecipeProvider {
 					if (unlockedBy != null)
 						b.unlockedBy("has_item", inventoryTrigger(unlockedBy.get()));
 
-					RecipeOutput conditionalOutput = recipeOutput.withConditions(recipeConditions.toArray(new ICondition[0]));
+					RecipeOutput conditionalOutput = withFabricConditions(recipeOutput, recipeConditions);
 
 					b.save(
 						isOtherMod ? new ModdedCookingRecipeOutput(conditionalOutput, compatDatagenOutput) : conditionalOutput,
@@ -1700,6 +1701,22 @@ public final class CreateStandardRecipeGen extends BaseRecipeProvider {
 				});
 			}
 		}
+	}
+
+	private static RecipeOutput withFabricConditions(RecipeOutput output, List<ResourceCondition> conditions) {
+		return new RecipeOutput() {
+			@Override
+			public Advancement.Builder advancement() {
+				return output.advancement();
+			}
+
+			@Override
+			public void accept(ResourceLocation id, Recipe<?> recipe, @Nullable AdvancementHolder advancement) {
+				if (!conditions.isEmpty())
+					FabricDataGenHelper.addConditions(recipe, conditions.toArray(ResourceCondition[]::new));
+				output.accept(id, recipe, advancement);
+			}
+		};
 	}
 
 	@Override

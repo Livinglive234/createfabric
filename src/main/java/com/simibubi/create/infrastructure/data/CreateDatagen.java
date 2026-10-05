@@ -58,6 +58,7 @@ public class CreateDatagen implements DataGeneratorEntrypoint {
 		pack.addProvider((output, registries) -> new CreateMountedItemStorageTypeTagsProvider(output, registries, existingFileHelper));
 		pack.addProvider(DamageTypeTagGen::new);
 		pack.addProvider(AllAdvancements::new);
+		pack.addProvider(GeneratedEntriesProvider::new);
 		pack.addProvider(CreateStandardRecipeGen::new);
 		pack.addProvider(CreateMechanicalCraftingRecipeGen::new);
 		pack.addProvider(CreateSequencedAssemblyRecipeGen::new);

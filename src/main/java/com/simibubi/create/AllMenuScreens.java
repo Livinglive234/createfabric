@@ -14,7 +14,6 @@ import com.simibubi.create.content.redstone.link.controller.LinkedControllerScre
 import com.simibubi.create.content.schematics.cannon.SchematicannonScreen;
 import com.simibubi.create.content.schematics.table.SchematicTableScreen;
 import com.simibubi.create.content.trains.schedule.ScheduleScreen;
-import net.minecraft.client.gui.screens.Screen;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;

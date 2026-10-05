@@ -29,6 +29,7 @@ jobs:
           timeout 360 xvfb-run -a -s "-screen 0 1280x720x24" env LIBGL_ALWAYS_SOFTWARE=1 ./gradlew runClient --console=plain
           test -s build/menu-smoke/title.png
           test -s build/menu-smoke/modmenu.png
+          test -s build/menu-smoke/pause-depth.png
       - name: Upload screenshots and client logs
         if: always()
         uses: actions/upload-artifact@v4

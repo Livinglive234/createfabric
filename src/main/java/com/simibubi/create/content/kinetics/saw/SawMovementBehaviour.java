@@ -30,10 +30,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 
-import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
 
 public class SawMovementBehaviour extends BlockBreakingMovementBehaviour {
 
@@ -108,6 +105,7 @@ public class SawMovementBehaviour extends BlockBreakingMovementBehaviour {
 		return true;
 	}
 
+	@Environment(EnvType.CLIENT)
 	@Override
 	public @Nullable ActorVisual createVisual(VisualizationContext visualizationContext, VirtualRenderWorld simulationWorld, MovementContext movementContext) {
 		return new SawActorVisual(visualizationContext, simulationWorld, movementContext);

@@ -19,7 +19,7 @@ Additional repairs:
 
 Limits: Botania and Sandwichable have no Fabric 1.21.1 releases in the queried Modrinth version lists and remain unverified legacy hooks. Storage-specific NeoForge threshold-switch adapters are commented out because Fabric reads storage-view capacity directly. FTB sidebar suppression is disabled in upstream Create 6.0.10 too; the train-map integration is separate. Third-party Create addons need their own compatible Create 6 / Fabric 1.21.1 port.
 
-Validation: source diff, optional-mod guards, dependency jars and published API signatures reviewed; Build workflow pending. EMI warning cleanup, ComputerCraft discovery, Dynamic Trees saw drops and both fullscreen map overlays require in-game checks with those mods installed. No additional workflow or verification script was added.
+Validation: source diff, optional-mod guards, dependency jars and published API signatures reviewed; Full Build passed for code commit `4666efac`: https://github.com/Livinglive234/createfabric/actions/runs/37417810483 . EMI warning cleanup, ComputerCraft discovery, Dynamic Trees saw drops and both fullscreen map overlays require in-game checks with those mods installed. No additional workflow or verification script was added.
 
 ## Create 6.0.10 source upgrade (2026-10-06)
 

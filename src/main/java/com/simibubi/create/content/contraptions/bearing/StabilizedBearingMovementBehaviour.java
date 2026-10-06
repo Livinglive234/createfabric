@@ -31,8 +31,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 
 public class StabilizedBearingMovementBehaviour implements MovementBehaviour {
 
@@ -81,6 +79,7 @@ public class StabilizedBearingMovementBehaviour implements MovementBehaviour {
 			.renderInto(matrices.getViewProjection(), buffer.getBuffer(RenderType.solid()));
 	}
 
+	@Environment(EnvType.CLIENT)
 	@Nullable
 	@Override
 	public ActorVisual createVisual(VisualizationContext visualizationContext, VirtualRenderWorld simulationWorld,

@@ -14,6 +14,8 @@ import com.simibubi.create.infrastructure.config.AllConfigs;
 import it.unimi.dsi.fastutil.objects.Object2IntMap.Entry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -136,6 +138,7 @@ public class BacktankUtil {
 
 	// For Air-using tools
 
+	@Environment(EnvType.CLIENT)
 	public static boolean isBarVisible(ItemStack stack, int usesPerTank) {
 		if (usesPerTank == 0)
 			return false;
@@ -148,6 +151,7 @@ public class BacktankUtil {
 		return true;
 	}
 
+	@Environment(EnvType.CLIENT)
 	public static int getBarWidth(ItemStack stack, int usesPerTank) {
 		if (usesPerTank == 0)
 			return 13;
@@ -174,6 +178,7 @@ public class BacktankUtil {
 		return Math.round((float) sumBarWidth / backtanks.size());
 	}
 
+	@Environment(EnvType.CLIENT)
 	public static int getBarColor(ItemStack stack, int usesPerTank) {
 		if (usesPerTank == 0)
 			return 0;

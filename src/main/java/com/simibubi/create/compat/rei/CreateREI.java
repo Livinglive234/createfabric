@@ -14,6 +14,7 @@ import java.util.function.Supplier;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import com.simibubi.create.AllBlocks;
+import com.simibubi.create.AllFluids;
 import com.simibubi.create.AllCreativeModeTabs;
 import com.simibubi.create.AllCreativeModeTabs.RegistrateDisplayItemsGenerator;
 import com.simibubi.create.AllItems;

@@ -24,8 +24,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 
 public class DrillMovementBehaviour extends BlockBreakingMovementBehaviour {
 
@@ -55,6 +53,7 @@ public class DrillMovementBehaviour extends BlockBreakingMovementBehaviour {
 			DrillRenderer.renderInContraption(context, renderWorld, matrices, buffer);
 	}
 
+	@Environment(EnvType.CLIENT)
 	@Nullable
 	@Override
 	public ActorVisual createVisual(VisualizationContext visualizationContext, VirtualRenderWorld simulationWorld, MovementContext movementContext) {

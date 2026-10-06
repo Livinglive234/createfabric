@@ -1,5 +1,8 @@
 package com.simibubi.create.content.kinetics.deployer;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -57,12 +60,7 @@ import net.minecraft.world.level.block.BaseRailBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.ResourceAmount;
-import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 
-import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
 
 
 public class DeployerMovementBehaviour implements MovementBehaviour {
@@ -312,6 +310,7 @@ public class DeployerMovementBehaviour implements MovementBehaviour {
 			DeployerRenderer.renderInContraption(context, renderWorld, matrices, buffers);
 	}
 
+	@Environment(EnvType.CLIENT)
 	@Nullable
 	@Override
 	public ActorVisual createVisual(VisualizationContext visualizationContext, VirtualRenderWorld simulationWorld,

@@ -22,6 +22,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 
 import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 @ParametersAreNonnullByDefault
 public class CreateEntityBuilder<T extends Entity, P> extends EntityBuilder<T, P> {
@@ -38,14 +39,38 @@ public class CreateEntityBuilder<T extends Entity, P> extends EntityBuilder<T, P
 		super(owner, parent, name, callback, factory, classification/*, (mobCategory, tEntityFactory) -> FabricEntityTypeBuilder.create(mobCategory, tEntityFactory)*/);
 	}
 
+	/**
+	 * Defers creation of Flywheel factory suppliers until the client environment.
+	 * The outer supplier is safe to construct during common registry initialization.
+	 */
+	public CreateEntityBuilder<T, P> visualLazy(
+		NonNullSupplier<NonNullSupplier<SimpleEntityVisualizer.Factory<T>>> visualFactory) {
+		return visualLazy(visualFactory, true);
+	}
+
+	public CreateEntityBuilder<T, P> visualLazy(
+		NonNullSupplier<NonNullSupplier<SimpleEntityVisualizer.Factory<T>>> visualFactory, boolean renderNormally) {
+		return visualLazy(visualFactory, entry -> renderNormally);
+	}
+
+	public CreateEntityBuilder<T, P> visualLazy(
+		NonNullSupplier<NonNullSupplier<SimpleEntityVisualizer.Factory<T>>> visualFactory,
+		Predicate<@NotNull T> renderNormally) {
+		CatnipServices.PLATFORM.executeOnClientOnly(() -> () -> visual(visualFactory.get(), renderNormally));
+		return this;
+	}
+
+	@Environment(EnvType.CLIENT)
 	public CreateEntityBuilder<T, P> visual(NonNullSupplier<SimpleEntityVisualizer.Factory<T>> visualFactory) {
 		return visual(visualFactory, true);
 	}
 
+	@Environment(EnvType.CLIENT)
 	public CreateEntityBuilder<T, P> visual(NonNullSupplier<SimpleEntityVisualizer.Factory<T>> visualFactory, boolean renderNormally) {
 		return visual(visualFactory, entity -> renderNormally);
 	}
 
+	@Environment(EnvType.CLIENT)
 	public CreateEntityBuilder<T, P> visual(NonNullSupplier<SimpleEntityVisualizer.Factory<T>> visualFactory, Predicate<@NotNull T> renderNormally) {
 		if (this.visualFactory == null) {
 			CatnipServices.PLATFORM.executeOnClientOnly(() -> this::registerVisualizer);
@@ -57,6 +82,7 @@ public class CreateEntityBuilder<T extends Entity, P> extends EntityBuilder<T, P
 		return this;
 	}
 
+	@Environment(EnvType.CLIENT)
 	protected void registerVisualizer() {
 		this.onRegister((entry) -> {
 			var visualFactory = this.visualFactory;

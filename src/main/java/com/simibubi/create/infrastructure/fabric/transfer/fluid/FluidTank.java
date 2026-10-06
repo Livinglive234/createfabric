@@ -56,6 +56,8 @@ public class FluidTank extends SingleFluidStorage {
 		FluidStack fluid = this.getFluid();
 		if (!fluid.isEmpty()) {
 			nbt.put("Fluid", fluid.save(registries));
+		} else {
+			nbt.remove("Fluid");
 		}
 		return nbt;
 	}

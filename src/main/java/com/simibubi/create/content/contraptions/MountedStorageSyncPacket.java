@@ -1,5 +1,8 @@
 package com.simibubi.create.content.contraptions;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,6 +33,7 @@ public record MountedStorageSyncPacket(int contraptionId, Map<BlockPos, MountedI
 	}
 
 	@Override
+	@Environment(EnvType.CLIENT)
 	public void handle(LocalPlayer player) {
 		Entity entity = Minecraft.getInstance().level.getEntity(this.contraptionId);
 		if (!(entity instanceof AbstractContraptionEntity contraption))

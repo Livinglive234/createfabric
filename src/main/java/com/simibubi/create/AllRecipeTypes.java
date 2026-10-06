@@ -1,5 +1,8 @@
 package com.simibubi.create;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -160,6 +163,7 @@ public enum AllRecipeTypes implements IRecipeTypeInfo, StringRepresentable {
 	 * {@link RecipeHolder} it was looked up with - finds the real holder by identity so the id-based checks in
 	 * {@link #shouldIgnoreInAutomation(RecipeHolder)} still work.
 	 */
+	@Environment(EnvType.CLIENT)
 	public static boolean shouldIgnoreInAutomation(Recipe<?> recipe) {
 		for (RecipeHolder<?> holder : net.minecraft.client.Minecraft.getInstance().level.getRecipeManager().getRecipes())
 			if (holder.value() == recipe)

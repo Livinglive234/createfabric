@@ -1,5 +1,8 @@
 package com.simibubi.create.content.logistics.tableCloth;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -128,6 +131,7 @@ public class ShoppingListItem extends Item {
 	}
 
 	@Override
+	@Environment(EnvType.CLIENT)
 	public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents,
 								TooltipFlag tooltipFlag) {
 		ShoppingList list = getList(stack);

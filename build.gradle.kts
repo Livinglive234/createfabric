@@ -178,8 +178,8 @@ dependencies {
     modCompileOnly("dev.onyxstudios.cardinal-components-api:cardinal-components-entity:$ccaVersion")
 
     modCompileOnly("dev.architectury:architectury-fabric:13.0.8")
-    modCompileOnly("curse.maven:ftb-chunks-fabric-472657:8791114") { isTransitive = false }
-    modCompileOnly("curse.maven:ftb-library-fabric-438495:8519364") { isTransitive = false }
+    modCompileOnly("curse.maven:ftb-chunks-fabric-472657:5882246") { isTransitive = false }
+    modCompileOnly("curse.maven:ftb-library-fabric-438495:6304124") { isTransitive = false }
     modCompileOnly("curse.maven:dynamictrees-252818:8227325") { isTransitive = false }
 
     // EMI

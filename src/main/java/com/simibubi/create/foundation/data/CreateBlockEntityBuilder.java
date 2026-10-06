@@ -27,6 +27,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 
 import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class CreateBlockEntityBuilder<T extends BlockEntity, P> extends BlockEntityBuilder<T, P> {
 
@@ -78,17 +79,41 @@ public class CreateBlockEntityBuilder<T extends BlockEntity, P> extends BlockEnt
 		return this;
 	}
 
+	/**
+	 * Defers creation of Flywheel factory suppliers until the client environment.
+	 * The outer supplier is safe to construct during common registry initialization.
+	 */
+	public CreateBlockEntityBuilder<T, P> visualLazy(
+		NonNullSupplier<NonNullSupplier<SimpleBlockEntityVisualizer.Factory<T>>> visualFactory) {
+		return visualLazy(visualFactory, true);
+	}
+
+	public CreateBlockEntityBuilder<T, P> visualLazy(
+		NonNullSupplier<NonNullSupplier<SimpleBlockEntityVisualizer.Factory<T>>> visualFactory, boolean renderNormally) {
+		return visualLazy(visualFactory, entry -> renderNormally);
+	}
+
+	public CreateBlockEntityBuilder<T, P> visualLazy(
+		NonNullSupplier<NonNullSupplier<SimpleBlockEntityVisualizer.Factory<T>>> visualFactory,
+		Predicate<@NotNull T> renderNormally) {
+		CatnipServices.PLATFORM.executeOnClientOnly(() -> () -> visual(visualFactory.get(), renderNormally));
+		return this;
+	}
+
+	@Environment(EnvType.CLIENT)
 	public CreateBlockEntityBuilder<T, P> visual(
 		NonNullSupplier<SimpleBlockEntityVisualizer.Factory<T>> visualFactory) {
 		return visual(visualFactory, true);
 	}
 
+	@Environment(EnvType.CLIENT)
 	public CreateBlockEntityBuilder<T, P> visual(
 		NonNullSupplier<SimpleBlockEntityVisualizer.Factory<T>> visualFactory,
 		boolean renderNormally) {
 		return visual(visualFactory, be -> renderNormally);
 	}
 
+	@Environment(EnvType.CLIENT)
 	public CreateBlockEntityBuilder<T, P> visual(
 		NonNullSupplier<SimpleBlockEntityVisualizer.Factory<T>> visualFactory,
 		Predicate<@NotNull T> renderNormally) {
@@ -102,6 +127,7 @@ public class CreateBlockEntityBuilder<T extends BlockEntity, P> extends BlockEnt
 		return this;
 	}
 
+	@Environment(EnvType.CLIENT)
 	protected void registerVisualizer() {
 		this.onRegister((entry) -> {
 			var visualFactory = this.visualFactory;

@@ -1,5 +1,54 @@
 # Fabric port compile-error sweep
 
+## Optional integration audit (2026-10-06, upgrade branch)
+
+The development recipe viewer now defaults to JEI; EMI and REI remain optional integrations and none of these viewers is bundled in the distributed Create jar.
+
+Repairs in this audit:
+- EMI recipe wrappers and generated toolbox recipes mark their display-only IDs with a leading slash, as required by EMI's synthetic-ID API. This addresses the development recipe-manager warnings in the user's screenshot. Blueprint transfer excludes synthetic recipes because the server needs a real recipe-manager ID.
+- ComputerCraft peripherals are registered with Fabric's PeripheralLookup using the existing block-entity computer behaviour. Previously the peripheral objects were constructed but never exposed through the lookup.
+- Train-map screen clicks are connected to Fabric's cancellable mouse event. Only left-click invokes the overlay toggle and a handled click is withheld from the map underneath.
+- Sodium initialization runs once instead of registering its sprite-activation callback twice; the duplicate FTB initialization is removed too.
+
+Additional repairs:
+- JourneyMap's stub, mod-presence checks, compile dependencies, Maven repository and legacy dependency declaration are removed at the user's request. Xaero's World Map is the chosen fullscreen-map target; Xaero Minimap radar markers are separate and unverified.
+- Xaero overlay rendering now uses Fabric's screen-render callback rather than an optional, unmapped injection into Xaero's internal render method. Camera/scale accessors were checked against the actual World Map 1.46.0 jar; unavailable map data is skipped safely.
+- Dynamic Trees saw felling is restored against Fabric 1.21.1 version 1.7.2-BETA, including thick-trunk shells and species/tool-aware drops.
+- FTB Chunks fullscreen train overlays are restored using compile APIs from Fabric 2101.1.3 with FTB Library 2101.1.12, using Fabric screen callbacks and current map-panel fields. FTB's Maven host returned HTTP 403 in this workspace; these compile-only APIs use pinned Curse Maven artifacts instead. The newest 2101.1.22/2101.1.34 jars were built by Loom 1.17 and cannot be remapped by this project's Loom 1.13; the older compile APIs were built by Loom 1.7. The map fields and methods used here were also inspected in the current jars and retain matching signatures.
+- REI uses its current fluid comparator API to distinguish potion data components instead of the commented-out JEI subtype API. Architectury's compile dependency is updated to its 1.21.1 line.
+
+Limits: Botania and Sandwichable have no Fabric 1.21.1 releases in the queried Modrinth version lists and remain unverified legacy hooks. Storage-specific NeoForge threshold-switch adapters are commented out because Fabric reads storage-view capacity directly. FTB sidebar suppression is disabled in upstream Create 6.0.10 too; the train-map integration is separate. Third-party Create addons need their own compatible Create 6 / Fabric 1.21.1 port.
+
+Validation: source diff, optional-mod guards, dependency jars and published API signatures reviewed; Full Build passed for code commit `4666efac`: https://github.com/Livinglive234/createfabric/actions/runs/37417810483 . EMI warning cleanup, ComputerCraft discovery, Dynamic Trees saw drops and both fullscreen map overlays require in-game checks with those mods installed. No additional workflow or verification script was added.
+
+## Create 6.0.10 source upgrade (2026-10-06)
+
+Upgrade branch: `codex/update-create-6.0.10`; upstream baseline: `mc1.21.1-6.0.10` (`ac0c444d9828da3453ae8cc65338e8de063286fb`). This section describes the upgrade branch, not a merged release.
+
+The port already contained most 6.0.10 gameplay changes. The source audit compared its Java tree against upstream and reviewed the 6.0.9-to-6.0.10 changes while preserving Fabric storage, native fluid units, resource conditions, and the stable-based runtime repairs below.
+
+Changes applied:
+- Fluid tank connectivity sends an immediate block-state update after changing the placed state; basin particle orientation matches upstream.
+- Modifier keys use Ponder's conflict-safe key mapping and read the bound key state directly on Fabric.
+- Cake recipes and unlocks accept the general `c:foods/dough` tag; dough registers both general and wheat tags, with matching generated resources and language entries.
+- Chute, belt, and deployer insertion respect per-stack maximum-size components; belt/deployer amounts are bounded before conversion to integer counts.
+- The mod version identifies the 6.0.10 source target. Fabric dependencies are Flywheel `1.0.6-44` and Ponder `1.0.69`; upstream's NeoForge Ponder `1.0.82` is not published for Fabric.
+- Fluid rendering migrates from removed `BasicFluidRenderer` to Ponder's variant-aware `FluidRenderHelper`, preserving fluid components in tanks, basins, spouts, drains and recipe-viewer animations.
+
+Validation: the full Build workflow passed for source commit `00ad77d01cb075041a62448d09e130127d24c2b8`: https://github.com/Livinglive234/createfabric/actions/runs/37391414585 . The subsequent tag/language consistency change and documentation receive the same Build workflow. No additional workflows or verification scripts were added.
+
+The user's local `runDatagen` completed successfully in 48 seconds with all providers finished (uploaded log, 2026-10-05). Generated-file changes from that local run have not been reviewed or committed here. Local execution in this workspace remained blocked by Java network access before Gradle configuration. Earlier runtime results below apply to earlier dependency versions; shader/modpack and ship-addon compatibility are not established by a successful build.
+
+The user's subsequent runtime log revealed `An outer transaction is already active on this thread` in bucket/container emptying, plus legacy empty-fluid NBT messages. The branch now extracts fluid inside the existing transaction, passes the tank/drain parent transaction into container emptying, and inserts into the drain under that same transaction. Old `{Amount:0,FluidName:"minecraft:empty"}` markers are accepted as empty without an invalid-fluid error. This is narrow empty-marker compatibility, not conversion of arbitrary old filled-fluid NBT. A subsequent runtime log exposed wrapped current-format stacks (`{Fluid:{amount:...,id:{fluid:...}}}`): the shared optional reader now unwraps the tank's `Fluid` compound while retaining direct-stack support for templates, tank items and mounted storage. Writing an empty tank also removes any stale `Fluid` entry from a reused output tag. Filled-tank rendering and save/reload persistence need retesting.
+
+The user also reported seeing underground through a tank next to a solid block. Their modpack contains More Culling 1.0.6; its shape-cache fallback directly queries `getOcclusionShape` on non-occluding blocks. Tanks inherited the full-cube default despite `noOcclusion()`. The branch gives regular and creative tanks an explicit empty occlusion shape while retaining collision/support shapes and connected-tank internal-face culling. The user confirmed the visual fix and filled-tank persistence across a world reload work.
+
+A later runtime/Ponder test revealed an open-pipe pump tick opening an outer transaction from its storage-view query. That query now uses a nested, always-aborted probe when the pump already owns a transaction. Missing open-end fluid data is treated as an empty tank rather than decoding Location/Pulling metadata as a fluid.
+
+Ponder schematic loading now normalizes Create block-entity data before placement: old Forge `FluidName`/`Amount` and NeoForge string-id fluid stacks become native Fabric variants with mB-to-native-unit conversion, including milk's Fabric registry id; empty air item stacks become empty compounds or are removed from inventory lists. Existing native variants and non-Create block entities are preserved. The actual bundled templates contained 149 legacy fluid stacks, 11 NeoForge string-id stacks and 260 air item markers under Create block entities; no legacy fluid component tags were present. This conversion is scoped to imported Ponder templates, not saved player worlds. Pump operation and Ponder animations need runtime retesting with the updated jar; unrelated DWM/EMF and Distant Horizons messages remain outside this repair.
+
+An isolated check against the actual Fabric Transfer API 5.4.4 verified simulation rollback, nested commit followed by outer rollback, atomic commit, reproduction of the original double-outer exception, and rollback of open-pipe probes both with and without an active parent transaction. This does not execute Minecraft's real container interactions. The repaired build still needs a tank bucket empty/fill and item-drain retest before merging.
+
 ## Current status (2026-10-05, merged to main)
 
 The stable-based repairs from `codex/fix-datagen-stable` were merged into `main` in PR #1 (merge commit `96f35f80c62638aa951bc8d4e894c0f0d5180fc4`). The supported target is Minecraft 1.21.1 on Fabric. The README now documents that target and build downloads.

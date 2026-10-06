@@ -52,7 +52,7 @@ public abstract class CreateEmiRecipe<T extends Recipe<?>> implements EmiRecipe 
 	 */
 	public static ResourceLocation syntheticId(Recipe<?> recipe) {
 		return ResourceLocation.fromNamespaceAndPath("emi",
-			"create/" + recipe.getClass().getSimpleName().toLowerCase(java.util.Locale.ROOT) + "/"
+			"/create/" + recipe.getClass().getSimpleName().toLowerCase(java.util.Locale.ROOT) + "/"
 				+ Integer.toHexString(System.identityHashCode(recipe)));
 	}
 

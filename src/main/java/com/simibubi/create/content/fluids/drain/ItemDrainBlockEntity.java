@@ -266,7 +266,7 @@ public class ItemDrainBlockEntity extends SmartBlockEntity implements IHaveGoggl
 				return true;
 			}
 
-			emptyItem = GenericItemEmptying.emptyItem(level, heldItem.stack.copy(), false);
+			emptyItem = GenericItemEmptying.emptyItem(level, heldItem.stack.copy(), false, t);
 			award(AllAdvancements.DRAIN);
 
 			// Process finished
@@ -276,7 +276,7 @@ public class ItemDrainBlockEntity extends SmartBlockEntity implements IHaveGoggl
 			else
 				heldItem = null;
 			internalTank.allowInsertion();
-			TransferUtil.insert(internalTank.getPrimaryHandler(), fluidFromItem);
+			TransferUtil.insert(internalTank.getPrimaryHandler(), fluidFromItem, t);
 			t.commit();
 			internalTank.forbidInsertion();
 			notifyUpdate();

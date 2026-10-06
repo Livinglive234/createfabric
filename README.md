@@ -21,7 +21,7 @@
 
 ## Minecraft 1.21.1 Fabric port
 
-This fork ports Create 6 to **Minecraft 1.21.1 on Fabric**. The supported target is 1.21.1; other Minecraft 1.21 versions have not been verified.
+This fork targets **Create 6.0.10 on Minecraft 1.21.1 Fabric**, based on upstream tag [`mc1.21.1-6.0.10`](https://github.com/Creators-of-Create/Create/tree/mc1.21.1-6.0.10). The supported target is 1.21.1; other Minecraft 1.21 versions have not been verified.
 
 Download builds from [GitHub Actions](https://github.com/Livinglive234/createfabric/actions/workflows/build.yml), or build locally with Java 21 and `./gradlew build`. Built jars are written to `build/libs/`.
 

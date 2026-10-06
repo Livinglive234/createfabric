@@ -109,7 +109,7 @@ public class AllItems {
 
 	public static final ItemEntry<Item>
 		WHEAT_FLOUR = taggedIngredient("wheat_flour", AllItemTags.FLOURS.tag, AllItemTags.WHEAT_FLOURS.tag),
-		DOUGH = taggedIngredient("dough", AllItemTags.FOODS_DOUGH_WHEAT.tag),
+		DOUGH = taggedIngredient("dough", AllItemTags.FOODS_DOUGH.tag, AllItemTags.FOODS_DOUGH_WHEAT.tag),
 		CINDER_FLOUR = ingredient("cinder_flour"), ROSE_QUARTZ = ingredient("rose_quartz"),
 		POLISHED_ROSE_QUARTZ = ingredient("polished_rose_quartz"), POWDERED_OBSIDIAN = ingredient("powdered_obsidian"),
 		STURDY_SHEET = taggedIngredient("sturdy_sheet", AllItemTags.OBSIDIAN_PLATES.tag, PLATES.tag),

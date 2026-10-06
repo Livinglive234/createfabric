@@ -12,7 +12,7 @@ public enum FluidUnit {
 
 	FluidUnit(int divisor, String key) {
 		this.divisor = divisor;
-		this.name = Component.translatable(key);
+		this.name = Component.translatable("create." + key);
 	}
 
 	public long convert(long droplets) {

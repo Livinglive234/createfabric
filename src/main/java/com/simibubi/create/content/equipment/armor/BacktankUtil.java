@@ -44,20 +44,19 @@ public class BacktankUtil {
 		});
 	}
 
-	public static List<ItemStack> getAllWithAir(LivingEntity entity) {
+	public static List<ItemStack> getAll(LivingEntity entity) {
 		List<ItemStack> all = new ArrayList<>();
+		for (Function<LivingEntity, List<ItemStack>> supplier : BACKTANK_SUPPLIERS)
+			all.addAll(supplier.apply(entity));
+		return all;
+	}
 
-		for (Function<LivingEntity, List<ItemStack>> supplier : BACKTANK_SUPPLIERS) {
-			List<ItemStack> result = supplier.apply(entity);
+	public static List<ItemStack> getAllWithAir(LivingEntity entity) {
+		List<ItemStack> all = getAll(entity);
+		all.removeIf(stack -> !hasAirRemaining(stack));
 
-			for (ItemStack stack : result)
-				if (hasAirRemaining(stack))
-					all.add(stack);
-		}
-
-		// Sort with ascending order (we want to prioritize the most empty so things actually run out)
+		// Prioritize the most empty tanks so they actually run out.
 		all.sort((a, b) -> Float.compare(getAir(a), getAir(b)));
-
 		return all;
 	}
 

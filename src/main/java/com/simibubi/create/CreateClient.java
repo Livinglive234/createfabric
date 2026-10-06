@@ -90,7 +90,6 @@ public class CreateClient implements ClientModInitializer {
 		POTATO_CANNON_RENDER_HANDLER.registerListeners();
 
 		Mods.FTBLIBRARY.executeIfInstalled(() -> () -> FTBIntegration.init());
-		Mods.SODIUM.executeIfInstalled(() -> () -> SodiumCompat.init());
 		PojavChecker.init();
 
 		// clientInit start
@@ -133,7 +132,6 @@ public class CreateClient implements ClientModInitializer {
 	private static void initCompat() {
 		Mods.TRINKETS.executeIfInstalled(() -> () -> Trinkets.clientInit());
 		Mods.SODIUM.executeIfInstalled(() -> () -> SodiumCompat.init());
-		Mods.FTBCHUNKS.executeIfInstalled(() -> () -> FTBIntegration.init());
 	}
 
 	private static void registerOverlays() {

@@ -120,6 +120,9 @@ public class FluidTankBlock extends Block implements IWrenchable, IBE<FluidTankB
 				? FluidTankBlockEntity::queueConnectivityUpdate
 				: FluidTankBlockEntity::updateConnectivity;
 		withBlockEntityDo(world, pos, consumer);
+		BlockState newState = world.getBlockState(pos);
+		if (state != newState && newState.getBlock() == this)
+			world.sendBlockUpdated(pos, oldState, newState, UPDATE_ALL_IMMEDIATE);
 	}
 
 	@Override
@@ -143,6 +146,12 @@ public class FluidTankBlock extends Block implements IWrenchable, IBE<FluidTankB
 	public InteractionResult onWrenched(BlockState state, UseOnContext context) {
 		withBlockEntityDo(context.getLevel(), context.getClickedPos(), FluidTankBlockEntity::toggleWindows);
 		return InteractionResult.SUCCESS;
+	}
+
+	@Override
+	public VoxelShape getOcclusionShape(BlockState state, BlockGetter level, BlockPos pos) {
+		// Glass windows must not hide neighbouring terrain, including when a culling mod queries this directly.
+		return Shapes.empty();
 	}
 
 	static final VoxelShape CAMPFIRE_SMOKE_CLIP = Block.box(0, 4, 0, 16, 16, 16);

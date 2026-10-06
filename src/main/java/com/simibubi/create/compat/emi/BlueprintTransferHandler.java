@@ -30,7 +30,8 @@ public class BlueprintTransferHandler implements EmiRecipeHandler<BlueprintMenu>
 
 	@Override
 	public boolean supportsRecipe(EmiRecipe recipe) {
-		return recipe instanceof EmiCraftingRecipe e && e.getId() != null;
+		return recipe instanceof EmiCraftingRecipe e && e.getId() != null
+			&& !e.getId().getPath().startsWith("/");
 	}
 
 	@Override

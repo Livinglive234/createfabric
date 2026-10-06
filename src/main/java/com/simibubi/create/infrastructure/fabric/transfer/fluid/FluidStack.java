@@ -179,7 +179,14 @@ public final class FluidStack implements DataComponentHolder {
 	}
 
 	public static FluidStack parseOptional(HolderLookup.Provider registries, CompoundTag tag) {
-		return tag.isEmpty() ? EMPTY : parse(registries, tag).orElse(EMPTY);
+		// FluidTank wraps its stack; structure templates and mounted storage may use a direct stack.
+		if (!tag.contains("id") && !tag.contains("amount") && tag.contains("Fluid", Tag.TAG_COMPOUND))
+			tag = tag.getCompound("Fluid");
+		// Old structure templates encode empty tanks with the pre-codec Forge keys.
+		if (tag.isEmpty() || (tag.contains("Amount", Tag.TAG_ANY_NUMERIC)
+			&& tag.getLong("Amount") == 0 && "minecraft:empty".equals(tag.getString("FluidName"))))
+			return EMPTY;
+		return parse(registries, tag).orElse(EMPTY);
 	}
 
 	public static FluidStack of(@Nullable ResourceAmount<FluidVariant> resource) {

@@ -19,6 +19,7 @@ import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 
 import net.fabricmc.fabric.api.client.rendering.v1.LivingEntityFeatureRendererRegistrationCallback.RegistrationHelper;
@@ -36,15 +37,17 @@ public class BacktankArmorLayer<T extends LivingEntity, M extends EntityModel<T>
 		if (entity.getPose() == Pose.SLEEPING)
 			return;
 
-		BacktankItem item = BacktankItem.getWornBy(entity);
-		if (item == null)
+		ItemStack worn = BacktankUtil.getAll(entity).stream()
+			.filter(stack -> stack.getItem() instanceof BacktankItem)
+			.findFirst().orElse(ItemStack.EMPTY);
+		if (!(worn.getItem() instanceof BacktankItem item))
 			return;
 
 		M entityModel = getParentModel();
 		if (!(entityModel instanceof HumanoidModel<?> model))
 			return;
 
-		boolean hasGlint = entity.getItemBySlot(BacktankItem.SLOT).hasFoil();
+		boolean hasGlint = worn.hasFoil();
 		VertexConsumer vc = ItemRenderer.getFoilBuffer(buffer, Sheets.cutoutBlockSheet(), false, hasGlint);
 		BlockState renderedState = item.getBlock().defaultBlockState()
 			.setValue(BacktankBlock.HORIZONTAL_FACING, Direction.SOUTH);

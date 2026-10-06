@@ -141,6 +141,65 @@ public class FabricStructureProcessing {
 		}
 	}
 
+	/** Convert only Create block entities in imported Ponder templates, not saved worlds. */
+	public static CompoundTag normalizePonderTemplate(CompoundTag template) {
+		CompoundTag copy = template.copy();
+		ListTag blocks = copy.getList("blocks", Tag.TAG_COMPOUND);
+		for (int i = 0; i < blocks.size(); i++) {
+			CompoundTag block = blocks.getCompound(i);
+			CompoundTag nbt = block.getCompound("nbt");
+			if (nbt.getString("id").startsWith(Create.ID + ":"))
+				block.put("nbt", normalizePonderCompound(nbt));
+		}
+		return copy;
+	}
+
+	private static boolean isEmptyItem(CompoundTag tag) {
+		return tag.contains("id", Tag.TAG_STRING) && ("minecraft:air".equals(tag.getString("id"))
+			|| (tag.contains("Count", Tag.TAG_ANY_NUMERIC) && tag.getLong("Count") <= 0)
+			|| (tag.contains("count", Tag.TAG_ANY_NUMERIC) && tag.getLong("count") <= 0));
+	}
+
+	private static CompoundTag normalizePonderCompound(CompoundTag tag) {
+		if (isEmptyItem(tag))
+			return new CompoundTag();
+		CompoundTag result = tag.copy();
+		for (String key : tag.getAllKeys()) {
+			Tag value = tag.get(key);
+			if (value instanceof CompoundTag compound)
+				result.put(key, normalizePonderCompound(compound));
+			else if (value instanceof ListTag list && list.getElementType() == Tag.TAG_COMPOUND) {
+				ListTag normalized = new ListTag();
+				for (int i = 0; i < list.size(); i++) {
+					CompoundTag entry = list.getCompound(i);
+					if (!isEmptyItem(entry))
+						normalized.add(normalizePonderCompound(entry));
+				}
+				result.put(key, normalized);
+			}
+		}
+		boolean legacy = tag.contains("FluidName", Tag.TAG_STRING) && tag.contains("Amount", Tag.TAG_ANY_NUMERIC);
+		boolean neo = tag.contains("id", Tag.TAG_STRING) && tag.contains("amount", Tag.TAG_ANY_NUMERIC);
+		if (!legacy && !neo)
+			return result;
+		String name = tag.getString(legacy ? "FluidName" : "id");
+		long amount = tag.getLong(legacy ? "Amount" : "amount");
+		if (amount <= 0 || "minecraft:empty".equals(name))
+			return new CompoundTag();
+		if ("minecraft:milk".equals(name) || "create:milk".equals(name))
+			name = "milk:still_milk";
+		CompoundTag variant = new CompoundTag();
+		variant.putString("fluid", name);
+		if (tag.contains("components", Tag.TAG_COMPOUND))
+			variant.put("components", tag.getCompound("components").copy());
+		result.put("id", variant);
+		result.putLong("amount", Math.multiplyExact(amount, FluidConstants.BUCKET / 1000));
+		result.remove("FluidName");
+		result.remove("Amount");
+		result.remove("components");
+		return result;
+	}
+
 	private static void fixTankContent(CompoundTag content) {
 		if (content.contains("FluidName", Tag.TAG_STRING) && content.getString("FluidName").equals("minecraft:milk")) {
 			content.putString("FluidName", "milk:still_milk");

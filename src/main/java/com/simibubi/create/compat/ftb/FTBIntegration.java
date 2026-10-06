@@ -1,11 +1,8 @@
 package com.simibubi.create.compat.ftb;
 
-// TODO fabric: no working FTB Library/FTB Chunks fabric port could be resolved (see build.gradle.kts, the
-// dev.ftb.mods:*-fabric coordinates are commented out there) - this integration is stubbed out until a real
-// fabric artifact is available.
+// Sidebar suppression is also disabled in upstream Create 6.0.10 while FTB's config API settles.
+// Train-map compatibility is implemented separately in FTBChunksTrainMap.
 public class FTBIntegration {
-
 	public static void init() {
 	}
-
 }

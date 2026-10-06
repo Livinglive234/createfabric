@@ -73,7 +73,8 @@ public abstract class FlowSource {
 			this.level = null;
 		}
 
-		public void manageSource(Level world) {
+		@Override
+		public void manageSource(Level world, BlockEntity networkBE) {
 			if (world != this.level) {
 				this.level = world;
 				this.provider = StorageProvider.createForFluids(world, location.getConnectedPos());

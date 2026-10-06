@@ -9,6 +9,7 @@ import com.simibubi.create.foundation.virtualWorld.VirtualRenderWorld;
 import com.simibubi.create.foundation.render.fabric.LayerFilteringBakedModel;
 
 import net.createmod.catnip.render.ShadedBlockSbbBuilder;
+import com.simibubi.create.foundation.render.FabricShadedBlockSbbBuilder;
 import net.createmod.catnip.render.SuperByteBuffer;
 import net.createmod.catnip.render.SuperByteBufferCache;
 import net.minecraft.client.Minecraft;
@@ -122,6 +123,6 @@ public class ContraptionRenderInfo {
 	private static class ThreadLocalObjects {
 		public final PoseStack poseStack = new PoseStack();
 		public final RandomSource random = RandomSource.createNewThreadLocalInstance();
-		public final ShadedBlockSbbBuilder sbbBuilder = ShadedBlockSbbBuilder.create();
+		public final ShadedBlockSbbBuilder sbbBuilder = new FabricShadedBlockSbbBuilder();
 	}
 }

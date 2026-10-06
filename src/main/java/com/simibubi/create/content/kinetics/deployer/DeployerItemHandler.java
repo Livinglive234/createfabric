@@ -52,7 +52,7 @@ public class DeployerItemHandler extends SnapshotParticipant<Unit> implements St
 
 	@Override
 	public long insert(ItemVariant resource, long maxAmount, TransactionContext transaction) {
-		int maxInsert = Math.min((int) maxAmount, resource.getItem().getDefaultMaxStackSize());
+		int maxInsert = (int) Math.min(maxAmount, resource.toStack().getMaxStackSize());
 		ItemStack stack = resource.toStack(maxInsert);
 		if (!isItemValid(stack))
 			return 0;

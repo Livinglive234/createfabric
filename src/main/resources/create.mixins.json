@@ -102,6 +102,7 @@
     "fabric.LivingEntityRendererAccessor",
     "fabric.RenderTargetMixin",
     "fabric.infra.FabricClientHooksHelperMixin",
+    "fabric.infra.PonderSceneRegistryMixin",
     "fabric.infra.GuiGraphicsMixin",
     "fabric.infra.GuiMixin",
     "fabric.infra.ModMenuMixin",

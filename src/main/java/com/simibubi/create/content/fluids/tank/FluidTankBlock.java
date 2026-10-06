@@ -148,6 +148,12 @@ public class FluidTankBlock extends Block implements IWrenchable, IBE<FluidTankB
 		return InteractionResult.SUCCESS;
 	}
 
+	@Override
+	public VoxelShape getOcclusionShape(BlockState state, BlockGetter level, BlockPos pos) {
+		// Glass windows must not hide neighbouring terrain, including when a culling mod queries this directly.
+		return Shapes.empty();
+	}
+
 	static final VoxelShape CAMPFIRE_SMOKE_CLIP = Block.box(0, 4, 0, 16, 16, 16);
 
 	@Override

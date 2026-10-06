@@ -16,6 +16,7 @@ import dev.engine_room.flywheel.api.visualization.VisualizationManager;
 import dev.engine_room.flywheel.lib.transform.TransformStack;
 import net.createmod.catnip.animation.AnimationTickHolder;
 import net.createmod.catnip.render.ShadedBlockSbbBuilder;
+import com.simibubi.create.foundation.render.FabricShadedBlockSbbBuilder;
 import net.createmod.catnip.render.SuperByteBuffer;
 import net.createmod.catnip.render.SuperByteBufferCache;
 import net.minecraft.client.Minecraft;
@@ -168,6 +169,6 @@ public class ContraptionEntityRenderer<C extends AbstractContraptionEntity> exte
 	private static class ThreadLocalObjects {
 		public final PoseStack poseStack = new PoseStack();
 		public final RandomSource random = RandomSource.createNewThreadLocalInstance();
-		public final ShadedBlockSbbBuilder sbbBuilder = ShadedBlockSbbBuilder.create();
+		public final ShadedBlockSbbBuilder sbbBuilder = new FabricShadedBlockSbbBuilder();
 	}
 }

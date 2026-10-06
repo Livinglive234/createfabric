@@ -56,6 +56,8 @@ public class CreateDatagen implements DataGeneratorEntrypoint {
 		pack.addProvider((output, registries) -> new CreateRecipeSerializerTagsProvider(output, registries));
 		pack.addProvider((output, registries) -> new CreateContraptionTypeTagsProvider(output, registries, existingFileHelper));
 		pack.addProvider((output, registries) -> new CreateMountedItemStorageTypeTagsProvider(output, registries, existingFileHelper));
+		// Generate sound definitions so datagen does not prune sounds.json as stale output.
+		pack.addProvider(AllSoundEvents::provider);
 		pack.addProvider(DamageTypeTagGen::new);
 		pack.addProvider(AllAdvancements::new);
 		pack.addProvider(GeneratedEntriesProvider::new);

@@ -1,5 +1,23 @@
 # Fabric port compile-error sweep
 
+## Create 6.0.10 source upgrade (2026-10-06)
+
+Upgrade branch: `codex/update-create-6.0.10`; upstream baseline: `mc1.21.1-6.0.10` (`ac0c444d9828da3453ae8cc65338e8de063286fb`). This section describes the upgrade branch, not a merged release.
+
+The port already contained most 6.0.10 gameplay changes. The source audit compared its Java tree against upstream and reviewed the 6.0.9-to-6.0.10 changes while preserving Fabric storage, native fluid units, resource conditions, and the stable-based runtime repairs below.
+
+Changes applied:
+- Fluid tank connectivity sends an immediate block-state update after changing the placed state; basin particle orientation matches upstream.
+- Modifier keys use Ponder's conflict-safe key mapping and read the bound key state directly on Fabric.
+- Cake recipes and unlocks accept the general `c:foods/dough` tag; dough registers both general and wheat tags, with matching generated resources and language entries.
+- Chute, belt, and deployer insertion respect per-stack maximum-size components; belt/deployer amounts are bounded before conversion to integer counts.
+- The mod version identifies the 6.0.10 source target. Fabric dependencies are Flywheel `1.0.6-44` and Ponder `1.0.69`; upstream's NeoForge Ponder `1.0.82` is not published for Fabric.
+- Fluid rendering migrates from removed `BasicFluidRenderer` to Ponder's variant-aware `FluidRenderHelper`, preserving fluid components in tanks, basins, spouts, drains and recipe-viewer animations.
+
+Validation: the full Build workflow passed for source commit `00ad77d01cb075041a62448d09e130127d24c2b8`: https://github.com/Livinglive234/createfabric/actions/runs/37391414585 . The subsequent tag/language consistency change and documentation receive the same Build workflow. No additional workflows or verification scripts were added.
+
+Local client datagen was attempted with Java 21, but the Gradle wrapper could not reach its download service (`java.net.SocketException: Network is unreachable`), before project configuration or generation. Datagen and client/server runtime behavior have therefore not been reverified for this upgrade. Earlier results below apply to the earlier dependency versions. Retest startup, menu panorama, Ponder, potion rendering/recipes, modifier controls and trains with the upgraded jar. Shader/modpack and ship-addon compatibility are not established by a successful build.
+
 ## Current status (2026-10-05, merged to main)
 
 The stable-based repairs from `codex/fix-datagen-stable` were merged into `main` in PR #1 (merge commit `96f35f80c62638aa951bc8d4e894c0f0d5180fc4`). The supported target is Minecraft 1.21.1 on Fabric. The README now documents that target and build downloads.

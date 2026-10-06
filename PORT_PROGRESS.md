@@ -16,7 +16,11 @@ Changes applied:
 
 Validation: the full Build workflow passed for source commit `00ad77d01cb075041a62448d09e130127d24c2b8`: https://github.com/Livinglive234/createfabric/actions/runs/37391414585 . The subsequent tag/language consistency change and documentation receive the same Build workflow. No additional workflows or verification scripts were added.
 
-Local client datagen was attempted with Java 21, but the Gradle wrapper could not reach its download service (`java.net.SocketException: Network is unreachable`), before project configuration or generation. Datagen and client/server runtime behavior have therefore not been reverified for this upgrade. Earlier results below apply to the earlier dependency versions. Retest startup, menu panorama, Ponder, potion rendering/recipes, modifier controls and trains with the upgraded jar. Shader/modpack and ship-addon compatibility are not established by a successful build.
+The user's local `runDatagen` completed successfully in 48 seconds with all providers finished (uploaded log, 2026-10-05). Generated-file changes from that local run have not been reviewed or committed here. Local execution in this workspace remained blocked by Java network access before Gradle configuration. Earlier runtime results below apply to earlier dependency versions; shader/modpack and ship-addon compatibility are not established by a successful build.
+
+The user's subsequent runtime log revealed `An outer transaction is already active on this thread` in bucket/container emptying, plus legacy empty-fluid NBT messages. The branch now extracts fluid inside the existing transaction, passes the tank/drain parent transaction into container emptying, and inserts into the drain under that same transaction. Old `{Amount:0,FluidName:"minecraft:empty"}` markers are accepted as empty without an invalid-fluid error. This is narrow empty-marker compatibility, not conversion of arbitrary old filled-fluid NBT.
+
+An isolated check against the actual Fabric Transfer API 5.4.4 verified simulation rollback, nested commit followed by outer rollback, atomic commit, and reproduction of the original double-outer exception. This does not execute Minecraft's real container interactions. The repaired build still needs a tank bucket empty/fill and item-drain retest before merging.
 
 ## Current status (2026-10-05, merged to main)
 

@@ -1,5 +1,8 @@
 package com.simibubi.create.content.contraptions.actors.roller;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -76,6 +79,7 @@ public class RollerMovementBehaviour extends BlockBreakingMovementBehaviour {
 		return true;
 	}
 
+	@Environment(EnvType.CLIENT)
 	@Nullable
 	@Override
 	public ActorVisual createVisual(VisualizationContext visualizationContext, VirtualRenderWorld simulationWorld,
@@ -84,6 +88,7 @@ public class RollerMovementBehaviour extends BlockBreakingMovementBehaviour {
 	}
 
 	@Override
+	@Environment(EnvType.CLIENT)
 	public void renderInContraption(MovementContext context, VirtualRenderWorld renderWorld,
 		ContraptionMatrices matrices, MultiBufferSource buffers) {
 		if (!VisualizationManager.supportsVisualization(context.world))

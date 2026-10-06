@@ -57,7 +57,7 @@ public abstract class CreateRecipeProvider {
 		}
 
 		static TagKey<Item> goldSheet() {
-			return AllTags.commonItemTag("gold_plates");
+			return AllTags.commonItemTag("plates/gold");
 		}
 
 		static TagKey<Item> stone() {
@@ -93,11 +93,11 @@ public abstract class CreateRecipeProvider {
 		}
 
 		static TagKey<Item> brass() {
-			return AllTags.commonItemTag("brass_ingots");
+			return AllTags.commonItemTag("ingots/brass");
 		}
 
 		static TagKey<Item> brassSheet() {
-			return AllTags.commonItemTag("brass_plates");
+			return AllTags.commonItemTag("plates/brass");
 		}
 
 		static TagKey<Item> iron() {
@@ -109,15 +109,15 @@ public abstract class CreateRecipeProvider {
 		}
 
 		static TagKey<Item> zinc() {
-			return AllTags.commonItemTag("zinc_ingots");
+			return AllTags.commonItemTag("ingots/zinc");
 		}
 
 		static TagKey<Item> ironSheet() {
-			return AllTags.commonItemTag("iron_plates");
+			return AllTags.commonItemTag("plates/iron");
 		}
 
 		static TagKey<Item> sturdySheet() {
-			return AllTags.commonItemTag("obsidian_plates");
+			return AllTags.commonItemTag("plates/obsidian");
 		}
 
 		static ItemLike brassCasing() {
@@ -141,11 +141,11 @@ public abstract class CreateRecipeProvider {
 		}
 
 		static TagKey<Item> brassBlock() {
-			return AllTags.commonItemTag("brass_blocks");
+			return AllTags.commonItemTag("storage_blocks/brass");
 		}
 
 		static TagKey<Item> zincBlock() {
-			return AllTags.commonItemTag("zinc_blocks");
+			return AllTags.commonItemTag("storage_blocks/zinc");
 		}
 
 		static TagKey<Item> wheatFlour() {
@@ -157,7 +157,7 @@ public abstract class CreateRecipeProvider {
 		}
 
 		static TagKey<Item> copperNugget() {
-			return AllTags.commonItemTag("copper_nuggets");
+			return AllTags.commonItemTag("nuggets/copper");
 		}
 
 		static TagKey<Item> copperBlock() {
@@ -165,15 +165,15 @@ public abstract class CreateRecipeProvider {
 		}
 
 		static TagKey<Item> copperSheet() {
-			return AllTags.commonItemTag("copper_plates");
+			return AllTags.commonItemTag("plates/copper");
 		}
 
 		static TagKey<Item> brassNugget() {
-			return AllTags.commonItemTag("brass_nuggets");
+			return AllTags.commonItemTag("nuggets/brass");
 		}
 
 		static TagKey<Item> zincNugget() {
-			return AllTags.commonItemTag("zinc_nuggets");
+			return AllTags.commonItemTag("nuggets/zinc");
 		}
 
 		static ItemLike copperCasing() {

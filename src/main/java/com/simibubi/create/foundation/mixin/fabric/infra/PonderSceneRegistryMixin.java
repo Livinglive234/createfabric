@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(PonderSceneRegistry.class)
 public class PonderSceneRegistryMixin {
-	@ModifyExpressionValue(method = "loadSchematic",
+	@ModifyExpressionValue(method = "loadSchematic(Ljava/io/InputStream;)Lnet/minecraft/world/level/levelgen/structure/templatesystem/StructureTemplate;",
 		at = @At(value = "INVOKE", remap = true,
 			target = "Lnet/minecraft/nbt/NbtIo;read(Ljava/io/DataInput;Lnet/minecraft/nbt/NbtAccounter;)Lnet/minecraft/nbt/CompoundTag;"))
 	private static CompoundTag create$normalizeTemplate(CompoundTag template) {

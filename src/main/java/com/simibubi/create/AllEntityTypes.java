@@ -40,21 +40,21 @@ public class AllEntityTypes {
 
 	public static final EntityEntry<OrientedContraptionEntity> ORIENTED_CONTRAPTION = contraption("contraption",
 		OrientedContraptionEntity::new, () -> OrientedContraptionEntityRenderer::new, 5, 3, true)
-		.visual(() -> ContraptionVisual::new)
+		.visualLazy(() -> () -> ContraptionVisual::new)
 		.register();
 	public static final EntityEntry<ControlledContraptionEntity> CONTROLLED_CONTRAPTION =
 		contraption("stationary_contraption", ControlledContraptionEntity::new, () -> ContraptionEntityRenderer::new,
 			20, 40, false)
-			.visual(() -> ContraptionVisual::new)
+			.visualLazy(() -> () -> ContraptionVisual::new)
 			.register();
 	public static final EntityEntry<GantryContraptionEntity> GANTRY_CONTRAPTION = contraption("gantry_contraption",
 		GantryContraptionEntity::new, () -> ContraptionEntityRenderer::new, 10, 40, false)
-		.visual(() -> ContraptionVisual::new)
+		.visualLazy(() -> () -> ContraptionVisual::new)
 		.register();
 	public static final EntityEntry<CarriageContraptionEntity> CARRIAGE_CONTRAPTION =
 		contraption("carriage_contraption", CarriageContraptionEntity::new,
 			() -> CarriageContraptionEntityRenderer::new, 15, 3, true)
-			.visual(() -> CarriageContraptionVisual::new)
+			.visualLazy(() -> () -> CarriageContraptionVisual::new)
 			.register();
 
 	public static final EntityEntry<SuperGlueEntity> SUPER_GLUE =
@@ -74,7 +74,7 @@ public class AllEntityTypes {
 
 	public static final EntityEntry<PackageEntity> PACKAGE = register("package", PackageEntity::new, () -> PackageRenderer::new,
 		MobCategory.MISC, 10, 3, true, false, PackageEntity::build)
-		.visual(() -> PackageVisual::new, true)
+		.visualLazy(() -> () -> PackageVisual::new, true)
 		.attributes(PackageEntity::createPackageAttributes)
 		.register();
 

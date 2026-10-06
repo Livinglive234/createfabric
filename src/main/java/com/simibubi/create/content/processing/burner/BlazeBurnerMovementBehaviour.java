@@ -78,6 +78,7 @@ public class BlazeBurnerMovementBehaviour implements MovementBehaviour {
 		return (LerpedFloat) context.temporaryData;
 	}
 
+	@Environment(EnvType.CLIENT)
 	private float getTargetAngle(MovementContext context) {
 		if (shouldRenderHat(context) && !Mth.equal(context.relativeMotion.length(), 0)
 			&& context.contraption.entity instanceof CarriageContraptionEntity cce) {

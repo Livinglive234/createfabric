@@ -1,5 +1,8 @@
 package com.simibubi.create.content.processing.basin;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -179,6 +182,7 @@ public class BasinRecipe extends StandardProcessingRecipe<RecipeInput> {
 		}
 	}
 
+	@Environment(EnvType.CLIENT)
 	public static RecipeHolder<BasinRecipe> convertShapeless(RecipeHolder<?> recipe) {
 		BasinRecipe basinRecipe =
 			new Builder<>(BasinRecipe::new, recipe.id()).withItemIngredients(recipe.value().getIngredients())

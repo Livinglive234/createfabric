@@ -226,6 +226,7 @@ public class HarvesterMovementBehaviour implements MovementBehaviour {
 	}
 
 	@Override
+	@Environment(EnvType.CLIENT)
 	public void renderInContraption(MovementContext context, VirtualRenderWorld renderWorld,
 									ContraptionMatrices matrices, MultiBufferSource buffers) {
 		if (!VisualizationManager.supportsVisualization(context.world))

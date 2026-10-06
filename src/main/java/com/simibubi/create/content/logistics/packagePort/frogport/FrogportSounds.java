@@ -1,5 +1,8 @@
 package com.simibubi.create.content.logistics.packagePort.frogport;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+
 import com.simibubi.create.AllSoundEvents;
 
 import net.minecraft.client.Minecraft;
@@ -9,10 +12,12 @@ import net.minecraft.world.phys.Vec3;
 
 public class FrogportSounds {
 
+	@Environment(EnvType.CLIENT)
 	public void open(Level level, BlockPos pos) {
 		AllSoundEvents.FROGPORT_OPEN.playAt(level, Vec3.atCenterOf(pos), 0.5f, 1, false);
 	}
 
+	@Environment(EnvType.CLIENT)
 	public void close(Level level, BlockPos pos) {
 		if (!isPlayerNear(pos))
 			return;
@@ -20,18 +25,21 @@ public class FrogportSounds {
 			true);
 	}
 
+	@Environment(EnvType.CLIENT)
 	public void catchPackage(Level level, BlockPos pos) {
 		if (!isPlayerNear(pos))
 			return;
 		AllSoundEvents.FROGPORT_CATCH.playAt(level, Vec3.atCenterOf(pos), 1, 1, false);
 	}
 
+	@Environment(EnvType.CLIENT)
 	public void depositPackage(Level level, BlockPos pos) {
 		if (!isPlayerNear(pos))
 			return;
 		AllSoundEvents.FROGPORT_DEPOSIT.playAt(level, Vec3.atCenterOf(pos), 1, 1, false);
 	}
 
+	@Environment(EnvType.CLIENT)
 	private boolean isPlayerNear(BlockPos pos) {
 		return pos.closerThan(Minecraft.getInstance().player.blockPosition(), 20);
 	}

@@ -27,10 +27,6 @@ public class Trinkets {
 			return stacks;
 		});
 
-	}
-
-	@Environment(EnvType.CLIENT)
-	public static void clientInit() {
 		GogglesItem.addIsWearingPredicate(player -> {
 			Optional<TrinketComponent> optional = TrinketsApi.getTrinketComponent(player);
 			if (optional.isPresent()) {
@@ -41,7 +37,10 @@ public class Trinkets {
 			}
 			return false;
 		});
+	}
 
+	@Environment(EnvType.CLIENT)
+	public static void clientInit() {
 		TrinketRendererRegistry.registerRenderer(AllItems.GOGGLES.get(), new GoggleTrinketRenderer());
 	}
 }

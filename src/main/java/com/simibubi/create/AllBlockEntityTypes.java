@@ -54,7 +54,6 @@ import com.simibubi.create.content.fluids.drain.ItemDrainRenderer;
 import com.simibubi.create.content.fluids.hosePulley.HosePulleyBlockEntity;
 import com.simibubi.create.content.fluids.hosePulley.HosePulleyRenderer;
 import com.simibubi.create.content.fluids.pipes.FluidPipeBlockEntity;
-import com.simibubi.create.content.fluids.pipes.GlassPipeVisual;
 import com.simibubi.create.content.fluids.pipes.SmartFluidPipeBlockEntity;
 import com.simibubi.create.content.fluids.pipes.StraightPipeBlockEntity;
 import com.simibubi.create.content.fluids.pipes.TransparentStraightPipeRenderer;
@@ -403,7 +402,7 @@ public class AllBlockEntityTypes {
 
 	public static final BlockEntityEntry<StraightPipeBlockEntity> GLASS_FLUID_PIPE = REGISTRATE
 		.blockEntity("glass_fluid_pipe", StraightPipeBlockEntity::new)
-		.visual(() -> GlassPipeVisual::new, false)
+		// Use the fallback renderer: the instanced fluid stream is invisible on the tested Mac backend.
 		.validBlocks(AllBlocks.GLASS_FLUID_PIPE)
 		.renderer(() -> TransparentStraightPipeRenderer::new)
 		.register();

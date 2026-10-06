@@ -1,5 +1,26 @@
 # Fabric port compile-error sweep
 
+## Optional integration audit (2026-10-06, upgrade branch)
+
+The development recipe viewer now defaults to JEI; EMI and REI remain optional integrations and none of these viewers is bundled in the distributed Create jar.
+
+Repairs in this audit:
+- EMI recipe wrappers and generated toolbox recipes mark their display-only IDs with a leading slash, as required by EMI's synthetic-ID API. This addresses the development recipe-manager warnings in the user's screenshot. Blueprint transfer excludes synthetic recipes because the server needs a real recipe-manager ID.
+- ComputerCraft peripherals are registered with Fabric's PeripheralLookup using the existing block-entity computer behaviour. Previously the peripheral objects were constructed but never exposed through the lookup.
+- Train-map screen clicks are connected to Fabric's cancellable mouse event. Only left-click invokes the overlay toggle and a handled click is withheld from the map underneath.
+- Sodium initialization runs once instead of registering its sprite-activation callback twice; the duplicate FTB initialization is removed too.
+
+Additional repairs:
+- JourneyMap's stub, mod-presence checks, compile dependencies, Maven repository and legacy dependency declaration are removed at the user's request. Xaero's World Map is the chosen fullscreen-map target; Xaero Minimap radar markers are separate and unverified.
+- Xaero overlay rendering now uses Fabric's screen-render callback rather than an optional, unmapped injection into Xaero's internal render method. Camera/scale accessors were checked against the actual World Map 1.46.0 jar; unavailable map data is skipped safely.
+- Dynamic Trees saw felling is restored against Fabric 1.21.1 version 1.7.2-BETA, including thick-trunk shells and species/tool-aware drops.
+- FTB Chunks fullscreen train overlays are restored against Fabric 2101.1.22 with FTB Library 2101.1.34, using Fabric screen callbacks and current map-panel fields. FTB's Maven host returned HTTP 403 in this workspace; these compile-only APIs use pinned Curse Maven artifacts instead.
+- REI uses its current fluid comparator API to distinguish potion data components instead of the commented-out JEI subtype API. Architectury's compile dependency is updated to its 1.21.1 line.
+
+Limits: Botania and Sandwichable have no Fabric 1.21.1 releases in the queried Modrinth version lists and remain unverified legacy hooks. Storage-specific NeoForge threshold-switch adapters are commented out because Fabric reads storage-view capacity directly. FTB sidebar suppression is disabled in upstream Create 6.0.10 too; the train-map integration is separate. Third-party Create addons need their own compatible Create 6 / Fabric 1.21.1 port.
+
+Validation: source diff, optional-mod guards, dependency jars and published API signatures reviewed; Build workflow pending. EMI warning cleanup, ComputerCraft discovery, Dynamic Trees saw drops and both fullscreen map overlays require in-game checks with those mods installed. No additional workflow or verification script was added.
+
 ## Create 6.0.10 source upgrade (2026-10-06)
 
 Upgrade branch: `codex/update-create-6.0.10`; upstream baseline: `mc1.21.1-6.0.10` (`ac0c444d9828da3453ae8cc65338e8de063286fb`). This section describes the upgrade branch, not a merged release.

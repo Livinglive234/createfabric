@@ -68,8 +68,6 @@ val sodiumVersion = "mc1.21.1-0.6.9-fabric"
 val trinketsVersion = "3.10.0"
 // for Trinkets - https://modrinth.com/mod/cardinal-components-api/versions
 val ccaVersion = "6.1.2"
-// https://modrinth.com/mod/journeymap
-val jmVersion = "1.21.1-6.0.0-beta.39+fabric"
 // https://modrinth.com/mod/xaeros-minimap/versions
 val xaerosMinimapVersion = "fabric-1.21.1-26.5.0"
 // https://modrinth.com/mod/xaeros-world-map/versions
@@ -77,12 +75,10 @@ val xaerosWorldMapVersion = "fabric-1.21.1-1.46.0"
 // https://chocolateminecraft.com/maven/xaero/lib/xaerolib-fabric-1.21.1/ - required transitively by
 // both xaero mods above (xaero.lib.client.gui.ScreenBase etc.), not published on Modrinth for fabric
 val xaeroLibVersion = "1.7.3"
-// check the jm jar, it's JiJ
-val jmApiVersion = "1.20-1.9-SNAPSHOT"
 
 // dev stuff
 val ccRuntime = false
-val recipeViewer = "emi" // jei, rei, or emi
+val recipeViewer = "jei" // jei, rei, or emi
 
 plugins {
     id("fabric-loom") version "1.13.+"
@@ -116,9 +112,8 @@ repositories {
     maven("https://maven.squiddev.cc") // CC:T
     maven("https://modmaven.dev") // Botania
     maven("https://maven.ladysnake.org/releases") // CCA, for Trinkets
-    maven("https://maven.saps.dev/releases") // FTB
+    maven("https://cursemaven.com") { content { includeGroup("curse.maven") } }
     maven("https://maven.architectury.dev") // Architectury API
-    maven("https://jm.gserv.me/repository/maven-public/") // Journey map
     maven("https://chocolateminecraft.com/maven") // XaeroLib, required by Xaero's Minimap/World Map
 }
 
@@ -182,17 +177,10 @@ dependencies {
     modCompileOnly("dev.onyxstudios.cardinal-components-api:cardinal-components-base:$ccaVersion")
     modCompileOnly("dev.onyxstudios.cardinal-components-api:cardinal-components-entity:$ccaVersion")
 
-    // FIXME - Use gradle.properties for these versions, make change to concealed for this
-    modCompileOnly("dev.architectury:architectury-fabric:9.1.12")
-    // FIXME fabric-port: these dev.ftb.mods:*-fabric coordinates/versions don't exist on any configured
-    // repository (404 on maven.squiddev.cc) - stale pin from before this ever resolved. FTB Chunks/Teams/Library
-    // compat (FTBIntegration.java, FTBChunksTrainMap.java) needs the correct current maven + version.
-    // modCompileOnly("dev.ftb.mods:ftb-chunks-fabric:2001.3.1")
-    // modCompileOnly("dev.ftb.mods:ftb-teams-fabric:2001.3.0")
-    // modCompileOnly("dev.ftb.mods:ftb-library-fabric:2001.2.4")
-
-    modCompileOnly("maven.modrinth:journeymap:$jmVersion")
-    modCompileOnly("info.journeymap:journeymap-api:$jmApiVersion")
+    modCompileOnly("dev.architectury:architectury-fabric:13.0.8")
+    modCompileOnly("curse.maven:ftb-chunks-fabric-472657:8791114") { isTransitive = false }
+    modCompileOnly("curse.maven:ftb-library-fabric-438495:8519364") { isTransitive = false }
+    modCompileOnly("curse.maven:dynamictrees-252818:8227325") { isTransitive = false }
 
     // EMI
     modCompileOnly("dev.emi:emi-fabric:$emiVersion:api") { isTransitive = false }

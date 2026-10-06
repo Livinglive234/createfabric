@@ -62,15 +62,6 @@ versionRange = "[0.14.7,)"
 ordering = "NONE"
 side = "BOTH"
 
-# Versions before 1.21.1-6.0.0-beta.46 do not contain the fullscreen render event we use
-[[dependencies."${mod_id}"]]
-modId = "journeymap"
-type = "optional"
-reason = "Versions before 1.21.1-6.0.0-beta.46 do not contain the APIs Create requires to work with JourneyMap."
-versionRange = "[1.21.1-6.0.0-beta.46,)"
-ordering = "NONE"
-side = "CLIENT"
-
 [[dependencies."${mod_id}"]]
 modId = "xaeroworldmap"
 type = "optional"

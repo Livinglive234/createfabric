@@ -20,8 +20,11 @@ public class TrainMapEvents {
 
 	public static void init() {
 		ClientTickEvents.END_CLIENT_TICK.register(TrainMapEvents::tick);
-		// TODO fabric-port: mouseClick/cancelTooltips/renderGui are not yet wired to
-		// ScreenMouseEvents/tooltip-render/screen-render hooks
+		ScreenEvents.AFTER_INIT.register((client, screen, width, height) -> {
+			ScreenEvents.afterRender(screen).register(TrainMapEvents::renderGui);
+			ScreenMouseEvents.allowMouseClick(screen).register((clickedScreen, mouseX, mouseY, button) ->
+				button != 0 || !mouseClick(clickedScreen, mouseX, mouseY, button));
+		});
 	}
 
 	public static void tick(Minecraft mc) {
@@ -30,17 +33,12 @@ public class TrainMapEvents {
 
 		if (Mods.FTBCHUNKS.isLoaded())
 			FTBChunksTrainMap.tick();
-		if (Mods.JOURNEYMAP.isLoaded())
-			JourneyTrainMap.tick();
 		if (Mods.XAEROWORLDMAP.isLoaded())
 			XaeroTrainMap.tick();
 	}
 
-	// TODO fabric-port: not yet wired up to ScreenMouseEvents.beforeMouseClick anywhere
 	public static boolean mouseClick(Screen screen, double mouseX, double mouseY, int button) {
 		if (Mods.FTBCHUNKS.isLoaded() && FTBChunksTrainMap.mouseClick(screen, (int) mouseX, (int) mouseY))
-			return true;
-		if (Mods.JOURNEYMAP.isLoaded() && JourneyTrainMap.mouseClick(screen, (int) mouseX, (int) mouseY))
 			return true;
 		if (Mods.XAEROWORLDMAP.isLoaded() && XaeroTrainMap.mouseClick(screen, (int) mouseX, (int) mouseY))
 			return true;
@@ -56,8 +54,9 @@ public class TrainMapEvents {
 	}
 
 	public static void renderGui(Screen screen, GuiGraphics graphics, double mouseX, double mouseY, float partialTicks) {
-		if (Mods.FTBCHUNKS.isLoaded()) {
+		if (Mods.FTBCHUNKS.isLoaded())
 			FTBChunksTrainMap.renderGui(screen, graphics, (int) mouseX, (int) mouseY, partialTicks);
-		}
+		if (Mods.XAEROWORLDMAP.isLoaded())
+			XaeroTrainMap.renderGui(screen, graphics, (int) mouseX, (int) mouseY, partialTicks);
 	}
 }

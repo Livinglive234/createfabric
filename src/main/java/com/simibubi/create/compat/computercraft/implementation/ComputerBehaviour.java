@@ -52,6 +52,7 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 
 import dan200.computercraft.api.detail.VanillaDetailRegistries;
 import dan200.computercraft.api.peripheral.IPeripheral;
+import dan200.computercraft.api.peripheral.PeripheralLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -111,6 +112,13 @@ public class ComputerBehaviour extends AbstractComputerBehaviour {
 
 		throw new IllegalArgumentException(
 				"No peripheral available for " + BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(be.getType()));
+	}
+
+	public static void registerPeripheralLookup() {
+		PeripheralLookup.get().registerFallback((level, pos, state, blockEntity, direction) -> {
+			AbstractComputerBehaviour behaviour = BlockEntityBehaviour.get(blockEntity, AbstractComputerBehaviour.TYPE);
+			return behaviour == null ? null : behaviour.<IPeripheral>getPeripheral();
+		});
 	}
 
 	public static void registerItemDetailProviders() {

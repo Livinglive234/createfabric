@@ -54,12 +54,27 @@ public class XaeroTrainMap {
 		return TrainMapManager.handleToggleWidgetClick(mouseX, mouseY, 3, 30);
 	}
 
-	// Called by XaeroFullscreenMapMixin, guarded by try-catch
+	public static void renderGui(Screen screen, GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+		if (encounteredException)
+			return;
+		try {
+			if (screen instanceof GuiMap map)
+				onRender(graphics, map, mouseX, mouseY, partialTicks);
+		} catch (Throwable e) {
+			Create.LOGGER.error("Failed to render Xaero's World Map train map integration:", e);
+			encounteredException = true;
+		}
+	}
+
+	// Fabric screen rendering keeps this independent of Xaero's internal render method names.
 	public static void onRender(GuiGraphics graphics, GuiMap screen, int mX, int mY, float pt) {
 		double x = ((XaeroFullscreenMapAccessor) screen).create$getCameraX();
 		double z = ((XaeroFullscreenMapAccessor) screen).create$getCameraZ();
 		double mapScale = ((XaeroFullscreenMapAccessor) screen).create$getScale();
-		renderedDimension = ((XaeroFullscreenMapAccessor) screen).create$getMapProcessor().getMapWorld().getCurrentDimension().getDimId();
+		var processor = ((XaeroFullscreenMapAccessor) screen).create$getMapProcessor();
+		if (processor == null || !processor.isMapWorldUsable() || processor.getMapWorld().getCurrentDimension() == null)
+			return;
+		renderedDimension = processor.getMapWorld().getCurrentDimension().getDimId();
 
 		if (!AllConfigs.client().showTrainMapOverlay.get()) {
 			renderToggleWidgetAndTooltip(graphics, screen, mX, mY);

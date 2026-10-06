@@ -356,13 +356,10 @@ public class CreateREI implements REIClientPlugin {
 		registry.register(new BlueprintTransferHandler());
 	}
 
-//	@Override // FIXME RECIPE VIEWERS
-//	public void registerFluidSubtypes(ISubtypeRegistration registration) {
-//		PotionFluidSubtypeInterpreter interpreter = new PotionFluidSubtypeInterpreter();
-//		PotionFluid potionFluid = AllFluids.POTION.get();
-//		registration.registerSubtypeInterpreter(FabricTypes.FLUID_STACK, potionFluid.getSource(), interpreter);
-//		registration.registerSubtypeInterpreter(FabricTypes.FLUID_STACK, potionFluid.getFlowing(), interpreter);
-//	}
+	@Override
+	public void registerFluidComparators(me.shedaniel.rei.api.common.entry.comparison.FluidComparatorRegistry registry) {
+		registry.registerNbt(AllFluids.POTION.get().getSource(), AllFluids.POTION.get().getFlowing());
+	}
 
 	@Override
 	public void registerEntries(EntryRegistry registry) {

@@ -1,5 +1,8 @@
 package com.simibubi.create.content.contraptions.actors.harvester;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+
 import com.simibubi.create.compat.Mods;
 
 import com.simibubi.create.compat.farmersdelight.FarmersDelightCompat;
@@ -229,6 +232,7 @@ public class HarvesterMovementBehaviour implements MovementBehaviour {
 			HarvesterRenderer.renderInContraption(context, renderWorld, matrices, buffers);
 	}
 
+	@Environment(EnvType.CLIENT)
 	@Nullable
 	@Override
 	public ActorVisual createVisual(VisualizationContext visualizationContext, VirtualRenderWorld simulationWorld,

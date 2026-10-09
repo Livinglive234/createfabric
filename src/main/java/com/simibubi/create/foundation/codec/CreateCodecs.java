@@ -5,10 +5,10 @@ import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.tags.TagKey;
-import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
+import com.simibubi.create.content.processing.recipe.ProcessingRecipeBuilder;
 import com.simibubi.create.foundation.fluid.FluidIngredient;
 import com.simibubi.create.foundation.item.ItemSlots;
 import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
@@ -58,7 +58,7 @@ public class CreateCodecs {
 		TagKey.codec(Registries.FLUID).fieldOf("tag").forGetter(ingredient -> { throw new UnsupportedOperationException(); }),
 		NON_NEGATIVE_LONG.fieldOf("amount").forGetter(FluidIngredient::getRequiredAmount)
 	).apply(instance, (type, tag, amount) ->
-		FluidIngredient.fromTag(tag, Math.multiplyExact(amount, FluidConstants.BUCKET / 1000))));
+		FluidIngredient.fromTag(tag, ProcessingRecipeBuilder.millibuckets(amount))));
 
 	public static final Codec<FluidIngredient> SIZED_FLUID_INGREDIENT =
 		Codec.either(FluidIngredient.CODEC, LEGACY_FLUID_TAG)

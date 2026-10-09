@@ -7,7 +7,6 @@ import java.util.function.Supplier;
 
 import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringBehaviour;
 
-import net.minecraft.core.component.DataComponents;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
@@ -17,14 +16,6 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
 import net.minecraft.util.Unit;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
-
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
-import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
-import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
-
-import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
 
 public class DeployerItemHandler extends SnapshotParticipant<Unit> implements Storage<ItemVariant> {
 
@@ -52,8 +43,9 @@ public class DeployerItemHandler extends SnapshotParticipant<Unit> implements St
 
 	@Override
 	public long insert(ItemVariant resource, long maxAmount, TransactionContext transaction) {
-		int maxInsert = (int) Math.min(maxAmount, resource.toStack().getMaxStackSize());
-		ItemStack stack = resource.toStack(maxInsert);
+		ItemStack stack = resource.toStack();
+		int maxInsert = (int) Math.min(maxAmount, stack.getMaxStackSize());
+		stack.setCount(maxInsert);
 		if (!isItemValid(stack))
 			return 0;
 

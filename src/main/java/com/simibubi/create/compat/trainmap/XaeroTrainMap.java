@@ -7,7 +7,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.Create;
 import com.simibubi.create.foundation.gui.RemovedGuiUtils;
 import com.simibubi.create.foundation.mixin.compat.xaeros.XaeroFullscreenMapAccessor;
-import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
 import net.minecraft.client.Minecraft;
@@ -117,13 +116,8 @@ public class XaeroTrainMap {
 
 	private static boolean renderToggleWidgetAndTooltip(GuiGraphics graphics, GuiMap screen, int mouseX,
 														int mouseY) {
-		TrainMapManager.renderToggleWidget(graphics, 3, 30);
-		if (!TrainMapManager.isToggleWidgetHovered(mouseX, mouseY, 3, 30))
-			return false;
-
-		RemovedGuiUtils.drawHoveringText(graphics, List.of(CreateLang.translate("train_map.toggle")
-			.component()), mouseX, mouseY + 20, screen.width, screen.height, 256, Minecraft.getInstance().font);
-		return true;
+		return TrainMapManager.renderToggleWidgetAndTooltip(graphics, 3, 30, mouseX, mouseY, screen.width,
+			screen.height);
 	}
 
 	public static ResourceKey<Level> getRenderedDimension() {

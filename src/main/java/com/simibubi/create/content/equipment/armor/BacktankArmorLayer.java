@@ -37,10 +37,16 @@ public class BacktankArmorLayer<T extends LivingEntity, M extends EntityModel<T>
 		if (entity.getPose() == Pose.SLEEPING)
 			return;
 
-		ItemStack worn = BacktankUtil.getAll(entity).stream()
-			.filter(stack -> stack.getItem() instanceof BacktankItem)
-			.findFirst().orElse(ItemStack.EMPTY);
-		if (!(worn.getItem() instanceof BacktankItem item))
+		BacktankItem item = null;
+		ItemStack worn = ItemStack.EMPTY;
+		for (ItemStack stack : BacktankUtil.getAll(entity)) {
+			if (stack.getItem() instanceof BacktankItem backtankItem) {
+				item = backtankItem;
+				worn = stack;
+				break;
+			}
+		}
+		if (item == null)
 			return;
 
 		M entityModel = getParentModel();

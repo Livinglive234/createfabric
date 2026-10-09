@@ -18,8 +18,10 @@ public class ItemHandlerBeltSegment implements SingleSlotStorage<ItemVariant> {
 	@Override
 	public long insert(ItemVariant resource, long maxAmount, TransactionContext transaction) {
 		if (this.beltInventory.canInsertAt(offset)) {
-			int toInsert = (int) Math.min(maxAmount, resource.toStack().getMaxStackSize());
-			TransportedItemStack newStack = new TransportedItemStack(resource.toStack(toInsert));
+			ItemStack fullStack = resource.toStack();
+			int toInsert = (int) Math.min(maxAmount, fullStack.getMaxStackSize());
+			fullStack.setCount(toInsert);
+			TransportedItemStack newStack = new TransportedItemStack(fullStack);
 			newStack.insertedAt = offset;
 			newStack.beltPosition = offset + .5f + (beltInventory.beltMovementPositive ? -1 : 1) / 16f;
 			newStack.prevBeltPosition = newStack.beltPosition;

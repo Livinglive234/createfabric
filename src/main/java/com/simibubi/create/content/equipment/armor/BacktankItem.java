@@ -3,8 +3,6 @@ package com.simibubi.create.content.equipment.armor;
 import java.util.Locale;
 import java.util.function.Supplier;
 
-import org.jetbrains.annotations.Nullable;
-
 import com.simibubi.create.AllDataComponents;
 import com.simibubi.create.foundation.item.LayeredArmorItem;
 
@@ -12,7 +10,6 @@ import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ArmorItem;
@@ -28,7 +25,6 @@ import net.minecraft.world.level.block.Block;
 import io.github.fabricators_of_create.porting_lib.item.extensions.CustomSupportsEnchantItem;
 
 public class BacktankItem extends BaseArmorItem implements CustomSupportsEnchantItem {
-	public static final EquipmentSlot SLOT = EquipmentSlot.CHEST;
 	public static final ArmorItem.Type TYPE = ArmorItem.Type.CHESTPLATE;
 	public static final int BAR_COLOR = 0xEFEFEF;
 
@@ -37,17 +33,6 @@ public class BacktankItem extends BaseArmorItem implements CustomSupportsEnchant
 	public BacktankItem(Holder<ArmorMaterial> material, Properties properties, ResourceLocation textureLoc, Supplier<BacktankBlockItem> placeable) {
 		super(material, TYPE, properties, textureLoc);
 		this.blockItem = placeable;
-	}
-
-	@Nullable
-	public static BacktankItem getWornBy(Entity entity) {
-		if (!(entity instanceof LivingEntity livingEntity)) {
-			return null;
-		}
-		if (!(livingEntity.getItemBySlot(SLOT).getItem() instanceof BacktankItem item)) {
-			return null;
-		}
-		return item;
 	}
 
 	@Override

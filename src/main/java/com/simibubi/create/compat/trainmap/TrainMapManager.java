@@ -25,6 +25,7 @@ import com.simibubi.create.content.trains.graph.TrackNodeLocation;
 import com.simibubi.create.content.trains.station.GlobalStation;
 import com.simibubi.create.content.trains.track.BezierConnection;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
+import com.simibubi.create.foundation.gui.RemovedGuiUtils;
 import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 import com.simibubi.create.infrastructure.config.CClient;
@@ -123,6 +124,17 @@ public class TrainMapManager {
 			return false;
 		if (mouseY < y || mouseY >= y + AllGuiTextures.TRAINMAP_TOGGLE_PANEL.getHeight())
 			return false;
+		return true;
+	}
+
+	public static boolean renderToggleWidgetAndTooltip(GuiGraphics graphics, int x, int y, int mouseX, int mouseY,
+		int screenWidth, int screenHeight) {
+		renderToggleWidget(graphics, x, y);
+		if (!isToggleWidgetHovered(mouseX, mouseY, x, y))
+			return false;
+
+		RemovedGuiUtils.drawHoveringText(graphics, List.of(CreateLang.translate("train_map.toggle")
+			.component()), mouseX, mouseY + 20, screenWidth, screenHeight, 256, Minecraft.getInstance().font);
 		return true;
 	}
 

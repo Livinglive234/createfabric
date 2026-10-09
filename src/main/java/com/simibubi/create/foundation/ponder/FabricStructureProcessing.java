@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 import com.mojang.serialization.MapCodec;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.Create;
+import com.simibubi.create.content.processing.recipe.ProcessingRecipeBuilder;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
@@ -193,7 +194,7 @@ public class FabricStructureProcessing {
 		if (tag.contains("components", Tag.TAG_COMPOUND))
 			variant.put("components", tag.getCompound("components").copy());
 		result.put("id", variant);
-		result.putLong("amount", Math.multiplyExact(amount, FluidConstants.BUCKET / 1000));
+		result.putLong("amount", ProcessingRecipeBuilder.millibuckets(amount));
 		result.remove("FluidName");
 		result.remove("Amount");
 		result.remove("components");

@@ -157,7 +157,7 @@ public abstract class ProcessingRecipeBuilder<P extends ProcessingRecipeParams, 
 	}
 
 	/** Numeric fluid shortcuts use millibuckets, matching upstream recipe definitions. */
-	private static long millibuckets(long amount) {
+	public static long millibuckets(long amount) {
 		return Math.multiplyExact(amount, FluidConstants.BUCKET / 1000);
 	}
 
